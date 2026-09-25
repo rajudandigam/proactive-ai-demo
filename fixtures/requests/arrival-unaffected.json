@@ -1,0 +1,9 @@
+{
+  "eventId": "arrival-unaffected-001",
+  "tripId": "trip-jordan",
+  "type": "TRIP_REVIEW",
+  "scenarioId": "jordan-arrival-unaffected",
+  "signals": [
+    { "id": "route-1", "type": "DESTINATION_EVENT" }
+  ]
+}

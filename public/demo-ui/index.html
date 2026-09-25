@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Proactive AI Demo V2</title>
+  <link rel="stylesheet" href="/demo/ui/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Proactive AI Demo V2</h1>
+      <p class="sub">One local app · one real model · mock travel facts · preview delivery</p>
+    </div>
+    <div class="badges" id="badges">
+      <span class="badge" id="modeBadge">…</span>
+      <span class="badge muted">Mock travel facts</span>
+      <span class="badge muted">Preview delivery</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button type="button" class="tab active" data-tab="run">Run</button>
+    <button type="button" class="tab" data-tab="architecture">Architecture</button>
+    <button type="button" class="tab" data-tab="inspect">AgentInspect</button>
+  </nav>
+
+  <section id="tab-run" class="panel active">
+    <div class="controls">
+      <label>Scenario
+        <select id="scenarioSelect"></select>
+      </label>
+      <button type="button" id="runBtn" class="primary">Run</button>
+      <button type="button" id="repeatBtn">Repeat same event</button>
+      <button type="button" id="resetBtn">Reset session</button>
+      <label class="check"><input type="checkbox" id="largeText" /> Large text</label>
+      <span class="meta" id="runMeta"></span>
+    </div>
+    <details>
+      <summary>Intake JSON</summary>
+      <textarea id="intakeJson" rows="8" spellcheck="false"></textarea>
+    </details>
+
+    <div class="graph" id="execGraph" aria-label="Execution path"></div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Policy</h2>
+        <div id="policyTable"></div>
+      </div>
+      <div class="card">
+        <h2>Agent activity</h2>
+        <div id="agentActivity"></div>
+      </div>
+      <div class="card">
+        <h2>Decisions</h2>
+        <div id="decisions"></div>
+      </div>
+    </div>
+
+    <footer class="stats" id="stats"></footer>
+  </section>
+
+  <section id="tab-architecture" class="panel">
+    <h2>System architecture</h2>
+    <img src="/demo/architecture/Demo_System_Architecture.png" alt="System architecture" />
+    <h2>Agent loop</h2>
+    <img src="/demo/architecture/Demo_Agent_Loop.png" alt="Agent loop" />
+  </section>
+
+  <section id="tab-inspect" class="panel">
+    <h2>AgentInspect</h2>
+    <p>Enable with <code>AGENT_INSPECT=1</code> in <code>.env</code>, then:</p>
+    <pre>npx --no-install agent-inspect list --dir .agent-inspect
+npx --no-install agent-inspect view &lt;trace-id&gt; --dir .agent-inspect --summary</pre>
+    <p id="inspectHint">Trace id appears here after a live instrumented run.</p>
+  </section>
+
+  <script src="/demo/ui/app.js"></script>
+</body>
+</html>

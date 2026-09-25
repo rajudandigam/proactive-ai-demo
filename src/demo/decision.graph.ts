@@ -1,42 +1,39 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
+import { createHash } from 'node:crypto';
 import { DemoClockService } from './demo-clock.service';
-import {
-  DecisionProvider,
-  ModelProposal,
-} from './decision-provider';
-import { FixtureDecisionProvider } from './fixture-decision.provider';
-import { OpenAiDecisionProvider } from './openai-decision.provider';
 import { FixtureToolsService } from './fixture-tools.service';
 import { OutboxService } from './outbox.service';
-import { PolicyEvaluation, PolicyService } from './policy.service';
+import { PolicyEnvelope, PolicyService } from './policy.service';
+import { ReadToolsService } from './read-tools.service';
+import { TripAttentionAgentService } from './trip-attention.agent';
+import { DemoTraceService } from './trace-events.service';
+import { ValidationService } from './validation.service';
 import {
   ApplicationResult,
   DecisionOutcome,
+  DemoRunContext,
   IntakeRequest,
   IntakeRequestSchema,
+  ModelAccounting,
+  ModelDecisionSet,
 } from './schemas';
-import { DemoTrace, loadSkillText, serializeTrace } from './trace';
-import { ValidationService } from './validation.service';
-
-export const DECISION_PROVIDER = 'DECISION_PROVIDER_TOKEN';
 
 const GraphState = Annotation.Root({
-  request: Annotation<IntakeRequest>,
-  policyEval: Annotation<PolicyEvaluation | null>,
-  evidenceIds: Annotation<string[]>,
-  evidenceStatus: Annotation<string>,
-  modelProposals: Annotation<ModelProposal[]>,
-  decisions: Annotation<DecisionOutcome[]>,
-  modelCalls: Annotation<number>,
-  modelMode: Annotation<'live' | 'fixture' | 'none'>,
+  ctx: Annotation<DemoRunContext>,
+  envelope: Annotation<PolicyEnvelope | null>,
+  appOutcomes: Annotation<DecisionOutcome[]>,
+  requiredOutcomes: Annotation<DecisionOutcome[]>,
+  agentDecisionSet: Annotation<ModelDecisionSet | null>,
+  agentOutcomes: Annotation<DecisionOutcome[]>,
+  toolSummaries: Annotation<unknown[]>,
+  accounting: Annotation<ModelAccounting>,
+  nodeStatuses: Annotation<Record<string, string>>,
+  nodeTimings: Annotation<Record<string, number>>,
   runStatus: Annotation<ApplicationResult['runStatus']>,
   failureReason: Annotation<string | undefined>,
   outboxWrites: Annotation<number>,
-  nodeTimings: Annotation<Record<string, number>>,
-  skipModel: Annotation<boolean>,
-  requiredPath: Annotation<boolean>,
 });
 
 type GraphStateType = typeof GraphState.State;
@@ -47,157 +44,184 @@ export class DecisionGraphService {
 
   constructor(
     @Inject(ConfigService) private readonly config: ConfigService,
-    private readonly clock: DemoClockService,
-    private readonly fixtures: FixtureToolsService,
-    private readonly policyService: PolicyService,
-    private readonly validation: ValidationService,
-    private readonly outbox: OutboxService,
-    private readonly fixtureProvider: FixtureDecisionProvider,
-    private readonly openAiProvider: OpenAiDecisionProvider,
-    @Optional()
-    @Inject(DECISION_PROVIDER)
-    private readonly overrideProvider: DecisionProvider | null = null,
+    @Inject(DemoClockService) private readonly clock: DemoClockService,
+    @Inject(FixtureToolsService) private readonly fixtures: FixtureToolsService,
+    @Inject(PolicyService) private readonly policyService: PolicyService,
+    @Inject(ValidationService) private readonly validation: ValidationService,
+    @Inject(OutboxService) private readonly outbox: OutboxService,
+    @Inject(TripAttentionAgentService)
+    private readonly agent: TripAttentionAgentService,
+    @Inject(ReadToolsService) private readonly tools: ReadToolsService,
+    @Inject(DemoTraceService) private readonly traces: DemoTraceService,
   ) {
     this.compiled = this.buildGraph();
   }
 
-  getProvider(): DecisionProvider {
-    if (this.overrideProvider) {
-      return this.overrideProvider;
-    }
-    const mode = (this.config.get<string>('DECISION_PROVIDER') ?? 'fixture').toLowerCase();
-    return mode === 'live' ? this.openAiProvider : this.fixtureProvider;
+  getProviderMode(): 'live' | 'fixture' {
+    return this.agent.getMode();
   }
 
-  async run(rawRequest: unknown): Promise<ApplicationResult> {
+  async run(
+    rawRequest: unknown,
+    opts?: { sessionId?: string; runId?: string },
+  ): Promise<ApplicationResult> {
     const request = IntakeRequestSchema.parse(rawRequest);
-    const started = Date.now();
-    const startedAt = new Date().toISOString();
+    if (opts?.sessionId) {
+      request.sessionId = opts.sessionId;
+    }
+    const scenario = this.fixtures.getScenario(request.scenarioId);
+    const ctx = this.clock.createContext(scenario, request, {
+      sessionId: opts?.sessionId ?? request.sessionId,
+      runId: opts?.runId,
+    });
+    this.fixtures.assertOwnership(ctx, request.tripId);
+    this.traces.begin(ctx.runId);
+    this.outbox.markRunActive(ctx.runId);
+    this.tools.clearCache(ctx.runId);
 
-    return this.outbox.withEventLock(request.eventId, async () => {
-      const existing = this.outbox.getEventResult(request.eventId);
-      if (existing) {
-        return {
-          ...existing,
-          runStatus: 'duplicate',
-          duplicateOf: request.eventId,
+    const payloadHash = createHash('sha256')
+      .update(JSON.stringify(request))
+      .digest('hex');
+
+    try {
+      return await this.outbox.withEventLock(request.eventId, async () => {
+        const existing = this.outbox.getEventResult(
+          ctx.sessionId,
+          request.eventId,
+        );
+        if (existing) {
+          const priorHash = this.outbox.getPayloadHash(
+            ctx.sessionId,
+            request.eventId,
+          );
+          if (priorHash && priorHash !== payloadHash) {
+            throw new Error(
+              'EVENT_PAYLOAD_MISMATCH: same eventId with different payload in this session',
+            );
+          }
+          this.traces.emit(ctx, {
+            stage: 'dedupe',
+            status: 'ok',
+            summary: 'Repeated eventId — returning prior result',
+          });
+          return {
+            ...existing,
+            runStatus: 'duplicate',
+            duplicateOf: request.eventId,
+            outboxWrites: 0,
+            runId: ctx.runId,
+            sessionId: ctx.sessionId,
+          };
+        }
+
+        const initial: GraphStateType = {
+          ctx,
+          envelope: null,
+          appOutcomes: [],
+          requiredOutcomes: [],
+          agentDecisionSet: null,
+          agentOutcomes: [],
+          toolSummaries: [],
+          accounting: {
+            providerMode: this.agent.getMode(),
+            liveAttempts: 0,
+            liveSuccesses: 0,
+            liveFailures: 0,
+            fixtureInvocations: 0,
+            toolExecutions: 0,
+            toolCacheHits: 0,
+            requestedModelId: null,
+            returnedModelIds: [],
+            tokenUsage: { known: false },
+          },
+          nodeStatuses: {},
+          nodeTimings: {},
+          runStatus: 'completed',
+          failureReason: undefined,
           outboxWrites: 0,
+        };
+
+        const finalState = await this.compiled.invoke(initial);
+        const decisions = [
+          ...finalState.requiredOutcomes,
+          ...finalState.appOutcomes,
+          ...finalState.agentOutcomes,
+        ];
+        const modelCalls =
+          finalState.accounting.liveAttempts +
+          finalState.accounting.fixtureInvocations;
+
+        const result: ApplicationResult = {
+          runStatus: finalState.runStatus,
+          runId: ctx.runId,
+          sessionId: ctx.sessionId,
+          eventId: request.eventId,
+          modelMode:
+            finalState.accounting.providerMode === 'fixture'
+              ? finalState.accounting.fixtureInvocations > 0
+                ? 'fixture'
+                : 'none'
+              : finalState.accounting.liveAttempts > 0
+                ? 'live'
+                : 'none',
+          modelCalls,
+          accounting: finalState.accounting,
+          decisions,
+          outboxWrites: finalState.outboxWrites,
+          modelDecisionSet: finalState.agentDecisionSet ?? undefined,
+          policyRules: finalState.envelope?.rules,
+          failureReason: finalState.failureReason,
           trace: {
-            ...(existing.trace ?? {}),
-            duplicate: true,
-            note: 'Repeated eventId returned prior application result; no new logical notification.',
+            nodeStatuses: finalState.nodeStatuses,
+            nodeTimings: finalState.nodeTimings,
+            toolSummaries: finalState.toolSummaries,
+            events: this.traces.getEvents(ctx.runId),
           },
         };
-      }
 
-      this.fixtures.activateScenario(request.scenarioId);
-      this.fixtures.assertOwnership(
-        this.fixtures.getActiveScenario().actor.id,
-        request.tripId,
-      );
-
-      const initial: GraphStateType = {
-        request,
-        policyEval: null,
-        evidenceIds: [],
-        evidenceStatus: 'pending',
-        modelProposals: [],
-        decisions: [],
-        modelCalls: 0,
-        modelMode: 'none',
-        runStatus: 'completed',
-        failureReason: undefined,
-        outboxWrites: 0,
-        nodeTimings: {},
-        skipModel: false,
-        requiredPath: request.type === 'FLIGHT_CHANGE_CONFIRMED',
-      };
-
-      const finalState = await this.compiled.invoke(initial);
-      const finishedAt = new Date().toISOString();
-      const elapsedMs = Date.now() - started;
-
-      const trace: DemoTrace = {
-        modelMode: finalState.modelMode,
-        modelCalls: finalState.modelCalls,
-        startedAt,
-        finishedAt,
-        elapsedMs,
-        policy: {
-          result: finalState.policyEval
-            ? {
-                blockModelCall: finalState.policyEval.blockModelCall,
-                blockReason: finalState.policyEval.blockReason,
-                quietHoursActive: finalState.policyEval.quietHoursActive,
-                optionalConsent: finalState.policyEval.optionalConsent,
-                signalCount: finalState.policyEval.signals.length,
-              }
-            : null,
-        },
-        evidence: {
-          status: finalState.evidenceStatus,
-          ids: finalState.evidenceIds,
-        },
-        validation: {
-          decisions: finalState.decisions.map((d) => ({
-            outcome: d.outcome,
-            reason: d.reason,
-          })),
-        },
-        nodes: Object.entries(finalState.nodeTimings).map(([name, durationMs]) => ({
-          name,
-          status: 'ok',
-          durationMs,
-        })),
-        versions: {
-          skill: loadSkillText().version,
-          policy: 'demo-v1',
-        },
-      };
-
-      const result: ApplicationResult = {
-        runStatus: finalState.runStatus,
-        eventId: request.eventId,
-        modelMode: finalState.modelMode,
-        modelCalls: finalState.modelCalls,
-        decisions: finalState.decisions,
-        outboxWrites: finalState.outboxWrites,
-        modelProposals: finalState.modelProposals,
-        failureReason: finalState.failureReason,
-        trace: serializeTrace(trace),
-      };
-
-      this.outbox.rememberEventResult(request.eventId, result);
-      return result;
-    });
+        this.outbox.rememberEventResult(
+          ctx.sessionId,
+          request.eventId,
+          result,
+          payloadHash,
+        );
+        this.traces.emit(ctx, {
+          stage: 'complete',
+          status: result.runStatus,
+          summary: `Run ${result.runStatus}; outboxWrites=${result.outboxWrites}`,
+        });
+        return result;
+      });
+    } finally {
+      this.outbox.markRunInactive(ctx.runId);
+      this.traces.finish(ctx.runId);
+    }
   }
 
   private buildGraph() {
-    const graph = new StateGraph(GraphState)
-      .addNode('policy_check', async (state) => this.policyNode(state))
-      .addNode('gather_evidence', async (state) => this.evidenceNode(state))
-      .addNode('judge', async (state) => this.judgeNode(state))
-      .addNode('validate_result', async (state) => this.validateNode(state))
-      .addNode('record_result', async (state) => this.recordNode(state))
-      .addEdge(START, 'policy_check')
-      .addConditionalEdges('policy_check', (state) => {
-        if (state.runStatus === 'failed') return 'record_result';
-        return 'gather_evidence';
-      })
-      .addConditionalEdges('gather_evidence', (state) => {
-        if (state.runStatus === 'failed') return 'record_result';
-        return 'judge';
-      })
-      .addEdge('judge', 'validate_result')
+    return new StateGraph(GraphState)
+      .addNode('bind_context', async (s) => this.bindContext(s))
+      .addNode('policy_envelope', async (s) => this.policyNode(s))
+      .addNode('resolve_deterministic', async (s) => this.deterministicNode(s))
+      .addNode('required_alerts', async (s) => this.requiredNode(s))
+      .addNode('investigate_agent', async (s) => this.agentNode(s))
+      .addNode('validate_result', async (s) => this.validateNode(s))
+      .addNode('record_result', async (s) => this.recordNode(s))
+      .addEdge(START, 'bind_context')
+      .addEdge('bind_context', 'policy_envelope')
+      .addEdge('policy_envelope', 'resolve_deterministic')
+      .addEdge('resolve_deterministic', 'required_alerts')
+      .addEdge('required_alerts', 'investigate_agent')
+      .addEdge('investigate_agent', 'validate_result')
       .addEdge('validate_result', 'record_result')
-      .addEdge('record_result', END);
-
-    return graph.compile();
+      .addEdge('record_result', END)
+      .compile();
   }
 
   private timed(
     state: GraphStateType,
     name: string,
+    status: string,
     fn: () => Partial<GraphStateType>,
   ): Partial<GraphStateType> {
     const t0 = Date.now();
@@ -209,263 +233,331 @@ export class DecisionGraphService {
         ...(update.nodeTimings ?? {}),
         [name]: Date.now() - t0,
       },
+      nodeStatuses: {
+        ...state.nodeStatuses,
+        ...(update.nodeStatuses ?? {}),
+        [name]: status,
+      },
     };
+  }
+
+  private async bindContext(
+    state: GraphStateType,
+  ): Promise<Partial<GraphStateType>> {
+    this.traces.emit(state.ctx, {
+      stage: 'bind_context',
+      status: 'ok',
+      summary: `Bound scenario ${state.ctx.scenarioId}`,
+      detail: {
+        sessionId: state.ctx.sessionId,
+        demoTime: state.ctx.nowIso,
+      },
+    });
+    return this.timed(state, 'bind_context', 'ok', () => ({}));
   }
 
   private async policyNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    return this.timed(state, 'policy_check', () => {
-      const policyEval = this.policyService.evaluate(state.request);
-      return { policyEval };
+    const envelope = this.policyService.evaluate(state.ctx);
+    this.traces.emit(state.ctx, {
+      stage: 'policy_envelope',
+      status: 'ok',
+      summary: `Policy v2: ${envelope.optionalEligible.length} optional, ${envelope.requiredEligible.length} required`,
+      detail: { rules: envelope.rules.map((r) => ({ id: r.id, result: r.result })) },
     });
+    return this.timed(state, 'policy_envelope', 'ok', () => ({ envelope }));
   }
 
-  private async evidenceNode(
+  private async deterministicNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    return this.timed(state, 'gather_evidence', () => {
-      const evidence = this.fixtures.readEvidence();
-      const evidenceIds = evidence.map((e) => e.id);
-
-      if (state.requiredPath) {
-        const flight = this.fixtures.getFlightEvidence() as
-          | { id?: string; confirmedChange?: boolean; arrivalAt?: string }
-          | undefined;
-        if (!flight?.id || !flight.confirmedChange || !flight.arrivalAt) {
-          return {
-            evidenceIds,
-            evidenceStatus: 'missing_essential',
-            runStatus: 'failed',
-            failureReason: 'MISSING_ESSENTIAL_FLIGHT_EVIDENCE',
-            decisions: [
-              {
-                candidates: state.request.signals.map((s) => s.id),
-                outcome: 'failure',
-                reason: 'MISSING_ESSENTIAL_FLIGHT_EVIDENCE',
-                decidedBy: 'application',
-              },
-            ],
-          };
-        }
-        // Read updated source rather than trusting event claim
-        return {
-          evidenceIds,
-          evidenceStatus: 'ok',
-          requiredPath: true,
-        };
-      }
-
-      return {
-        evidenceIds,
-        evidenceStatus: evidenceIds.length ? 'ok' : 'empty',
-      };
+    const outcomes: DecisionOutcome[] = (
+      state.envelope?.deterministicOutcomes ?? []
+    ).map((d) => ({
+      candidates: [d.candidateId],
+      outcome: d.outcome,
+      reason: d.reason,
+      recheckAt: d.recheckAt,
+      decidedBy: 'application' as const,
+      proposedBy: 'application' as const,
+      validatedBy: 'application' as const,
+      finalizedBy: 'application' as const,
+      policyRuleIds: d.policyRuleIds,
+    }));
+    this.traces.emit(state.ctx, {
+      stage: 'resolve_deterministic',
+      status: 'ok',
+      summary: `${outcomes.length} application-resolved candidates`,
     });
+    return this.timed(state, 'resolve_deterministic', 'ok', () => ({
+      appOutcomes: outcomes,
+    }));
   }
 
-  private async judgeNode(
+  private async requiredNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    const t0 = Date.now();
-    const policy = state.policyEval!;
-    const decisions: DecisionOutcome[] = [...state.decisions];
-    const modelProposals: ModelProposal[] = [];
-    let modelCalls = 0;
-    let modelMode: ApplicationResult['modelMode'] = 'none';
+    const required = state.envelope?.requiredEligible ?? [];
+    const outcomes: DecisionOutcome[] = [];
+    let outboxWrites = 0;
     let runStatus = state.runStatus;
     let failureReason = state.failureReason;
 
-    // Deterministic application outcomes first
-    for (const signal of policy.signals) {
-      if (signal.category === 'deterministic_silent') {
-        decisions.push({
-          candidates: [signal.signalId],
-          outcome: 'silent',
-          reason: signal.reason,
+    for (const candidate of required) {
+      const flight = this.fixtures.matchFlightSource(
+        state.ctx,
+        candidate.claimedSourceVersion,
+      ) as
+        | { id: string; confirmedChange?: boolean; arrivalAt?: string }
+        | undefined;
+
+      if (!flight?.id || !flight.confirmedChange || !flight.arrivalAt) {
+        outcomes.push({
+          candidates: [candidate.id],
+          outcome: 'failure',
+          reason: 'MISSING_ESSENTIAL_FLIGHT_EVIDENCE',
           decidedBy: 'application',
+          proposedBy: 'template',
+          validatedBy: 'application',
+          finalizedBy: 'application',
         });
-      } else if (signal.category === 'deterministic_wait') {
-        decisions.push({
-          candidates: [signal.signalId],
-          outcome: 'wait',
-          reason: signal.reason,
-          recheckAt: signal.recheckAt,
-          decidedBy: 'application',
-        });
+        runStatus = 'failed';
+        failureReason = 'MISSING_ESSENTIAL_FLIGHT_EVIDENCE';
+        continue;
       }
-    }
 
-    if (state.requiredPath) {
-      const flight = this.fixtures.getFlightEvidence()!;
-      const signalIds = state.request.signals.map((s) => s.id);
-      const proposal: ModelProposal = {
-        decision: 'act_now',
-        candidateIds: signalIds,
-        factIds: [flight.id],
-        templateId: 'flight_change_confirmed',
-        action: 'view_flight',
-        recheckAt: null,
-        reasonSummary: 'Required confirmed flight change uses approved template.',
+      const decisionSet: ModelDecisionSet = {
+        decisions: [
+          {
+            candidateIds: [candidate.id],
+            decision: 'act_now',
+            reasonCode: 'REQUIRED_FLIGHT_ALERT',
+            reasonSummary: 'Verified confirmed flight change.',
+            factIds: [flight.id],
+            messagePurpose: 'flight_change',
+            templateId: 'flight_change_confirmed',
+            action: 'view_flight',
+            recheckAt: null,
+            messageDraft: null,
+          },
+        ],
       };
-      modelProposals.push(proposal);
-      // Update arrival-guidance recheck note for presentation (16:10 ET)
-      const arrival = (flight as unknown as { arrivalAt: string }).arrivalAt;
-      const recheck = this.policyService.arrivalGuidanceWindowStart(arrival);
-      void recheck; // available for later wait simulation fixtures
-    } else {
-      const optionalEligible = policy.signals.filter(
-        (s) => s.eligible && s.category === 'optional',
-      );
 
-      if (optionalEligible.length > 0) {
-        if (policy.blockModelCall) {
-          for (const s of optionalEligible) {
-            decisions.push({
-              candidates: [s.signalId],
-              outcome: 'silent',
-              reason: policy.blockReason ?? 'POLICY_BLOCKED',
-              decidedBy: 'application',
-            });
-          }
-        } else {
-          const provider = this.getProvider();
-          modelMode = provider.mode;
-          const skill = loadSkillText();
-          try {
-            const proposal = await provider.propose({
-              scenarioId: state.request.scenarioId,
-              tripId: state.request.tripId,
-              eligibleCandidateIds: optionalEligible.map((s) => s.signalId),
-              evidenceIds: state.evidenceIds,
-              skillVersion: skill.version,
-              skillText: skill.text,
-              summary: JSON.stringify({
-                trip: this.fixtures.readTrip(state.request.tripId),
-                evidence: this.fixtures.readEvidence(),
-                recentActivity: this.fixtures.readRecentActivity(),
-              }),
-            });
-            modelCalls = 1;
-            modelProposals.push(proposal);
-          } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
-            runStatus = decisions.length ? 'partial_failure' : 'failed';
-            failureReason = message.startsWith('MODEL_')
-              ? message
-              : `MODEL_ERROR: ${message}`;
-            decisions.push({
-              candidates: optionalEligible.map((s) => s.signalId),
-              outcome: 'failure',
-              reason: failureReason,
-              decidedBy: 'model',
-            });
-          }
+      const validated = this.validation.validateDecisionSet({
+        ctx: state.ctx,
+        envelope: state.envelope!,
+        decisionSet,
+        modelCandidateIds: [candidate.id],
+        proposedBy: 'template',
+        required: true,
+      });
+      outcomes.push(...validated.outcomes);
+      if (!validated.ok) {
+        runStatus = 'failed';
+        failureReason = validated.failureReason;
+        continue;
+      }
+
+      for (const o of validated.outcomes) {
+        if (o.outcome === 'act_now') {
+          const write = await this.outbox.withSessionWriteLock(
+            state.ctx.sessionId,
+            async () =>
+              this.outbox.tryWrite(
+                o,
+                state.ctx.eventId,
+                state.ctx.sessionId,
+                'flight_change',
+                state.ctx.nowIso,
+              ),
+          );
+          if (write.written) outboxWrites += 1;
         }
       }
     }
 
-    return {
-      decisions,
-      modelProposals,
-      modelCalls,
-      modelMode: state.requiredPath ? 'none' : modelMode,
-      runStatus,
-      failureReason,
-      nodeTimings: { ...state.nodeTimings, judge: Date.now() - t0 },
-    };
+    this.traces.emit(state.ctx, {
+      stage: 'required_alerts',
+      status: failureReason ? 'failed' : 'ok',
+      summary: `${outcomes.length} required outcomes`,
+    });
+
+    return this.timed(
+      state,
+      'required_alerts',
+      failureReason ? 'failed' : 'ok',
+      () => ({
+        requiredOutcomes: outcomes,
+        outboxWrites: state.outboxWrites + outboxWrites,
+        runStatus,
+        failureReason,
+      }),
+    );
+  }
+
+  private async agentNode(
+    state: GraphStateType,
+  ): Promise<Partial<GraphStateType>> {
+    const eligible = state.envelope?.optionalEligible ?? [];
+    if (!eligible.length) {
+      this.traces.emit(state.ctx, {
+        stage: 'investigate_agent',
+        status: 'skipped',
+        summary: 'No optional eligible candidates (or policy deferred them)',
+      });
+      return this.timed(state, 'investigate_agent', 'skipped', () => ({}));
+    }
+
+    // Mandatory application read tagged separately
+    const mandatory = this.tools.execute(
+      state.ctx,
+      'read_trip_snapshot',
+      {},
+      'app-mandatory-1',
+      'application',
+    );
+
+    const result = await this.agent.run(state.ctx, state.envelope!, eligible);
+    const accounting = { ...result.accounting };
+    if (!mandatory.cached) {
+      // application read not counted as model tool execution
+    }
+
+    this.traces.emit(state.ctx, {
+      stage: 'investigate_agent',
+      status: result.failureReason ? 'failed' : 'ok',
+      summary: result.failureReason
+        ? result.failureReason
+        : `Agent finished; tools=${result.toolResults.length}`,
+      detail: {
+        accounting,
+        toolNames: result.toolResults.map((t) => t.name),
+      },
+    });
+
+    if (result.failureReason) {
+      const failOutcomes: DecisionOutcome[] = eligible.map((c) => ({
+        candidates: [c.id],
+        outcome: 'failure',
+        reason: result.failureReason!,
+        decidedBy: 'model',
+        proposedBy: 'model',
+        validatedBy: 'application',
+        finalizedBy: 'application',
+      }));
+      const runStatus =
+        state.requiredOutcomes.length || state.appOutcomes.length
+          ? 'partial_failure'
+          : 'failed';
+      return this.timed(state, 'investigate_agent', 'failed', () => ({
+        accounting,
+        agentOutcomes: failOutcomes,
+        toolSummaries: result.toolResults,
+        runStatus,
+        failureReason: result.failureReason,
+      }));
+    }
+
+    return this.timed(state, 'investigate_agent', 'ok', () => ({
+      accounting,
+      agentDecisionSet: result.decisionSet ?? null,
+      toolSummaries: result.toolResults,
+    }));
   }
 
   private async validateNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    return this.timed(state, 'validate_result', () => {
-      const decisions = [...state.decisions];
-      let runStatus = state.runStatus;
-      let failureReason = state.failureReason;
-      let outboxWrites = 0;
+    if (!state.agentDecisionSet) {
+      return this.timed(state, 'validate_result', 'skipped', () => ({}));
+    }
 
-      if (state.requiredPath && state.modelProposals[0]) {
-        const proposal = state.modelProposals[0];
-        const result = this.validation.validate({
-          proposal,
-          allowedCandidateIds: state.request.signals.map((s) => s.id),
-          decidedBy: 'template',
-          purpose: 'flight_change',
-          required: true,
-        });
-        if (!result.ok) {
-          runStatus = 'failed';
-          failureReason = result.reason;
-        }
-        decisions.push(result.outcome);
-        if (result.ok && result.outcome.outcome === 'act_now') {
-          const write = this.outbox.tryWrite(
-            result.outcome,
-            state.request.eventId,
-            this.clock.now().toISOString(),
-          );
-          if (write.written) outboxWrites += 1;
-          if (write.duplicate) {
-            // delivery key already present — still act_now but no new write
-          }
-        }
-        return { decisions, runStatus, failureReason, outboxWrites };
-      }
-
-      for (const proposal of state.modelProposals) {
-        const result = this.validation.validate({
-          proposal,
-          allowedCandidateIds: state.request.signals
-            .filter((s) => {
-              const pol = state.policyEval?.signals.find(
-                (ps) => ps.signalId === s.id,
-              );
-              return pol?.eligible && pol.category === 'optional';
-            })
-            .map((s) => s.id),
-          decidedBy: 'model',
-          purpose: 'trip_preparation',
-          required: false,
-        });
-        if (!result.ok) {
-          runStatus =
-            decisions.some((d) => d.outcome !== 'failure')
-              ? 'partial_failure'
-              : 'failed';
-          failureReason = result.reason;
-        }
-        decisions.push(result.outcome);
-        if (result.ok && result.outcome.outcome === 'act_now') {
-          const write = this.outbox.tryWrite(
-            result.outcome,
-            state.request.eventId,
-            this.clock.now().toISOString(),
-          );
-          if (write.written) outboxWrites += 1;
-        }
-      }
-
-      return { decisions, runStatus, failureReason, outboxWrites };
+    const eligibleIds = (state.envelope?.optionalEligible ?? []).map(
+      (c) => c.id,
+    );
+    const validated = this.validation.validateDecisionSet({
+      ctx: state.ctx,
+      envelope: state.envelope!,
+      decisionSet: state.agentDecisionSet,
+      modelCandidateIds: eligibleIds,
+      proposedBy: 'model',
+      required: false,
     });
+
+    let outboxWrites = 0;
+    let runStatus = state.runStatus;
+    let failureReason = state.failureReason;
+
+    if (!validated.ok) {
+      runStatus =
+        state.requiredOutcomes.length || state.appOutcomes.length
+          ? 'partial_failure'
+          : 'failed';
+      failureReason = validated.failureReason;
+    } else {
+      // Atomic delivery recheck + write for optional acts
+      for (const outcome of validated.outcomes) {
+        if (outcome.outcome !== 'act_now') continue;
+        const write = await this.outbox.withSessionWriteLock(
+          state.ctx.sessionId,
+          async () => {
+            if (this.policyService.optionalContactLimitExceeded(state.ctx)) {
+              return { written: false, duplicate: false, blocked: true as const };
+            }
+            return {
+              ...this.outbox.tryWrite(
+                outcome,
+                state.ctx.eventId,
+                state.ctx.sessionId,
+                outcome.notificationPreview?.templateId === 'arrival_guidance'
+                  ? 'arrival_guidance'
+                  : 'trip_preparation',
+                state.ctx.nowIso,
+              ),
+              blocked: false as const,
+            };
+          },
+        );
+        if ('blocked' in write && write.blocked) {
+          // convert to wait/silent handled by mutating — record failure to write
+          failureReason = 'CONTACT_LIMIT_DELIVERY';
+          runStatus = 'partial_failure';
+        } else if (write.written) {
+          outboxWrites += 1;
+        }
+      }
+    }
+
+    this.traces.emit(state.ctx, {
+      stage: 'validate_result',
+      status: validated.ok ? 'ok' : 'failed',
+      summary: validated.ok
+        ? `Validated ${validated.outcomes.length} groups`
+        : validated.failureReason ?? 'validation failed',
+    });
+
+    return this.timed(
+      state,
+      'validate_result',
+      validated.ok ? 'ok' : 'failed',
+      () => ({
+        agentOutcomes: validated.outcomes,
+        outboxWrites: state.outboxWrites + outboxWrites,
+        runStatus,
+        failureReason,
+      }),
+    );
   }
 
   private async recordNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    return this.timed(state, 'record_result', () => {
-      // Outcomes already accumulated; ensure failure never looks like successful silence
-      if (
-        state.failureReason &&
-        state.runStatus === 'completed' &&
-        state.decisions.some((d) => d.outcome === 'failure')
-      ) {
-        return {
-          runStatus: state.decisions.every((d) => d.outcome === 'failure')
-            ? 'failed'
-            : 'partial_failure',
-        };
-      }
-      return {};
+    this.traces.emit(state.ctx, {
+      stage: 'record_result',
+      status: state.runStatus,
+      summary: 'Recorded application outcomes',
     });
+    return this.timed(state, 'record_result', state.runStatus, () => ({}));
   }
 }

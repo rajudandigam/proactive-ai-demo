@@ -8,3 +8,5 @@ coverage/
 .turbo/
 .nestjs/
 *.tsbuildinfo
+.agent-inspect/
+recordings/

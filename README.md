@@ -1,103 +1,100 @@
-# Proactive AI Demo
+# Proactive AI Demo V2
 
-Local NestJS + LangGraph demo for a five-minute talk: Jordan’s SFO→BOS trip. Shows **policy → evidence → judgment → validation**, with a mock notification outbox. The model never delivers; only validated application code writes the outbox.
+Local NestJS + LangGraph demo for an **eight-minute talk**: one trip-attention agent, mock travel facts, optional live OpenAI tool loop, policy visibility, and a presentation UI.
 
-**Default mode is FIXTURE** (no API key). Set `DECISION_PROVIDER=live` only when you want a real OpenAI Structured Outputs call.
-
-> Process restart clears the in-memory ledger. This demo makes **no durable delivery guarantee**.
+> Mock travel data · Preview-only delivery · In-memory ledger (restart clears state) · No durable scheduling
 
 ## Quick start
 
 ```bash
 npm ci
 cp .env.example .env
+# For stage: DECISION_PROVIDER=live and OPENAI_API_KEY=...
+# For rehearsal without credits: leave DECISION_PROVIDER=fixture
 npm run start:dev
 ```
 
-In another terminal:
+Open **http://127.0.0.1:3000/demo/ui**
+
+CLI (other terminal):
 
 ```bash
 npm run demo:reset
 npm run demo:trip
+npm run demo:arrival
+npm run demo:noimpact
 npm run demo:flight
 npm run demo:repeat
 ```
 
-Or with curl:
+## Modes
+
+| Mode | When | Label |
+|------|------|--------|
+| LIVE | `DECISION_PROVIDER=live` + API key | LIVE OPENAI |
+| FIXTURE | default / rehearsal | FIXTURE (scripted agent tools; not live AI) |
+| REPLAY | saved recording in UI | REPLAY |
+
+## What the agent does
+
+1. Policy binds allowed candidates, tools, and timing (Demo policy v2).
+2. Optional path: model requests read tools (`read_trip_snapshot`, `read_weather_context`, `read_destination_impact`, `read_contact_history`).
+3. LangGraph executes tools and returns results to the model.
+4. Final structured decision set covers every eligible candidate.
+5. Application validates and writes mock outbox previews.
+
+Required flight alerts use an independent template path (no optional AI).
+
+## Presets
+
+| Preset | Scenario id |
+|--------|-------------|
+| Before departure | `jordan-before-departure` |
+| Arrival route affected | `jordan-arrival-affected` |
+| Arrival no journey impact | `jordan-arrival-unaffected` |
+| Quiet hours | `jordan-quiet-hours` |
+| Consent disabled | `jordan-consent-disabled` |
+| Confirmed flight change | `jordan-flight-change` |
+
+## Tests and live eval
 
 ```bash
-curl -s http://127.0.0.1:3000/demo/intake \
-  -H 'Content-Type: application/json' \
-  --data-binary @fixtures/requests/trip-review.json
+npm run validate          # typecheck + tests + build (no OpenAI)
+npm run demo:live-eval    # opt-in; requires DECISION_PROVIDER=live + key
 ```
 
-## Scripts
+Ordinary tests never call OpenAI. AgentInspect: set `AGENT_INSPECT=1`, then:
 
-| Command | Purpose |
-|---------|---------|
-| `npm run start:dev` | Local server on `127.0.0.1:3000` |
-| `npm run demo:reset` | Clear ledger + reload fixtures |
-| `npm run demo:trip` | Trip review (optional model / fixture proposal) |
-| `npm run demo:flight` | Required confirmed flight-change alert |
-| `npm run demo:repeat` | Same flight event again (dedupe) |
-| `npm run validate` | typecheck + test + build |
-| `npm run demo:live-eval` | Opt-in live OpenAI eval (spends credits) |
+```bash
+npx --no-install agent-inspect list --dir .agent-inspect
+```
 
-## Expected behavior
-
-### Trip review (`jordan-before-departure`)
-
-| Signal | Outcome | Why |
-|--------|---------|-----|
-| preparation + weather | `act_now` | One combined push from verified facts |
-| road closure / route | `wait` | Arrival guidance not due until ~2h before arrival (`recheckAt` ~ 15:30 ET) |
-| abandoned hotel search | `silent` | Hotel already booked |
-
-Fixture mode produces one mock notification similar to:
-
-> Your Boston trip is tomorrow. Check-in is open, and rain is expected. View your trip plan.
-
-### Flight change (`jordan-flight-change`)
-
-- Required alert path uses an approved template (no optional model judgment).
-- Reads `flight-status-v2` from fixtures (does not trust the event’s claim alone).
-- `demo:repeat` returns the prior result; no second logical outbox entry.
-
-## Environment
-
-| Variable | Default | Notes |
-|----------|---------|-------|
-| `DECISION_PROVIDER` | `fixture` | `live` requires `OPENAI_API_KEY` |
-| `OPENAI_MODEL` | `gpt-4o-2024-08-06` | Must support Structured Outputs |
-| `OPENAI_TIMEOUT_MS` | `15000` | One attempt; no hidden retries |
-| `HOST` / `PORT` | `127.0.0.1` / `3000` | Localhost only |
-
-## Common setup failures
-
-| Symptom | Fix |
-|---------|-----|
-| `ECONNREFUSED` on demo scripts | Start `npm run start:dev` first |
-| Live mode errors about API key | Set `OPENAI_API_KEY` in `.env`; keep it out of git |
-| Model timeout / refusal | Run fails as **failure**, not successful silence; use fixture mode for the stage |
-| Quiet hours / consent tests fail unexpectedly | Fixture clock is fixed to scenario `now`; quiet hours are 22:00–08:00 local |
-
-## Five-minute presentation script
+## Eight-minute stage script
 
 | Time | Show | Say |
 |------|------|-----|
-| 0:00–0:35 | Request + fixture summary | Same trip from the slides — which updates would you want? |
-| 0:35–1:50 | `demo:trip` proposal vs outcomes | Model helps combine useful details; app already ruled out hotel search and set arrival wait |
-| 1:50–2:40 | Notification + wait + silent | Four signals → one message, one future check, one never-send |
-| 2:40–3:35 | `demo:flight` | Required alert with verified template, no optional AI wait |
-| 3:35–4:05 | `demo:repeat` | Same request twice → same logical notification |
-| 4:05–5:00 | Compact trace | Evidence, decision, delivery; production also needs schedules/restarts |
+| 0:00–0:50 | Architecture tab | Local app; fixtures for trip data; OpenAI for inference |
+| 0:50–1:30 | Agent-loop diagram | Model asks for facts; LangGraph carries results and stops |
+| 1:30–3:15 | Before-departure Run | Policy first, then tools, then proposal vs application result |
+| 3:15–4:40 | Arrival affected | Does this change something Jordan should do? |
+| 4:40–5:40 | No-impact compare | Same candidate type; journey differs → silence can be useful |
+| 5:40–6:20 | Quiet hours | Model never called; planned wait |
+| 6:20–7:05 | AgentInspect | Policy step, model calls, tools, outcome |
+| 7:05–7:45 | Flight + Repeat | Required path; no second logical notification |
+| 7:45–8:00 | Close | Model decides usefulness; application makes it dependable |
 
-Pre-open terminals, enlarge the font, start the server before the talk. Prefer a recorded run if the API stalls; announce FIXTURE vs LIVE clearly.
+**Five-minute cut:** architecture glance → before-departure → one comparison → quiet hours or flight+repeat → close.
 
-## Architecture
+## Docs
 
-See [`.cursor/development_guide.md`](.cursor/development_guide.md) for the full brief. Flow: intake → policy/dedupe → fixture evidence → model **or** required template → validation → mock outbox.
+- Spec: [docs/demo-v2-brief.md](docs/demo-v2-brief.md)
+- Diagrams: [docs/architecture/](docs/architecture/)
+- Runbook detail: [docs/RUNBOOK.md](docs/RUNBOOK.md)
 
-## License
+## Known limitations
 
-MIT
+- In-memory outbox/ledger; process restart clears state
+- Mock travel providers only
+- Preview notifications only (no real push)
+- Wait `recheckAt` is recorded, not scheduled by a worker
+- Live model wording varies; evaluate actions/facts, not exact sentences

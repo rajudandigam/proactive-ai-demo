@@ -1,29 +1,48 @@
 import { Injectable } from '@nestjs/common';
+import {
+  DemoRunContext,
+  ScenarioFixture,
+  createRunId,
+  createSessionId,
+  IntakeRequest,
+  POLICY,
+} from './schemas';
 
+/**
+ * Owns only the factory for immutable per-run clocks.
+ * Never stores a process-wide "now" — each DemoRunContext carries its own.
+ */
 @Injectable()
 export class DemoClockService {
-  private nowIso: string | null = null;
-
-  setNow(iso: string): void {
-    this.nowIso = iso;
+  createContext(
+    scenario: ScenarioFixture,
+    request: IntakeRequest,
+    opts?: { sessionId?: string; runId?: string },
+  ): DemoRunContext {
+    const startedAtMs = Date.now();
+    return {
+      runId: opts?.runId ?? createRunId(),
+      sessionId: opts?.sessionId ?? request.sessionId ?? createSessionId(),
+      eventId: request.eventId,
+      scenarioId: scenario.scenarioId,
+      actorId: scenario.actor.id,
+      nowIso: scenario.now,
+      deadlineMs: startedAtMs + POLICY.overallDeadlineMs,
+      startedAtMs,
+      scenario: structuredClone(scenario),
+      request: structuredClone(request),
+    };
   }
 
-  clear(): void {
-    this.nowIso = null;
+  now(ctx: DemoRunContext): Date {
+    return new Date(ctx.nowIso);
   }
 
-  now(): Date {
-    if (!this.nowIso) {
-      throw new Error('Demo clock is not set. Load a scenario before evaluating.');
-    }
-    return new Date(this.nowIso);
+  remainingMs(ctx: DemoRunContext): number {
+    return Math.max(0, ctx.deadlineMs - Date.now());
   }
 
-  nowIsoString(): string {
-    return this.now().toISOString();
-  }
-
-  getConfiguredIso(): string | null {
-    return this.nowIso;
+  isExpired(ctx: DemoRunContext): boolean {
+    return Date.now() >= ctx.deadlineMs;
   }
 }

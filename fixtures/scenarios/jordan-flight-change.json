@@ -1,5 +1,7 @@
 {
   "scenarioId": "jordan-flight-change",
+  "preset": "flight-change-confirmed",
+  "label": "Confirmed flight change",
   "now": "2026-10-06T07:30:00-07:00",
   "actor": { "id": "demo-jordan" },
   "traveler": {
@@ -18,6 +20,7 @@
     "status": "active",
     "origin": "SFO",
     "destination": "BOS",
+    "destinationName": "Boston",
     "destinationTimeZone": "America/New_York",
     "departureAt": "2026-10-06T09:00:00-07:00",
     "arrivalAt": "2026-10-06T18:10:00-04:00",
@@ -26,6 +29,7 @@
   "evidence": [
     {
       "id": "flight-status-v2",
+      "kind": "flight_status",
       "source": "mock-flight-service",
       "checkedAt": "2026-10-06T07:30:00-07:00",
       "checkInOpen": true,
@@ -35,6 +39,7 @@
     },
     {
       "id": "hotel-booking-v1",
+      "kind": "hotel_booking",
       "source": "mock-booking-service",
       "checkedAt": "2026-10-06T07:30:00-07:00",
       "status": "confirmed"

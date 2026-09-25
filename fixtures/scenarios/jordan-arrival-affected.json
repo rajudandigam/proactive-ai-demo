@@ -1,8 +1,8 @@
 {
-  "scenarioId": "jordan-before-departure",
-  "preset": "before-departure",
-  "label": "Before departure",
-  "now": "2026-10-05T09:00:00-07:00",
+  "scenarioId": "jordan-arrival-affected",
+  "preset": "arrival-route-affected",
+  "label": "Arrival — route affected",
+  "now": "2026-10-06T16:00:00-04:00",
   "actor": { "id": "demo-jordan" },
   "traveler": {
     "id": "demo-jordan",
@@ -32,7 +32,7 @@
       "id": "flight-status-v1",
       "kind": "flight_status",
       "source": "mock-flight-service",
-      "checkedAt": "2026-10-05T09:00:00-07:00",
+      "checkedAt": "2026-10-06T16:00:00-04:00",
       "checkInOpen": true,
       "arrivalAt": "2026-10-06T17:30:00-04:00"
     },
@@ -40,33 +40,22 @@
       "id": "hotel-booking-v1",
       "kind": "hotel_booking",
       "source": "mock-booking-service",
-      "checkedAt": "2026-10-05T09:00:00-07:00",
+      "checkedAt": "2026-10-06T16:00:00-04:00",
       "status": "confirmed"
     },
     {
-      "id": "weather-v1",
-      "kind": "weather",
-      "source": "mock-weather-service",
-      "checkedAt": "2026-10-05T09:00:00-07:00",
-      "forecastDate": "2026-10-06",
-      "forecast": "rain",
-      "severity": "routine"
-    },
-    {
-      "id": "road-closure-v1",
+      "id": "road-closure-v2",
       "kind": "destination_impact",
       "source": "mock-city-service",
-      "checkedAt": "2026-10-05T09:00:00-07:00",
+      "checkedAt": "2026-10-06T16:00:00-04:00",
       "verified": true,
       "affectsHotelRoute": true,
       "affectsChosenTransport": true,
-      "startsAt": "2026-10-06T16:00:00-04:00",
+      "description": "Waterfront tunnel closure overlaps rideshare to hotel",
+      "startsAt": "2026-10-06T16:30:00-04:00",
       "endsAt": "2026-10-06T20:00:00-04:00"
     }
   ],
-  "recentActivity": [
-    { "type": "HOTEL_SEARCH_ABANDONED", "at": "2026-10-04T12:00:00-07:00" },
-    { "type": "HOTEL_BOOKED", "at": "2026-10-04T13:00:00-07:00" }
-  ],
+  "recentActivity": [],
   "recentMessages": []
 }

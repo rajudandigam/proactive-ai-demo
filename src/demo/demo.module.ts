@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DECISION_PROVIDER, DecisionGraphService } from './decision.graph';
+import { DecisionGraphService } from './decision.graph';
 import { DemoClockService } from './demo-clock.service';
 import { DemoController } from './demo.controller';
-import { FixtureDecisionProvider } from './fixture-decision.provider';
 import { FixtureToolsService } from './fixture-tools.service';
-import { OpenAiDecisionProvider } from './openai-decision.provider';
 import { OutboxService } from './outbox.service';
 import { PolicyService } from './policy.service';
+import { ReadToolsService } from './read-tools.service';
+import { RunsService } from './runs.service';
+import { DemoTraceService } from './trace-events.service';
+import { TripAttentionAgentService } from './trip-attention.agent';
 import { ValidationService } from './validation.service';
 
 @Module({
@@ -24,10 +26,11 @@ import { ValidationService } from './validation.service';
     PolicyService,
     ValidationService,
     OutboxService,
-    FixtureDecisionProvider,
-    OpenAiDecisionProvider,
+    ReadToolsService,
+    DemoTraceService,
+    TripAttentionAgentService,
     DecisionGraphService,
-    { provide: DECISION_PROVIDER, useValue: null },
+    RunsService,
   ],
   exports: [
     DecisionGraphService,
@@ -36,7 +39,8 @@ import { ValidationService } from './validation.service';
     DemoClockService,
     PolicyService,
     ValidationService,
-    FixtureDecisionProvider,
+    DemoTraceService,
+    RunsService,
   ],
 })
 export class DemoModule {}

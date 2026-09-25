@@ -1,40 +1,63 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { DemoClockService } from './demo-clock.service';
 import { FixtureToolsService } from './fixture-tools.service';
-import { IntakeRequest, POLICY, Signal } from './schemas';
+import { OutboxService } from './outbox.service';
+import {
+  DemoRunContext,
+  POLICY,
+  PolicyRuleResult,
+  TypedCandidate,
+  Signal,
+} from './schemas';
 
-export type PolicySignalResult = {
-  signalId: string;
-  signalType: string;
-  eligible: boolean;
-  category: 'optional' | 'required' | 'deterministic_silent' | 'deterministic_wait';
-  reason: string;
-  recheckAt?: string;
-};
-
-export type PolicyEvaluation = {
-  allowed: boolean;
+export type PolicyEnvelope = {
+  version: string;
+  rules: PolicyRuleResult[];
+  candidates: TypedCandidate[];
+  optionalEligible: TypedCandidate[];
+  requiredEligible: TypedCandidate[];
+  deterministicOutcomes: Array<{
+    candidateId: string;
+    outcome: 'wait' | 'silent';
+    reason: string;
+    recheckAt?: string;
+    policyRuleIds: string[];
+  }>;
+  blockOptionalModel: boolean;
+  blockReason?: string;
   quietHoursActive: boolean;
   optionalConsent: boolean;
   channelAllowed: boolean;
   contactLimitExceeded: boolean;
-  signals: PolicySignalResult[];
-  blockModelCall: boolean;
-  blockReason?: string;
+  allowedTools: string[];
+  allowedChannels: string[];
+};
+
+const SIGNAL_KIND: Record<
+  string,
+  TypedCandidate['kind']
+> = {
+  TRIP_PREPARATION: 'trip_preparation',
+  WEATHER_UPDATE: 'weather_update',
+  DESTINATION_EVENT: 'destination_event',
+  HOTEL_SEARCH_ABANDONED: 'hotel_search_abandoned',
+  FLIGHT_CHANGE_CONFIRMED: 'flight_change_confirmed',
 };
 
 @Injectable()
 export class PolicyService {
   constructor(
-    private readonly clock: DemoClockService,
-    private readonly fixtures: FixtureToolsService,
+    @Inject(DemoClockService) private readonly clock: DemoClockService,
+    @Inject(FixtureToolsService) private readonly fixtures: FixtureToolsService,
+    @Inject(OutboxService) private readonly outbox: OutboxService,
   ) {}
 
-  evaluate(request: IntakeRequest): PolicyEvaluation {
-    const traveler = this.fixtures.readTraveler();
-    const trip = this.fixtures.readTrip(request.tripId);
-    const now = this.clock.now();
+  evaluate(ctx: DemoRunContext): PolicyEnvelope {
+    const traveler = this.fixtures.readTraveler(ctx);
+    const trip = this.fixtures.readTrip(ctx);
+    const now = this.clock.now(ctx);
     const prefs = traveler.preferences;
+    const rules: PolicyRuleResult[] = [];
 
     const quietHoursActive = this.isQuietHours(
       now,
@@ -44,140 +67,323 @@ export class PolicyService {
     );
     const optionalConsent = prefs.optionalTripMessages === true;
     const channelAllowed = prefs.allowedChannels.includes('push');
-    const contactLimitExceeded = this.optionalContactLimitExceeded();
+    const contactLimitExceeded = this.optionalContactLimitExceeded(ctx);
 
-    const signals: PolicySignalResult[] = request.signals.map((signal) =>
-      this.evaluateSignal(signal, request, now, trip.departureAt, trip.arrivalAt),
+    rules.push({
+      id: 'optional_consent',
+      version: POLICY.version,
+      scope: 'traveler',
+      observed: optionalConsent ? 'Enabled' : 'Disabled',
+      constraint: 'Optional trip messages allowed',
+      result: optionalConsent ? 'pass' : 'block',
+      explanation: optionalConsent
+        ? 'Traveler opted into optional trip messages.'
+        : 'Optional trip messages are disabled.',
+      stage: 'permission',
+    });
+
+    const quietRecheck = this.nextQuietHoursEnd(
+      now,
+      traveler.timeZone,
+      prefs.quietHours.end,
     );
+    rules.push({
+      id: 'quiet_hours',
+      version: POLICY.version,
+      scope: 'traveler',
+      observed: this.formatLocalTime(now, traveler.timeZone),
+      constraint: `${prefs.quietHours.start}–${prefs.quietHours.end} ${traveler.timeZone}`,
+      result: quietHoursActive ? 'defer' : 'pass',
+      explanation: quietHoursActive
+        ? 'Inside quiet hours; defer optional contact until the window ends if still useful.'
+        : 'Outside quiet hours.',
+      recheckAt: quietHoursActive ? quietRecheck : undefined,
+      stage: 'permission',
+    });
 
-    const hasOptionalCandidates = signals.some(
-      (s) => s.eligible && s.category === 'optional',
-    );
+    rules.push({
+      id: 'channel_push',
+      version: POLICY.version,
+      scope: 'traveler',
+      observed: prefs.allowedChannels.join(','),
+      constraint: 'push permitted',
+      result: channelAllowed ? 'pass' : 'block',
+      explanation: channelAllowed
+        ? 'Push channel is allowed.'
+        : 'Push channel is not allowed.',
+      stage: 'permission',
+    });
 
-    let blockModelCall = false;
+    rules.push({
+      id: 'contact_limit',
+      version: POLICY.version,
+      scope: 'session',
+      observed: contactLimitExceeded
+        ? `>=${POLICY.maxOptionalPushesInWindow} optional push in ${POLICY.optionalPushLimitHours}h`
+        : `Under ${POLICY.maxOptionalPushesInWindow} optional push in ${POLICY.optionalPushLimitHours}h`,
+      constraint: `Max ${POLICY.maxOptionalPushesInWindow} optional push / ${POLICY.optionalPushLimitHours}h`,
+      result: contactLimitExceeded ? 'defer' : 'pass',
+      explanation: contactLimitExceeded
+        ? 'Optional contact budget already used; defer if still useful later.'
+        : 'Optional contact budget available.',
+      stage: 'permission',
+    });
+
+    const candidates = ctx.request.signals.map((s) => this.toCandidate(s));
+    const deterministicOutcomes: PolicyEnvelope['deterministicOutcomes'] = [];
+    const optionalEligible: TypedCandidate[] = [];
+    const requiredEligible: TypedCandidate[] = [];
+
+    for (const candidate of candidates) {
+      if (candidate.kind === 'hotel_search_abandoned') {
+        if (this.fixtures.hotelIsBooked(ctx)) {
+          rules.push({
+            id: `completed_booking:${candidate.id}`,
+            version: POLICY.version,
+            scope: 'candidate',
+            observed: 'Hotel confirmed',
+            constraint: 'Suppress abandoned hotel-search reminder',
+            result: 'block',
+            explanation: 'Hotel is already booked; reminder is unnecessary.',
+            stage: 'deterministic',
+          });
+          deterministicOutcomes.push({
+            candidateId: candidate.id,
+            outcome: 'silent',
+            reason: 'HOTEL_ALREADY_BOOKED',
+            policyRuleIds: [`completed_booking:${candidate.id}`],
+          });
+          continue;
+        }
+      }
+
+      if (candidate.kind === 'flight_change_confirmed') {
+        requiredEligible.push(candidate);
+        rules.push({
+          id: `required_flight:${candidate.id}`,
+          version: POLICY.version,
+          scope: 'candidate',
+          observed: 'Confirmed flight change signal',
+          constraint: 'Separate explicit category policy',
+          result: 'pass',
+          explanation: 'Required alert path; optional AI is not required.',
+          stage: 'permission',
+        });
+        continue;
+      }
+
+      if (
+        candidate.kind === 'trip_preparation' ||
+        candidate.kind === 'weather_update'
+      ) {
+        const windowStart = new Date(
+          new Date(trip.departureAt).getTime() -
+            POLICY.preparationWindowHours * 60 * 60 * 1000,
+        );
+        const expiresAt = new Date(trip.departureAt);
+        if (now.getTime() < windowStart.getTime()) {
+          const recheckAt = windowStart.toISOString();
+          rules.push({
+            id: `preparation_timing:${candidate.id}`,
+            version: POLICY.version,
+            scope: 'candidate',
+            observed: `${POLICY.preparationWindowHours}h window not open`,
+            constraint: `Eligible within ${POLICY.preparationWindowHours}h of departure; expires at departure`,
+            result: 'defer',
+            explanation: 'Preparation is not due yet.',
+            recheckAt,
+            stage: 'deterministic',
+          });
+          deterministicOutcomes.push({
+            candidateId: candidate.id,
+            outcome: 'wait',
+            reason: 'PREPARATION_NOT_DUE',
+            recheckAt,
+            policyRuleIds: [`preparation_timing:${candidate.id}`],
+          });
+          continue;
+        }
+        if (now.getTime() >= expiresAt.getTime()) {
+          rules.push({
+            id: `preparation_timing:${candidate.id}`,
+            version: POLICY.version,
+            scope: 'candidate',
+            observed: 'Past departure',
+            constraint: 'Expires at departure',
+            result: 'block',
+            explanation: 'Preparation opportunity has expired.',
+            stage: 'deterministic',
+          });
+          deterministicOutcomes.push({
+            candidateId: candidate.id,
+            outcome: 'silent',
+            reason: 'PREPARATION_EXPIRED',
+            policyRuleIds: [`preparation_timing:${candidate.id}`],
+          });
+          continue;
+        }
+        rules.push({
+          id: `preparation_timing:${candidate.id}`,
+          version: POLICY.version,
+          scope: 'candidate',
+          observed: 'Within preparation window',
+          constraint: `Eligible within ${POLICY.preparationWindowHours}h of departure`,
+          result: 'pass',
+          explanation: 'Preparation messaging is eligible.',
+          stage: 'permission',
+        });
+        optionalEligible.push(candidate);
+        continue;
+      }
+
+      if (candidate.kind === 'destination_event') {
+        const recheckAtDate = this.arrivalGuidanceWindowStart(trip.arrivalAt);
+        if (now.getTime() < recheckAtDate.getTime()) {
+          const recheckAt = this.formatWithOffset(
+            recheckAtDate,
+            trip.destinationTimeZone,
+          );
+          rules.push({
+            id: `arrival_guidance:${candidate.id}`,
+            version: POLICY.version,
+            scope: 'candidate',
+            observed: 'Arrival guidance not yet due',
+            constraint: `Eligible within ${POLICY.arrivalGuidanceWindowHours}h of arrival`,
+            result: 'defer',
+            explanation: 'Arrival guidance should wait until closer to arrival.',
+            recheckAt,
+            stage: 'deterministic',
+          });
+          deterministicOutcomes.push({
+            candidateId: candidate.id,
+            outcome: 'wait',
+            reason: 'ARRIVAL_GUIDANCE_NOT_DUE',
+            recheckAt,
+            policyRuleIds: [`arrival_guidance:${candidate.id}`],
+          });
+          continue;
+        }
+        rules.push({
+          id: `arrival_guidance:${candidate.id}`,
+          version: POLICY.version,
+          scope: 'candidate',
+          observed: 'Within arrival guidance window',
+          constraint: `Eligible within ${POLICY.arrivalGuidanceWindowHours}h of arrival`,
+          result: 'pass',
+          explanation: 'Arrival guidance is eligible now.',
+          stage: 'permission',
+        });
+        optionalEligible.push(candidate);
+        continue;
+      }
+
+      optionalEligible.push(candidate);
+    }
+
+    let blockOptionalModel = false;
     let blockReason: string | undefined;
-
-    if (hasOptionalCandidates) {
+    if (optionalEligible.length > 0) {
       if (!optionalConsent) {
-        blockModelCall = true;
+        blockOptionalModel = true;
         blockReason = 'OPTIONAL_CONSENT_DISABLED';
-      } else if (quietHoursActive) {
-        blockModelCall = true;
-        blockReason = 'QUIET_HOURS';
       } else if (!channelAllowed) {
-        blockModelCall = true;
+        blockOptionalModel = true;
         blockReason = 'CHANNEL_NOT_ALLOWED';
+      } else if (quietHoursActive) {
+        blockOptionalModel = true;
+        blockReason = 'QUIET_HOURS';
       } else if (contactLimitExceeded) {
-        blockModelCall = true;
+        blockOptionalModel = true;
         blockReason = 'CONTACT_LIMIT';
       }
     }
 
+    if (blockOptionalModel && optionalEligible.length) {
+      for (const c of optionalEligible) {
+        if (
+          blockReason === 'QUIET_HOURS' ||
+          blockReason === 'CONTACT_LIMIT'
+        ) {
+          const recheckAt =
+            blockReason === 'QUIET_HOURS'
+              ? quietRecheck
+              : new Date(
+                  now.getTime() + POLICY.optionalPushLimitHours * 3600 * 1000,
+                ).toISOString();
+          // Still useful before departure?
+          const useful =
+            Date.parse(recheckAt) < Date.parse(trip.departureAt);
+          deterministicOutcomes.push({
+            candidateId: c.id,
+            outcome: useful ? 'wait' : 'silent',
+            reason: useful ? blockReason : `${blockReason}_EXPIRED`,
+            recheckAt: useful ? recheckAt : undefined,
+            policyRuleIds: [blockReason.toLowerCase()],
+          });
+        } else {
+          deterministicOutcomes.push({
+            candidateId: c.id,
+            outcome: 'silent',
+            reason: blockReason!,
+            policyRuleIds: [blockReason!.toLowerCase()],
+          });
+        }
+      }
+    }
+
     return {
-      allowed: true,
+      version: POLICY.version,
+      rules,
+      candidates,
+      optionalEligible: blockOptionalModel ? [] : optionalEligible,
+      requiredEligible,
+      deterministicOutcomes,
+      blockOptionalModel,
+      blockReason,
       quietHoursActive,
       optionalConsent,
       channelAllowed,
       contactLimitExceeded,
-      signals,
-      blockModelCall,
-      blockReason,
+      allowedTools: [
+        'read_trip_snapshot',
+        'read_weather_context',
+        'read_destination_impact',
+        'read_contact_history',
+      ],
+      allowedChannels: prefs.allowedChannels,
     };
   }
 
-  private evaluateSignal(
-    signal: Signal,
-    request: IntakeRequest,
-    now: Date,
-    departureAt: string,
-    arrivalAt: string,
-  ): PolicySignalResult {
-    if (signal.type === 'HOTEL_SEARCH_ABANDONED') {
-      if (this.fixtures.hotelIsBooked()) {
-        return {
-          signalId: signal.id,
-          signalType: signal.type,
-          eligible: false,
-          category: 'deterministic_silent',
-          reason: 'HOTEL_ALREADY_BOOKED',
-        };
-      }
-      return {
-        signalId: signal.id,
-        signalType: signal.type,
-        eligible: true,
-        category: 'optional',
-        reason: 'HOTEL_SEARCH_ELIGIBLE',
-      };
-    }
-
-    if (signal.type === 'DESTINATION_EVENT') {
-      const recheckAt = this.arrivalGuidanceWindowStart(arrivalAt);
-      if (now.getTime() < recheckAt.getTime()) {
-        return {
-          signalId: signal.id,
-          signalType: signal.type,
-          eligible: false,
-          category: 'deterministic_wait',
-          reason: 'ARRIVAL_GUIDANCE_NOT_DUE',
-          recheckAt: this.formatWithOffset(recheckAt, 'America/New_York'),
-        };
-      }
-      return {
-        signalId: signal.id,
-        signalType: signal.type,
-        eligible: true,
-        category: 'optional',
-        reason: 'ARRIVAL_GUIDANCE_DUE',
-      };
-    }
-
-    if (
-      signal.type === 'TRIP_PREPARATION' ||
-      signal.type === 'WEATHER_UPDATE'
-    ) {
-      const windowStart = new Date(
-        new Date(departureAt).getTime() -
-          POLICY.preparationWindowHours * 60 * 60 * 1000,
-      );
-      if (now.getTime() < windowStart.getTime()) {
-        return {
-          signalId: signal.id,
-          signalType: signal.type,
-          eligible: false,
-          category: 'deterministic_wait',
-          reason: 'PREPARATION_NOT_DUE',
-          recheckAt: windowStart.toISOString(),
-        };
-      }
-      return {
-        signalId: signal.id,
-        signalType: signal.type,
-        eligible: true,
-        category: 'optional',
-        reason: 'PREPARATION_ELIGIBLE',
-      };
-    }
-
-    if (
-      signal.type === 'FLIGHT_CHANGE_CONFIRMED' ||
-      request.type === 'FLIGHT_CHANGE_CONFIRMED'
-    ) {
-      return {
-        signalId: signal.id,
-        signalType: signal.type,
-        eligible: true,
-        category: 'required',
-        reason: 'REQUIRED_FLIGHT_ALERT',
-      };
-    }
-
+  toCandidate(signal: Signal): TypedCandidate {
+    const kind = SIGNAL_KIND[signal.type] ?? 'other';
+    const category =
+      kind === 'flight_change_confirmed' ? 'required' : 'optional';
+    const allowedActions =
+      category === 'required'
+        ? [...POLICY.allowedRequiredActions]
+        : [...POLICY.allowedOptionalActions];
     return {
-      signalId: signal.id,
-      signalType: signal.type,
-      eligible: false,
-      category: 'deterministic_silent',
-      reason: 'UNKNOWN_SIGNAL',
+      id: signal.id,
+      type: signal.type,
+      kind,
+      category,
+      claimedSourceVersion: signal.claimedSourceVersion,
+      allowedActions,
+      messagePurposes:
+        kind === 'destination_event'
+          ? ['arrival_guidance']
+          : kind === 'flight_change_confirmed'
+            ? ['flight_change']
+            : ['trip_preparation'],
+      allowedOutcomes: ['act_now', 'wait', 'silent'],
+      requiredEvidenceKinds:
+        kind === 'weather_update'
+          ? ['weather']
+          : kind === 'destination_event'
+            ? ['destination_impact']
+            : kind === 'flight_change_confirmed'
+              ? ['flight_status']
+              : ['flight_status'],
     };
   }
 
@@ -188,19 +394,29 @@ export class PolicyService {
     );
   }
 
-  private optionalContactLimitExceeded(): boolean {
-    const messages = this.fixtures.readRecentMessages();
-    const now = this.clock.now().getTime();
+  optionalContactLimitExceeded(ctx: DemoRunContext): boolean {
+    const now = this.clock.now(ctx).getTime();
     const windowMs = POLICY.optionalPushLimitHours * 60 * 60 * 1000;
-    const recentOptional = messages.filter((m) => {
-      const at = new Date(m.at).getTime();
+    const seeded = this.fixtures.readSeededMessages(ctx);
+    const session = this.outbox.getSessionOptionalPreviews(ctx.sessionId);
+    const all = [
+      ...seeded.map((m) => ({ purpose: m.purpose, channel: m.channel, at: m.at })),
+      ...session.map((e) => ({
+        purpose: e.purpose,
+        channel: e.channel,
+        at: e.createdAt,
+      })),
+    ];
+    const recent = all.filter((m) => {
+      const at = Date.parse(m.at);
+      if (Number.isNaN(at)) return false;
+      const age = now - at;
       return (
-        m.purpose === 'trip_preparation' &&
-        m.channel === 'push' &&
-        now - at <= windowMs
-      );
+        m.purpose === 'trip_preparation' ||
+        m.purpose === 'arrival_guidance'
+      ) && m.channel === 'push' && age >= 0 && age < windowMs;
     });
-    return recentOptional.length >= POLICY.maxOptionalPushesInWindow;
+    return recent.length >= POLICY.maxOptionalPushesInWindow;
   }
 
   isQuietHours(
@@ -209,6 +425,33 @@ export class PolicyService {
     start: string,
     end: string,
   ): boolean {
+    const minutes = this.localMinutes(now, timeZone);
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    const startMin = sh * 60 + sm;
+    const endMin = eh * 60 + em;
+    if (startMin === endMin) return false;
+    if (startMin > endMin) {
+      return minutes >= startMin || minutes < endMin;
+    }
+    return minutes >= startMin && minutes < endMin;
+  }
+
+  nextQuietHoursEnd(now: Date, timeZone: string, end: string): string {
+    const [eh, em] = end.split(':').map(Number);
+    // Approximate: advance calendar day in local zone via iterative hour steps
+    let probe = new Date(now.getTime());
+    for (let i = 0; i < 48 * 60; i++) {
+      probe = new Date(probe.getTime() + 60_000);
+      const mins = this.localMinutes(probe, timeZone);
+      if (mins === eh * 60 + em) {
+        return probe.toISOString();
+      }
+    }
+    return new Date(now.getTime() + 8 * 3600 * 1000).toISOString();
+  }
+
+  localMinutes(now: Date, timeZone: string): number {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone,
       hour: '2-digit',
@@ -217,17 +460,17 @@ export class PolicyService {
     }).formatToParts(now);
     const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? '0');
     const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? '0');
-    const minutes = hour * 60 + minute;
-    const [sh, sm] = start.split(':').map(Number);
-    const [eh, em] = end.split(':').map(Number);
-    const startMin = sh * 60 + sm;
-    const endMin = eh * 60 + em;
-    if (startMin === endMin) return false;
-    if (startMin > endMin) {
-      // overnight window e.g. 22:00–08:00
-      return minutes >= startMin || minutes < endMin;
-    }
-    return minutes >= startMin && minutes < endMin;
+    return (hour % 24) * 60 + minute;
+  }
+
+  formatLocalTime(now: Date, timeZone: string): string {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZoneName: 'short',
+    }).format(now);
   }
 
   formatWithOffset(date: Date, timeZone: string): string {

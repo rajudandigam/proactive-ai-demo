@@ -17,6 +17,8 @@
     "demo:trip": "tsx scripts/demo-cli.ts trip",
     "demo:flight": "tsx scripts/demo-cli.ts flight",
     "demo:repeat": "tsx scripts/demo-cli.ts repeat",
+    "demo:arrival": "tsx scripts/demo-cli.ts arrival",
+    "demo:noimpact": "tsx scripts/demo-cli.ts noimpact",
     "demo:live-eval": "tsx scripts/live-eval.ts"
   },
   "dependencies": {
@@ -26,6 +28,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.6",
     "@nestjs/platform-express": "^11.1.6",
+    "agent-inspect": "^6.31.7",
     "openai": "^5.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",

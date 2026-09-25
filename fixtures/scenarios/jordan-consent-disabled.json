@@ -1,7 +1,7 @@
 {
-  "scenarioId": "jordan-before-departure",
-  "preset": "before-departure",
-  "label": "Before departure",
+  "scenarioId": "jordan-consent-disabled",
+  "preset": "consent-disabled",
+  "label": "Optional consent disabled",
   "now": "2026-10-05T09:00:00-07:00",
   "actor": { "id": "demo-jordan" },
   "traveler": {
@@ -9,7 +9,7 @@
     "name": "Jordan",
     "timeZone": "America/Los_Angeles",
     "preferences": {
-      "optionalTripMessages": true,
+      "optionalTripMessages": false,
       "allowedChannels": ["push"],
       "quietHours": { "start": "22:00", "end": "08:00" }
     }
@@ -24,7 +24,6 @@
     "destinationTimeZone": "America/New_York",
     "departureAt": "2026-10-06T09:00:00-07:00",
     "arrivalAt": "2026-10-06T17:30:00-04:00",
-    "transportToHotel": "rideshare",
     "hotel": { "status": "confirmed", "area": "Boston waterfront" }
   },
   "evidence": [
@@ -37,36 +36,14 @@
       "arrivalAt": "2026-10-06T17:30:00-04:00"
     },
     {
-      "id": "hotel-booking-v1",
-      "kind": "hotel_booking",
-      "source": "mock-booking-service",
-      "checkedAt": "2026-10-05T09:00:00-07:00",
-      "status": "confirmed"
-    },
-    {
       "id": "weather-v1",
       "kind": "weather",
       "source": "mock-weather-service",
       "checkedAt": "2026-10-05T09:00:00-07:00",
-      "forecastDate": "2026-10-06",
       "forecast": "rain",
       "severity": "routine"
-    },
-    {
-      "id": "road-closure-v1",
-      "kind": "destination_impact",
-      "source": "mock-city-service",
-      "checkedAt": "2026-10-05T09:00:00-07:00",
-      "verified": true,
-      "affectsHotelRoute": true,
-      "affectsChosenTransport": true,
-      "startsAt": "2026-10-06T16:00:00-04:00",
-      "endsAt": "2026-10-06T20:00:00-04:00"
     }
   ],
-  "recentActivity": [
-    { "type": "HOTEL_SEARCH_ABANDONED", "at": "2026-10-04T12:00:00-07:00" },
-    { "type": "HOTEL_BOOKED", "at": "2026-10-04T13:00:00-07:00" }
-  ],
+  "recentActivity": [],
   "recentMessages": []
 }

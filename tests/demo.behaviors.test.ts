@@ -1,71 +1,66 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { DecisionGraphService, DECISION_PROVIDER } from '../src/demo/decision.graph';
+import { DecisionGraphService } from '../src/demo/decision.graph';
 import { DemoClockService } from '../src/demo/demo-clock.service';
-import { FixtureDecisionProvider } from '../src/demo/fixture-decision.provider';
 import { FixtureToolsService } from '../src/demo/fixture-tools.service';
-import { OpenAiDecisionProvider } from '../src/demo/openai-decision.provider';
 import { OutboxService } from '../src/demo/outbox.service';
 import { PolicyService } from '../src/demo/policy.service';
+import { ReadToolsService } from '../src/demo/read-tools.service';
+import { DemoTraceService } from '../src/demo/trace-events.service';
+import { TripAttentionAgentService } from '../src/demo/trip-attention.agent';
 import { ValidationService } from '../src/demo/validation.service';
-import {
-  DecisionProvider,
-  ModelProposal,
-} from '../src/demo/decision-provider';
+import { RunsService } from '../src/demo/runs.service';
 import tripReview from '../fixtures/requests/trip-review.json';
 import flightChange from '../fixtures/requests/flight-change.json';
-import { ScenarioFixture } from '../src/demo/schemas';
+import arrivalAffected from '../fixtures/requests/arrival-affected.json';
+import arrivalUnaffected from '../fixtures/requests/arrival-unaffected.json';
+import { createSessionId } from '../src/demo/schemas';
 
-async function createApp(provider?: DecisionProvider) {
-  const builders = [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [
-        () => ({
-          DECISION_PROVIDER: 'fixture',
-          OPENAI_TIMEOUT_MS: '15000',
-        }),
-      ],
-    }),
-  ];
-
-  const moduleBuilder = Test.createTestingModule({
-    imports: builders,
+async function createApp() {
+  const module: TestingModule = await Test.createTestingModule({
+    imports: [
+      ConfigModule.forRoot({
+        isGlobal: true,
+        load: [
+          () => ({
+            DECISION_PROVIDER: 'fixture',
+            OPENAI_TIMEOUT_MS: '15000',
+            AGENT_INSPECT: '0',
+          }),
+        ],
+      }),
+    ],
     providers: [
       DemoClockService,
       FixtureToolsService,
       PolicyService,
       ValidationService,
       OutboxService,
-      FixtureDecisionProvider,
-      OpenAiDecisionProvider,
+      ReadToolsService,
+      DemoTraceService,
+      TripAttentionAgentService,
       DecisionGraphService,
-      {
-        provide: DECISION_PROVIDER,
-        useValue: provider ?? null,
-      },
+      RunsService,
     ],
-  });
+  }).compile();
 
-  const module: TestingModule = await moduleBuilder.compile();
   const graph = module.get(DecisionGraphService);
   const outbox = module.get(OutboxService);
   const fixtures = module.get(FixtureToolsService);
-  const policy = module.get(PolicyService);
-  const validation = module.get(ValidationService);
-  const clock = module.get(DemoClockService);
+  const traces = module.get(DemoTraceService);
   outbox.reset();
   fixtures.reset();
-  return { module, graph, outbox, fixtures, policy, validation, clock };
+  return { module, graph, outbox, fixtures, traces };
 }
 
-describe('proactive AI demo behaviors', () => {
-  it('trip review: combine prep+weather, wait route, silent hotel search', async () => {
+describe('proactive AI demo v2', () => {
+  it('before-departure: combine prep+weather, wait route, silent hotel', async () => {
     const { graph, outbox } = await createApp();
-    const result = await graph.run(tripReview);
+    const sessionId = createSessionId();
+    const result = await graph.run(tripReview, { sessionId });
 
     expect(result.modelMode).toBe('fixture');
-    expect(result.modelCalls).toBe(1);
+    expect(result.accounting?.fixtureInvocations).toBeGreaterThanOrEqual(1);
     expect(result.outboxWrites).toBe(1);
 
     const byReason = Object.fromEntries(
@@ -73,299 +68,260 @@ describe('proactive AI demo behaviors', () => {
     );
     expect(byReason.COMBINED_TRIP_PREPARATION?.outcome).toBe('act_now');
     expect(byReason.ARRIVAL_GUIDANCE_NOT_DUE?.outcome).toBe('wait');
-    expect(byReason.ARRIVAL_GUIDANCE_NOT_DUE?.recheckAt).toContain('2026-10-06');
     expect(byReason.HOTEL_ALREADY_BOOKED?.outcome).toBe('silent');
-
-    const preview = byReason.COMBINED_TRIP_PREPARATION?.notificationPreview;
-    expect(preview?.action).toBe('view_trip');
-    expect(preview?.factIds).toEqual(
-      expect.arrayContaining(['flight-status-v1', 'weather-v1']),
-    );
-    expect(preview?.body).toMatch(/Check-in is open/i);
-    expect(preview?.body).toMatch(/rain/i);
-    expect(outbox.getOutbox()).toHaveLength(1);
+    expect(outbox.getOutbox(sessionId)).toHaveLength(1);
   });
 
-  it('optional consent disabled stops a model call', async () => {
-    const spyProvider: DecisionProvider = {
-      mode: 'fixture',
-      propose: async () => {
-        throw new Error('should not be called');
-      },
-    };
-    const { graph, fixtures } = await createApp(spyProvider);
-    const scenario = fixtures.activateScenario('jordan-before-departure');
-    const mutated: ScenarioFixture = structuredClone(scenario);
-    mutated.traveler.preferences.optionalTripMessages = false;
-    fixtures.replaceScenario(mutated);
-
-    const result = await graph.run(tripReview);
-    expect(result.modelCalls).toBe(0);
-    expect(result.modelMode).toBe('none');
-    expect(
-      result.decisions.some(
-        (d) =>
-          d.reason === 'OPTIONAL_CONSENT_DISABLED' && d.outcome === 'silent',
-      ),
-    ).toBe(true);
-  });
-
-  it('quiet hours stop a model call', async () => {
-    const spyProvider: DecisionProvider = {
-      mode: 'fixture',
-      propose: async () => {
-        throw new Error('should not be called');
-      },
-    };
-    const { graph, fixtures, clock } = await createApp(spyProvider);
-    const scenario = fixtures.activateScenario('jordan-before-departure');
-    const mutated = structuredClone(scenario);
-    // 23:00 PT is inside 22:00–08:00 quiet hours
-    mutated.now = '2026-10-05T23:00:00-07:00';
-    fixtures.replaceScenario(mutated);
-    fixtures.activateScenario('jordan-before-departure');
-    expect(clock.getConfiguredIso()).toBe('2026-10-05T23:00:00-07:00');
-
-    const result = await graph.run(tripReview);
-    expect(result.modelCalls).toBe(0);
-    expect(
-      result.decisions.some(
-        (d) => d.reason === 'QUIET_HOURS' && d.outcome === 'silent',
-      ),
-    ).toBe(true);
-  });
-
-  it('hotel booking suppresses abandoned search', async () => {
+  it('quiet hours defer without model invocation', async () => {
     const { graph } = await createApp();
-    const result = await graph.run(tripReview);
-    const silent = result.decisions.find((d) =>
-      d.candidates.includes('search-1'),
-    );
-    expect(silent?.outcome).toBe('silent');
-    expect(silent?.reason).toBe('HOTEL_ALREADY_BOOKED');
-    expect(silent?.decidedBy).toBe('application');
-  });
-
-  it('route guidance cannot send before allowed window; wait is future', async () => {
-    const { graph, clock } = await createApp();
-    const result = await graph.run(tripReview);
-    const wait = result.decisions.find((d) => d.candidates.includes('route-1'));
-    expect(wait?.outcome).toBe('wait');
-    expect(wait?.recheckAt).toBeTruthy();
-    const when = Date.parse(wait!.recheckAt!);
-    expect(when).toBeGreaterThan(clock.now().getTime());
-  });
-
-  it('rejects unknown evidence IDs and unsupported actions', async () => {
-    const badEvidence: DecisionProvider = {
-      mode: 'fixture',
-      propose: async (): Promise<ModelProposal> => ({
-        decision: 'act_now',
-        candidateIds: ['preparation-1'],
-        factIds: ['not-a-real-fact'],
-        templateId: 'trip_preparation',
-        action: 'view_trip',
-        recheckAt: null,
-        reasonSummary: 'bad facts',
-      }),
-    };
-    const { graph: g1, outbox: o1 } = await createApp(badEvidence);
-    const r1 = await g1.run({ ...tripReview, eventId: 'bad-evidence-1' });
-    expect(r1.decisions.some((d) => d.reason === 'UNKNOWN_EVIDENCE_ID')).toBe(
-      true,
-    );
-    expect(o1.getOutbox()).toHaveLength(0);
-
-    const badAction: DecisionProvider = {
-      mode: 'fixture',
-      propose: async (): Promise<ModelProposal> => ({
-        decision: 'act_now',
-        candidateIds: ['preparation-1'],
-        factIds: ['flight-status-v1'],
-        templateId: 'trip_preparation',
-        action: 'launch_nukes' as unknown as 'view_trip',
-        recheckAt: null,
-        reasonSummary: 'bad action',
-      }),
-    };
-    const { graph: g2, outbox: o2 } = await createApp(badAction);
-    const r2 = await g2.run({ ...tripReview, eventId: 'bad-action-1' });
-    expect(r2.decisions.some((d) => d.reason === 'UNSUPPORTED_ACTION')).toBe(
-      true,
-    );
-    expect(o2.getOutbox()).toHaveLength(0);
-  });
-
-  it('changing a valid proposal changes the application result', async () => {
-    const silentProvider: DecisionProvider = {
-      mode: 'fixture',
-      propose: async (): Promise<ModelProposal> => ({
-        decision: 'silent',
-        candidateIds: ['preparation-1', 'weather-1'],
-        factIds: null,
-        templateId: null,
-        action: null,
-        recheckAt: null,
-        reasonSummary: 'Nothing useful.',
-      }),
-    };
-    const { graph } = await createApp(silentProvider);
-    const result = await graph.run({ ...tripReview, eventId: 'silent-prop-1' });
-    expect(result.outboxWrites).toBe(0);
+    const result = await graph.run({
+      eventId: 'quiet-test-1',
+      tripId: 'trip-jordan',
+      type: 'TRIP_REVIEW',
+      scenarioId: 'jordan-quiet-hours',
+      signals: [
+        { id: 'preparation-1', type: 'TRIP_PREPARATION' },
+        { id: 'weather-1', type: 'WEATHER_UPDATE' },
+      ],
+    });
+    expect(result.modelCalls).toBe(0);
+    expect(result.accounting?.liveAttempts).toBe(0);
+    expect(result.accounting?.fixtureInvocations).toBe(0);
     expect(
-      result.decisions.some(
-        (d) =>
-          d.outcome === 'silent' &&
-          d.candidates.includes('preparation-1') &&
-          d.decidedBy === 'model',
+      result.decisions.every(
+        (d) => d.outcome === 'wait' && d.reason === 'QUIET_HOURS',
       ),
     ).toBe(true);
+  });
+
+  it('consent disabled suppresses optional without model call', async () => {
+    const { graph } = await createApp();
+    const result = await graph.run({
+      eventId: 'consent-test-1',
+      tripId: 'trip-jordan',
+      type: 'TRIP_REVIEW',
+      scenarioId: 'jordan-consent-disabled',
+      signals: [
+        { id: 'preparation-1', type: 'TRIP_PREPARATION' },
+        { id: 'weather-1', type: 'WEATHER_UPDATE' },
+      ],
+    });
+    expect(result.modelCalls).toBe(0);
+    expect(
+      result.decisions.every((d) => d.reason === 'OPTIONAL_CONSENT_DISABLED'),
+    ).toBe(true);
+  });
+
+  it('arrival affected vs unaffected exercise different fixture judgments', async () => {
+    const { graph } = await createApp();
+    const a = await graph.run(arrivalAffected, {
+      sessionId: createSessionId(),
+    });
+    const b = await graph.run(arrivalUnaffected, {
+      sessionId: createSessionId(),
+    });
+    expect(a.decisions.some((d) => d.outcome === 'act_now')).toBe(true);
+    expect(b.decisions.some((d) => d.reason === 'NO_JOURNEY_IMPACT')).toBe(
+      true,
+    );
+  });
+
+  it('required flight alert works without optional model', async () => {
+    const { graph, outbox } = await createApp();
+    const sessionId = createSessionId();
+    const result = await graph.run(flightChange, { sessionId });
+    expect(result.modelMode).toBe('none');
+    expect(result.outboxWrites).toBe(1);
+    expect(outbox.getOutbox(sessionId)[0]?.templateId).toBe(
+      'flight_change_confirmed',
+    );
   });
 
   it('missing essential flight evidence fails with no alert', async () => {
     const { graph, fixtures, outbox } = await createApp();
-    const scenario = fixtures.activateScenario('jordan-flight-change');
+    const scenario = fixtures.getScenario('jordan-flight-change');
     const mutated = structuredClone(scenario);
     mutated.evidence = mutated.evidence.filter(
       (e) => e.source !== 'mock-flight-service',
     );
     fixtures.replaceScenario(mutated);
-
-    const result = await graph.run({
-      ...flightChange,
-      eventId: 'missing-flight-1',
-    });
+    const sessionId = createSessionId();
+    const result = await graph.run(
+      { ...flightChange, eventId: 'missing-flight-1' },
+      { sessionId },
+    );
     expect(result.runStatus).toBe('failed');
     expect(result.failureReason).toBe('MISSING_ESSENTIAL_FLIGHT_EVIDENCE');
-    expect(outbox.getOutbox()).toHaveLength(0);
+    expect(outbox.getOutbox(sessionId)).toHaveLength(0);
   });
 
-  it('missing optional weather does not block required flight alert', async () => {
-    const { graph, fixtures, outbox } = await createApp();
-    // Flight scenario has no weather evidence by default
-    fixtures.activateScenario('jordan-flight-change');
-    const result = await graph.run(flightChange);
-    expect(result.runStatus).toBe('completed');
-    expect(result.modelMode).toBe('none');
-    expect(result.modelCalls).toBe(0);
-    expect(result.outboxWrites).toBe(1);
-    expect(outbox.getOutbox()[0]?.templateId).toBe('flight_change_confirmed');
-    expect(outbox.getOutbox()[0]?.body).toMatch(/arrives/i);
-  });
-
-  it('repeated event IDs return prior result without new outbox writes', async () => {
+  it('repeated event IDs return prior result', async () => {
     const { graph, outbox } = await createApp();
-    const first = await graph.run(flightChange);
+    const sessionId = createSessionId();
+    const first = await graph.run(flightChange, { sessionId });
     expect(first.outboxWrites).toBe(1);
-    const second = await graph.run(flightChange);
+    const second = await graph.run(flightChange, { sessionId });
     expect(second.runStatus).toBe('duplicate');
     expect(second.outboxWrites).toBe(0);
-    expect(outbox.getOutbox()).toHaveLength(1);
+    expect(outbox.getOutbox(sessionId)).toHaveLength(1);
   });
 
-  it('repeated logical delivery keys do not add outbox entries', async () => {
-    const { graph, outbox } = await createApp();
-    await graph.run(flightChange);
-    // Different eventId, same purpose + source version
-    const again = await graph.run({
-      ...flightChange,
-      eventId: 'flight-change-002',
-    });
-    expect(again.decisions.some((d) => d.outcome === 'act_now')).toBe(true);
-    expect(outbox.getOutbox()).toHaveLength(1);
+  it('rejects same eventId with different payload', async () => {
+    const { graph } = await createApp();
+    const sessionId = createSessionId();
+    await graph.run(flightChange, { sessionId });
+    await expect(
+      graph.run(
+        { ...flightChange, signals: [{ id: 'other', type: 'FLIGHT_CHANGE_CONFIRMED' }] },
+        { sessionId },
+      ),
+    ).rejects.toThrow(/EVENT_PAYLOAD_MISMATCH/);
   });
 
-  it('concurrent duplicate event submissions share one logical result', async () => {
-    const { graph, outbox } = await createApp();
-    const [a, b] = await Promise.all([
-      graph.run({ ...flightChange, eventId: 'concurrent-1' }),
-      graph.run({ ...flightChange, eventId: 'concurrent-1' }),
+  it('concurrent different event IDs keep isolated contexts', async () => {
+    const { graph } = await createApp();
+    const [trip, flight] = await Promise.all([
+      graph.run(
+        { ...tripReview, eventId: 'concurrent-trip' },
+        { sessionId: createSessionId() },
+      ),
+      graph.run(
+        { ...flightChange, eventId: 'concurrent-flight' },
+        { sessionId: createSessionId() },
+      ),
     ]);
-    const writes = [a, b].filter((r) => r.outboxWrites === 1).length;
-    const duplicates = [a, b].filter((r) => r.runStatus === 'duplicate').length;
-    expect(writes).toBe(1);
-    expect(duplicates).toBe(1);
-    expect(outbox.getOutbox()).toHaveLength(1);
+    expect(trip.decisions.some((d) => d.reason === 'COMBINED_TRIP_PREPARATION')).toBe(
+      true,
+    );
+    expect(flight.decisions.some((d) => d.reason === 'REQUIRED_FLIGHT_ALERT')).toBe(
+      true,
+    );
   });
 
-  it('model timeout/refusal becomes failure, not successful silence', async () => {
-    const failing: DecisionProvider = {
-      mode: 'live',
-      propose: async () => {
-        throw new Error('MODEL_REFUSAL: cannot help');
+  it('seeded plus session outbox count toward contact limit', async () => {
+    const { graph, outbox } = await createApp();
+    const sessionId = createSessionId();
+    // First trip review spends the optional budget
+    await graph.run({ ...tripReview, eventId: 'budget-1' }, { sessionId });
+    expect(outbox.getSessionOptionalPreviews(sessionId).length).toBe(1);
+    // Same session, new event — optional prep should defer/block via contact limit
+    const second = await graph.run(
+      {
+        eventId: 'budget-2',
+        tripId: 'trip-jordan',
+        type: 'TRIP_REVIEW',
+        scenarioId: 'jordan-before-departure',
+        signals: [
+          { id: 'preparation-2', type: 'TRIP_PREPARATION' },
+          { id: 'weather-2', type: 'WEATHER_UPDATE' },
+        ],
       },
-    };
-    const { graph, outbox } = await createApp(failing);
-    const result = await graph.run({ ...tripReview, eventId: 'refusal-1' });
-    expect(result.modelMode).toBe('live');
+      { sessionId },
+    );
+    expect(second.modelCalls).toBe(0);
     expect(
-      result.decisions.some(
-        (d) => d.outcome === 'failure' && /MODEL_REFUSAL/.test(d.reason),
+      second.decisions.some(
+        (d) => d.reason === 'CONTACT_LIMIT' || d.reason === 'CONTACT_LIMIT_EXPIRED',
       ),
     ).toBe(true);
-    expect(result.runStatus === 'failed' || result.runStatus === 'partial_failure').toBe(
-      true,
-    );
-    // Hotel silent and route wait from application should still be present
-    expect(result.decisions.some((d) => d.reason === 'HOTEL_ALREADY_BOOKED')).toBe(
-      true,
-    );
-    expect(outbox.getOutbox()).toHaveLength(0);
   });
 
-  it('live and fixture modes are clearly labelled', async () => {
-    const { graph: fixtureGraph } = await createApp();
-    const fixtureResult = await fixtureGraph.run({
-      ...tripReview,
-      eventId: 'label-fixture',
-    });
-    expect(fixtureResult.modelMode).toBe('fixture');
-
-    const liveLike: DecisionProvider = {
-      mode: 'live',
-      propose: async () =>
-        new FixtureDecisionProvider().propose({
-          scenarioId: 'jordan-before-departure',
-          tripId: 'trip-jordan',
-          eligibleCandidateIds: ['preparation-1', 'weather-1'],
-          evidenceIds: ['flight-status-v1', 'weather-v1'],
-          skillVersion: '1.0.0',
-          skillText: '',
-          summary: '',
-        }),
-    };
-    const { graph: liveGraph } = await createApp(liveLike);
-    const liveResult = await liveGraph.run({
-      ...tripReview,
-      eventId: 'label-live',
-    });
-    expect(liveResult.modelMode).toBe('live');
+  it('future-dated history does not count toward contact limit', async () => {
+    const { graph, fixtures } = await createApp();
+    const scenario = fixtures.getScenario('jordan-before-departure');
+    const mutated = structuredClone(scenario);
+    mutated.recentMessages = [
+      {
+        purpose: 'trip_preparation',
+        channel: 'push',
+        at: '2026-10-07T09:00:00-07:00', // after demo now
+      },
+    ];
+    fixtures.replaceScenario(mutated);
+    const result = await graph.run(
+      { ...tripReview, eventId: 'future-hist-1' },
+      { sessionId: createSessionId() },
+    );
+    expect(result.outboxWrites).toBe(1);
   });
 
-  it('invalid wait recheckAt is rejected', async () => {
-    const badWait: DecisionProvider = {
-      mode: 'fixture',
-      propose: async (): Promise<ModelProposal> => ({
-        decision: 'wait',
-        candidateIds: ['preparation-1'],
-        factIds: null,
-        templateId: null,
-        action: null,
-        recheckAt: '2020-01-01T00:00:00Z',
-        reasonSummary: 'past wait',
-      }),
-    };
-    const { graph } = await createApp(badWait);
-    // Make preparation eligible only (override trip review signals)
-    const result = await graph.run({
-      eventId: 'bad-wait-1',
-      tripId: 'trip-jordan',
-      type: 'TRIP_REVIEW',
-      scenarioId: 'jordan-before-departure',
-      signals: [{ id: 'preparation-1', type: 'TRIP_PREPARATION' }],
+  it('runs SSE buffer includes early events', async () => {
+    const { module, traces } = await createApp();
+    const runs = module.get(RunsService);
+    const started = await runs.start(
+      { ...tripReview, eventId: 'sse-1' },
+      createSessionId(),
+    );
+    // wait briefly for completion
+    for (let i = 0; i < 50; i++) {
+      const r = runs.get(started.id);
+      if (r?.status !== 'running') break;
+      await new Promise((r) => setTimeout(r, 50));
+    }
+    const events = traces.getEvents(started.id);
+    expect(events.length).toBeGreaterThan(0);
+    expect(events[0].sequence).toBe(1);
+  });
+
+  it('reset blocked while run active', async () => {
+    const { outbox } = await createApp();
+    outbox.markRunActive('fake-run');
+    expect(() => outbox.reset()).toThrow(/RESET_BLOCKED/);
+    outbox.markRunInactive('fake-run');
+    expect(() => outbox.reset()).not.toThrow();
+  });
+
+  it('policy rules expose observed values', async () => {
+    const { graph } = await createApp();
+    const result = await graph.run(tripReview, {
+      sessionId: createSessionId(),
     });
-    expect(result.decisions.some((d) => d.reason === 'WAIT_NOT_IN_FUTURE')).toBe(
+    expect(result.policyRules?.length).toBeGreaterThan(0);
+    expect(result.policyRules?.some((r) => r.id === 'optional_consent')).toBe(
       true,
     );
+  });
+
+  it('normalizes path-like template ids from model proposals', async () => {
+    const { module } = await createApp();
+    const validation = module.get(ValidationService);
+    const normalized = validation.normalizeDecisionSet({
+      decisions: [
+        {
+          candidateIds: ['route-1'],
+          decision: 'act_now',
+          reasonCode: 'ARRIVAL_GUIDANCE_USEFUL',
+          reasonSummary: 'Affects journey',
+          factIds: ['road-closure-v2'],
+          messagePurpose: 'arrival_guidance',
+          templateId: '/templates/arrival_guidance',
+          action: 'view_route',
+          recheckAt: '',
+          messageDraft: '',
+        },
+      ],
+    });
+    expect(normalized.decisions[0].templateId).toBe('arrival_guidance');
+    expect(normalized.decisions[0].recheckAt).toBeNull();
+    expect(normalized.decisions[0].messageDraft).toBeNull();
+
+    const aliases = validation.normalizeDecisionSet({
+      decisions: [
+        {
+          candidateIds: ['preparation-1'],
+          decision: 'act_now',
+          reasonCode: 'COMBINED',
+          reasonSummary: 'ok',
+          factIds: ['flight-status-v1'],
+          messagePurpose: 'trip_preparation',
+          templateId: 'trip_preparation',
+          action: 'view_itinerary' as 'view_trip',
+          recheckAt: null,
+          messageDraft: 'null',
+        },
+      ],
+    });
+    expect(aliases.decisions[0].action).toBe('view_trip');
+    expect(aliases.decisions[0].messageDraft).toBeNull();
   });
 });

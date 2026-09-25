@@ -1,26 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { readFileSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   ScenarioFixture,
   ScenarioFixtureSchema,
   EvidenceItem,
+  DemoRunContext,
 } from './schemas';
-import { DemoClockService } from './demo-clock.service';
 
 @Injectable()
 export class FixtureToolsService {
   private fixtures = new Map<string, ScenarioFixture>();
-  private activeScenarioId: string | null = null;
 
-  constructor(private readonly clock: DemoClockService) {
+  constructor() {
     this.loadAllFromDisk();
   }
 
   reset(): void {
     this.fixtures.clear();
-    this.activeScenarioId = null;
-    this.clock.clear();
     this.loadAllFromDisk();
   }
 
@@ -28,7 +25,6 @@ export class FixtureToolsService {
     const candidates = [
       join(process.cwd(), 'fixtures', 'scenarios'),
       join(__dirname, '..', '..', 'fixtures', 'scenarios'),
-      join(__dirname, '..', 'fixtures', 'scenarios'),
     ];
     return candidates.filter((dir) => existsSync(dir));
   }
@@ -38,10 +34,7 @@ export class FixtureToolsService {
     if (!dir) {
       throw new Error('fixtures/scenarios directory not found');
     }
-    for (const name of [
-      'jordan-before-departure.json',
-      'jordan-flight-change.json',
-    ]) {
+    for (const name of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
       const raw = JSON.parse(readFileSync(join(dir, name), 'utf8'));
       const parsed = ScenarioFixtureSchema.parse(raw);
       this.fixtures.set(parsed.scenarioId, parsed);
@@ -49,92 +42,97 @@ export class FixtureToolsService {
   }
 
   listScenarioIds(): string[] {
-    return [...this.fixtures.keys()];
+    return [...this.fixtures.keys()].sort();
   }
 
-  activateScenario(scenarioId: string): ScenarioFixture {
+  listPresets(): Array<{
+    scenarioId: string;
+    preset?: string;
+    label?: string;
+  }> {
+    return [...this.fixtures.values()].map((f) => ({
+      scenarioId: f.scenarioId,
+      preset: f.preset,
+      label: f.label ?? f.scenarioId,
+    }));
+  }
+
+  getScenario(scenarioId: string): ScenarioFixture {
     const fixture = this.fixtures.get(scenarioId);
     if (!fixture) {
       throw new Error(`Unknown scenarioId: ${scenarioId}`);
     }
-    this.activeScenarioId = scenarioId;
-    this.clock.setNow(fixture.now);
     return structuredClone(fixture);
   }
 
-  getActiveScenario(): ScenarioFixture {
-    if (!this.activeScenarioId) {
-      throw new Error('No active scenario');
-    }
-    const fixture = this.fixtures.get(this.activeScenarioId);
-    if (!fixture) {
-      throw new Error(`Active scenario missing: ${this.activeScenarioId}`);
-    }
-    return structuredClone(fixture);
-  }
-
-  /** Test/helper override: mutate an already-loaded scenario in memory. */
+  /** Test helper: mutate an already-loaded scenario in memory. */
   replaceScenario(fixture: ScenarioFixture): void {
     this.fixtures.set(fixture.scenarioId, fixture);
   }
 
-  assertOwnership(actorId: string, tripId: string): ScenarioFixture {
-    const fixture = this.getActiveScenario();
-    if (fixture.actor.id !== actorId) {
-      throw new Error(`Actor mismatch: expected ${fixture.actor.id}, got ${actorId}`);
+  assertOwnership(ctx: DemoRunContext, tripId: string): void {
+    if (ctx.scenario.trip.id !== tripId) {
+      throw new Error(`Trip mismatch: expected ${ctx.scenario.trip.id}, got ${tripId}`);
     }
-    if (fixture.trip.id !== tripId) {
-      throw new Error(`Trip mismatch: expected ${fixture.trip.id}, got ${tripId}`);
-    }
-    if (fixture.trip.ownerId !== actorId) {
+    if (ctx.scenario.trip.ownerId !== ctx.actorId) {
       throw new Error(`Ownership check failed for trip ${tripId}`);
     }
-    return fixture;
   }
 
-  readTrip(tripId: string) {
-    const fixture = this.getActiveScenario();
-    if (fixture.trip.id !== tripId) {
-      throw new Error(`Trip ${tripId} not in active scenario`);
-    }
-    return fixture.trip;
+  readTrip(ctx: DemoRunContext) {
+    return ctx.scenario.trip;
   }
 
-  readTraveler() {
-    return this.getActiveScenario().traveler;
+  readTraveler(ctx: DemoRunContext) {
+    return ctx.scenario.traveler;
   }
 
-  readEvidence(): EvidenceItem[] {
-    return this.getActiveScenario().evidence;
+  readEvidence(ctx: DemoRunContext): EvidenceItem[] {
+    return ctx.scenario.evidence;
   }
 
-  readEvidenceById(id: string): EvidenceItem | undefined {
-    return this.readEvidence().find((e) => e.id === id);
+  readEvidenceById(ctx: DemoRunContext, id: string): EvidenceItem | undefined {
+    return ctx.scenario.evidence.find((e) => e.id === id);
   }
 
-  readRecentActivity() {
-    return this.getActiveScenario().recentActivity;
+  readRecentActivity(ctx: DemoRunContext) {
+    return ctx.scenario.recentActivity;
   }
 
-  readRecentMessages() {
-    return this.getActiveScenario().recentMessages;
+  readSeededMessages(ctx: DemoRunContext) {
+    return ctx.scenario.recentMessages;
   }
 
-  hotelIsBooked(): boolean {
-    const fixture = this.getActiveScenario();
-    if (fixture.trip.hotel.status === 'confirmed') {
-      return true;
-    }
-    return fixture.evidence.some(
+  hotelIsBooked(ctx: DemoRunContext): boolean {
+    if (ctx.scenario.trip.hotel.status === 'confirmed') return true;
+    return ctx.scenario.evidence.some(
       (e) =>
-        e.id.startsWith('hotel-booking') &&
+        (e.kind === 'hotel_booking' || e.id.startsWith('hotel-booking')) &&
         (e as { status?: string }).status === 'confirmed',
     );
   }
 
-  getFlightEvidence(): EvidenceItem | undefined {
-    return this.readEvidence()
-      .filter((e) => e.source === 'mock-flight-service')
-      .sort((a, b) => b.id.localeCompare(a.id))[0];
+  getFlightEvidence(ctx: DemoRunContext): EvidenceItem | undefined {
+    const flights = ctx.scenario.evidence.filter(
+      (e) =>
+        e.kind === 'flight_status' || e.source === 'mock-flight-service',
+    );
+    return flights.sort((a, b) => {
+      const at = Date.parse(String(a.checkedAt));
+      const bt = Date.parse(String(b.checkedAt));
+      return bt - at;
+    })[0];
+  }
+
+  matchFlightSource(
+    ctx: DemoRunContext,
+    claimedVersion?: string,
+  ): EvidenceItem | undefined {
+    const flight = this.getFlightEvidence(ctx);
+    if (!flight) return undefined;
+    if (claimedVersion && flight.id !== claimedVersion) {
+      return undefined;
+    }
+    return flight;
   }
 }

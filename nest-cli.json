@@ -8,12 +8,22 @@
       {
         "include": "../fixtures/**/*",
         "outDir": "dist/fixtures",
-        "watchAssets": true
+        "watchAssets": false
       },
       {
         "include": "../skills/**/*",
         "outDir": "dist/skills",
-        "watchAssets": true
+        "watchAssets": false
+      },
+      {
+        "include": "../public/**/*",
+        "outDir": "dist/public",
+        "watchAssets": false
+      },
+      {
+        "include": "../docs/architecture/**/*",
+        "outDir": "dist/docs/architecture",
+        "watchAssets": false
       }
     ]
   }

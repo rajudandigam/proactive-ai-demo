@@ -1,0 +1,154 @@
+:root {
+  --bg: #f3efe6;
+  --ink: #1c1a16;
+  --muted: #5c574e;
+  --card: #fffdf8;
+  --line: #d9d2c4;
+  --accent: #0f5c4c;
+  --warn: #8a4b08;
+  --fail: #8b1e1e;
+  --pass: #1f6b3a;
+  --font: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --fs: 16px;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% 0%, #e7f0ea 0%, transparent 40%),
+    linear-gradient(180deg, #f7f2e8, var(--bg));
+  min-height: 100vh;
+}
+body.large { --fs: 20px; }
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255,253,248,0.9);
+}
+h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.02em; }
+.sub { margin: 0.25rem 0 0; color: var(--muted); }
+.badges { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: start; }
+.badge {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.35rem 0.65rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.badge.live { border-color: var(--accent); color: var(--accent); }
+.badge.fixture { border-color: var(--warn); color: var(--warn); }
+.badge.muted { color: var(--muted); font-weight: 500; }
+
+.tabs { display: flex; gap: 0.25rem; padding: 0.75rem 1.5rem 0; }
+.tab {
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+.tab.active {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--card);
+  border-bottom-color: var(--card);
+}
+
+.panel { display: none; padding: 1rem 1.5rem 2rem; }
+.panel.active { display: block; }
+
+.controls {
+  display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end;
+  margin-bottom: 1rem;
+}
+label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: var(--muted); }
+select, textarea, button { font: inherit; }
+select, textarea {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.45rem 0.6rem;
+  min-width: 16rem;
+}
+textarea { width: 100%; font-family: var(--mono); font-size: 0.85rem; }
+button {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.check { flex-direction: row; align-items: center; gap: 0.4rem; }
+.meta { color: var(--muted); font-size: 0.9rem; }
+
+.graph { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0; }
+.graph .node {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.8rem;
+  opacity: 0.45;
+}
+.graph .node.active, .graph .node.ok { opacity: 1; border-color: var(--accent); }
+.graph .node.failed { opacity: 1; border-color: var(--fail); color: var(--fail); }
+.graph .node.skipped { opacity: 0.7; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 1fr; }
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 0.9rem;
+  min-height: 12rem;
+}
+.card h2 { margin: 0 0 0.6rem; font-size: 1rem; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { text-align: left; padding: 0.35rem 0.25rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.pass { color: var(--pass); font-weight: 600; }
+.defer { color: var(--warn); font-weight: 600; }
+.block { color: var(--fail); font-weight: 600; }
+
+.decision { border-top: 1px solid var(--line); padding: 0.55rem 0; }
+.preview {
+  background: #eef6f2;
+  border: 1px solid #cfe0d7;
+  padding: 0.6rem;
+  margin-top: 0.4rem;
+}
+.wait, .silent {
+  background: #f7f3ea;
+  border: 1px solid var(--line);
+  padding: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.stats {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+img { max-width: 100%; border: 1px solid var(--line); background: #fff; }
+pre { background: #1c1a16; color: #f3efe6; padding: 1rem; overflow: auto; }
+.event-line { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); margin: 0.2rem 0; }
