@@ -1,0 +1,13 @@
+{
+  "eventId": "flight-change-001",
+  "tripId": "trip-jordan",
+  "type": "FLIGHT_CHANGE_CONFIRMED",
+  "scenarioId": "jordan-flight-change",
+  "signals": [
+    {
+      "id": "flight-change-1",
+      "type": "FLIGHT_CHANGE_CONFIRMED",
+      "claimedSourceVersion": "flight-status-v2"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "scenarioId": "jordan-flight-change",
+  "now": "2026-10-06T07:30:00-07:00",
+  "actor": { "id": "demo-jordan" },
+  "traveler": {
+    "id": "demo-jordan",
+    "name": "Jordan",
+    "timeZone": "America/Los_Angeles",
+    "preferences": {
+      "optionalTripMessages": true,
+      "allowedChannels": ["push"],
+      "quietHours": { "start": "22:00", "end": "08:00" }
+    }
+  },
+  "trip": {
+    "id": "trip-jordan",
+    "ownerId": "demo-jordan",
+    "status": "active",
+    "origin": "SFO",
+    "destination": "BOS",
+    "destinationTimeZone": "America/New_York",
+    "departureAt": "2026-10-06T09:00:00-07:00",
+    "arrivalAt": "2026-10-06T18:10:00-04:00",
+    "hotel": { "status": "confirmed", "area": "Boston waterfront" }
+  },
+  "evidence": [
+    {
+      "id": "flight-status-v2",
+      "source": "mock-flight-service",
+      "checkedAt": "2026-10-06T07:30:00-07:00",
+      "checkInOpen": true,
+      "confirmedChange": true,
+      "previousArrivalAt": "2026-10-06T17:30:00-04:00",
+      "arrivalAt": "2026-10-06T18:10:00-04:00"
+    },
+    {
+      "id": "hotel-booking-v1",
+      "source": "mock-booking-service",
+      "checkedAt": "2026-10-06T07:30:00-07:00",
+      "status": "confirmed"
+    }
+  ],
+  "recentActivity": [
+    { "type": "HOTEL_BOOKED", "at": "2026-10-04T13:00:00-07:00" }
+  ],
+  "recentMessages": [
+    {
+      "purpose": "trip_preparation",
+      "channel": "push",
+      "at": "2026-10-05T09:01:00-07:00",
+      "deliveryKey": "trip-jordan:trip_preparation:flight-status-v1+weather-v1"
+    }
+  ]
+}

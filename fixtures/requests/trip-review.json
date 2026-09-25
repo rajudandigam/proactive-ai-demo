@@ -1,0 +1,12 @@
+{
+  "eventId": "trip-review-001",
+  "tripId": "trip-jordan",
+  "type": "TRIP_REVIEW",
+  "scenarioId": "jordan-before-departure",
+  "signals": [
+    { "id": "preparation-1", "type": "TRIP_PREPARATION" },
+    { "id": "weather-1", "type": "WEATHER_UPDATE" },
+    { "id": "route-1", "type": "DESTINATION_EVENT" },
+    { "id": "search-1", "type": "HOTEL_SEARCH_ABANDONED" }
+  ]
+}
