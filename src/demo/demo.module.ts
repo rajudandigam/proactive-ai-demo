@@ -11,6 +11,8 @@ import { RunsService } from './runs.service';
 import { DemoTraceService } from './trace-events.service';
 import { TripAttentionAgentService } from './trip-attention.agent';
 import { ValidationService } from './validation.service';
+import { InspectCaptureService } from '../instrumentation/inspect-capture.service';
+import { PlaygroundController } from '../playground/playground.controller';
 
 @Module({
   imports: [
@@ -19,7 +21,7 @@ import { ValidationService } from './validation.service';
       envFilePath: ['.env'],
     }),
   ],
-  controllers: [DemoController],
+  controllers: [DemoController, PlaygroundController],
   providers: [
     DemoClockService,
     FixtureToolsService,
@@ -28,6 +30,7 @@ import { ValidationService } from './validation.service';
     OutboxService,
     ReadToolsService,
     DemoTraceService,
+    InspectCaptureService,
     TripAttentionAgentService,
     DecisionGraphService,
     RunsService,
@@ -41,6 +44,7 @@ import { ValidationService } from './validation.service';
     ValidationService,
     DemoTraceService,
     RunsService,
+    InspectCaptureService,
   ],
 })
 export class DemoModule {}

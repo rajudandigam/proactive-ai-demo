@@ -1,0 +1,44 @@
+{
+  "id": "S08",
+  "version": "1.0.0",
+  "name": "Concurrent distinct sessions",
+  "suite": "travel-core",
+  "workload": "trip",
+  "variant": "valid",
+  "request": {
+    "eventId": "lab-s08-concurrent-a",
+    "tripId": "trip-jordan",
+    "type": "TRIP_REVIEW",
+    "scenarioId": "jordan-before-departure",
+    "signals": [
+      { "id": "preparation-1", "type": "TRIP_PREPARATION" },
+      { "id": "weather-1", "type": "WEATHER_UPDATE" },
+      { "id": "route-1", "type": "DESTINATION_EVENT" },
+      { "id": "search-1", "type": "HOTEL_SEARCH_ABANDONED" }
+    ]
+  },
+  "expected": {
+    "runStatus": "completed",
+    "exactOutboxWrites": 1,
+    "exactFixtureInvocations": 1,
+    "exactLiveAttempts": 0
+  },
+  "contract": {
+    "requireCompleted": true,
+    "expectCheckPass": true
+  },
+  "_lab": {
+    "parallelSibling": {
+      "eventId": "lab-s08-concurrent-b",
+      "tripId": "trip-jordan",
+      "type": "TRIP_REVIEW",
+      "scenarioId": "jordan-before-departure",
+      "signals": [
+        { "id": "preparation-1", "type": "TRIP_PREPARATION" },
+        { "id": "weather-1", "type": "WEATHER_UPDATE" },
+        { "id": "route-1", "type": "DESTINATION_EVENT" },
+        { "id": "search-1", "type": "HOTEL_SEARCH_ABANDONED" }
+      ]
+    }
+  }
+}

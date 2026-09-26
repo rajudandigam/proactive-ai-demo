@@ -23,7 +23,9 @@ export class DemoTraceService {
   private sequences = new Map<string, number>();
   private buffers = new Map<string, DemoEvent[]>();
   private emitters = new Map<string, EventEmitter>();
+  private finishedOrder: string[] = [];
   private readonly maxBuffer = 500;
+  private readonly maxFinishedRuns = 50;
 
   private emitter(runId: string): EventEmitter {
     let e = this.emitters.get(runId);
@@ -93,5 +95,18 @@ export class DemoTraceService {
 
   finish(runId: string): void {
     this.emitter(runId).emit('end');
+    // Bound retention: drop buffers for finished runs beyond the last 50.
+    this.finishedOrder.push(runId);
+    while (this.finishedOrder.length > this.maxFinishedRuns) {
+      const old = this.finishedOrder.shift();
+      if (!old) break;
+      this.sequences.delete(old);
+      this.buffers.delete(old);
+      const em = this.emitters.get(old);
+      if (em) {
+        em.removeAllListeners();
+        this.emitters.delete(old);
+      }
+    }
   }
 }

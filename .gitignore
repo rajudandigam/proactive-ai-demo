@@ -10,3 +10,4 @@ coverage/
 *.tsbuildinfo
 .agent-inspect/
 recordings/
+artifacts/

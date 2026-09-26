@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgentInspect Playground</title>
+  <link rel="stylesheet" href="/playground/ui/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>AgentInspect Playground</h1>
+    <p class="sub">Consumer lab for capture fidelity — demo UI remains at <a href="/demo/ui">/demo/ui</a></p>
+  </header>
+
+  <section class="controls">
+    <label>Suite
+      <select id="suite">
+        <option value="travel-core">travel-core</option>
+        <option value="city-evening">city-evening</option>
+        <option value="orchestration">orchestration</option>
+      </select>
+    </label>
+    <label>Scenario
+      <select id="scenario"></select>
+    </label>
+    <label>Profile
+      <select id="profile">
+        <option value="offline">offline (scripted+fixture)</option>
+        <option value="live-tools" disabled>live-tools (opt-in)</option>
+        <option value="live-model" disabled>live-model (opt-in)</option>
+      </select>
+    </label>
+    <button id="runBtn" type="button">Run offline</button>
+  </section>
+
+  <section class="grid">
+    <article>
+      <h2>Verdicts</h2>
+      <pre id="verdicts">Run a scenario to see application / fidelity / contract verdicts.</pre>
+    </article>
+    <article>
+      <h2>Coverage snapshot</h2>
+      <pre id="coverage">Loading…</pre>
+    </article>
+    <article class="wide">
+      <h2>Last result</h2>
+      <pre id="result"></pre>
+    </article>
+  </section>
+
+  <script src="/playground/ui/app.js"></script>
+</body>
+</html>

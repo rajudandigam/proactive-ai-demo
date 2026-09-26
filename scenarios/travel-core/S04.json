@@ -1,0 +1,32 @@
+{
+  "id": "S04",
+  "version": "1.0.0",
+  "name": "Quiet hours",
+  "suite": "travel-core",
+  "workload": "trip",
+  "variant": "valid",
+  "request": {
+    "eventId": "lab-s04-quiet",
+    "tripId": "trip-jordan",
+    "type": "TRIP_REVIEW",
+    "scenarioId": "jordan-quiet-hours",
+    "signals": [
+      { "id": "preparation-1", "type": "TRIP_PREPARATION" },
+      { "id": "weather-1", "type": "WEATHER_UPDATE" }
+    ]
+  },
+  "expected": {
+    "runStatus": "completed",
+    "modelMode": "none",
+    "exactOutboxWrites": 0,
+    "exactFixtureInvocations": 0,
+    "exactLiveAttempts": 0,
+    "maxModelCalls": 0,
+    "requireReasons": ["QUIET_HOURS"]
+  },
+  "contract": {
+    "requireCompleted": true,
+    "forbiddenTools": ["read_weather_context", "read_destination_impact"],
+    "expectCheckPass": true
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "S10",
+  "version": "1.0.0",
+  "name": "Boston city plan fixture",
+  "suite": "city-evening",
+  "workload": "city",
+  "variant": "valid",
+  "request": {
+    "city": "Boston",
+    "country": "US",
+    "date": "2026-10-06",
+    "radiusMeters": 800,
+    "limit": 3
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectStatus": "completed",
+    "minRestaurants": 1
+  }
+}

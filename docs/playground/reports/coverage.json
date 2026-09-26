@@ -1,0 +1,124 @@
+{
+  "generatedAt": "2026-09-26T19:59:11.948Z",
+  "appGitSha": "5981a1bf0a81dfb576b8fbf14bd169737f0c24aa",
+  "node": "v22.22.3",
+  "agentInspectInstalled": "6.31.7",
+  "coverageCounts": {
+    "packagesTotal": 18,
+    "packagesInstalled": 1,
+    "packagesBlocked": 17,
+    "symbolsTotal": 55,
+    "symbolsPlanned": 48,
+    "symbolsImplementedUnverified": 3,
+    "symbolsPassed": 4,
+    "executedEvidence": 16
+  },
+  "packages": {
+    "installed": [
+      {
+        "name": "agent-inspect",
+        "status": "passed"
+      }
+    ],
+    "blocked": [
+      {
+        "name": "@agent-inspect/adapter-sdk",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/ai-sdk",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/circuit",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/eval",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/guardrails",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/harness",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/index-sqlite",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/jest",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/langchain",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/mcp",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/mcp-server",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/openai-agents",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/redact",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/studio",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/tui",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/viewer",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      },
+      {
+        "name": "@agent-inspect/vitest",
+        "reason": "Not installed in this app; deferred to isolated consumer or later phase"
+      }
+    ]
+  },
+  "executedBatches": [
+    "batch-1790448787965",
+    "batch-1790448796862",
+    "batch-1790448838671",
+    "batch-1790448840295",
+    "batch-1790450275299",
+    "batch-1790452736131",
+    "batch-ext-1790450148064",
+    "batch-ext-1790450260214",
+    "batch-ext-1790452743860"
+  ],
+  "lanes": {
+    "travelCoreOffline": "see lab:suite travel-core",
+    "extendedOffline": "see lab:extended",
+    "cli": "see lab:cli",
+    "interopDocker": "blocked until docker compose --profile interop is executed and evidence retained",
+    "langgraphAdapter": "blocked — isolated integration-apps/langgraph requires core ^1",
+    "aiSdkAdapter": "blocked-until-install",
+    "openaiAgentsAdapter": "blocked-until-install",
+    "mcpPackages": "blocked — @agent-inspect/mcp not installed in root",
+    "liveProviders": "opt-in; record blocked when credentials/network unavailable"
+  },
+  "openDefects": [],
+  "remainingWork": [
+    "Install and run integration-apps/* with matching peer locks (P07)",
+    "Add @agent-inspect/mcp client/server consumers (P08)",
+    "Execute Docker interop profile and retain OTLP loss ledger (P11)",
+    "Expand contract rule-family matrix beyond S41/S42 (P05 remainder)",
+    "Browser smoke for /playground/ui and TUI PTY tests (P10 remainder)"
+  ]
+}

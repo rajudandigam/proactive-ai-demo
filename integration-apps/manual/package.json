@@ -1,0 +1,13 @@
+{
+  "name": "@playground/manual-consumer",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Direct agent-inspect instrumentation lane matching main app peers",
+  "type": "module",
+  "dependencies": {
+    "agent-inspect": "6.31.7"
+  },
+  "scripts": {
+    "smoke": "node smoke.mjs"
+  }
+}

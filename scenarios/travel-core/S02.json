@@ -1,0 +1,27 @@
+{
+  "id": "S02",
+  "version": "1.0.0",
+  "name": "Arrival journey affected",
+  "suite": "travel-core",
+  "workload": "trip",
+  "variant": "valid",
+  "request": {
+    "eventId": "lab-s02-arrival-affected",
+    "tripId": "trip-jordan",
+    "type": "TRIP_REVIEW",
+    "scenarioId": "jordan-arrival-affected",
+    "signals": [{ "id": "route-1", "type": "DESTINATION_EVENT" }]
+  },
+  "expected": {
+    "runStatus": "completed",
+    "modelMode": "fixture",
+    "exactOutboxWrites": 1,
+    "exactFixtureInvocations": 1,
+    "exactLiveAttempts": 0,
+    "minModelCalls": 1
+  },
+  "contract": {
+    "requireCompleted": true,
+    "expectCheckPass": true
+  }
+}

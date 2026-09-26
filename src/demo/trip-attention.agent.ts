@@ -2,9 +2,30 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { zodResponseFormat } from 'openai/helpers/zod';
-import { maybeInspectRun, step } from 'agent-inspect';
+import { step } from 'agent-inspect';
+import { createRequire } from 'node:module';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+
+const requireAdv = createRequire(__filename);
+const { hasActiveContext } = requireAdv('agent-inspect/advanced') as {
+  hasActiveContext: () => boolean;
+};
+
+async function maybeStep<T>(name: string, fn: () => Promise<T> | T): Promise<T> {
+  if (hasActiveContext()) return step(name, fn);
+  return fn();
+}
+
+async function maybeLlm<T>(model: string, fn: () => Promise<T> | T): Promise<T> {
+  if (hasActiveContext()) return step.llm(model, async () => fn());
+  return fn();
+}
+
+async function maybeTool<T>(toolName: string, fn: () => Promise<T> | T): Promise<T> {
+  if (hasActiveContext()) return step.tool(toolName, async () => fn());
+  return fn();
+}
 import {
   DemoRunContext,
   ModelDecisionSet,
@@ -83,24 +104,12 @@ export class TripAttentionAgentService {
   ): Promise<AgentLoopResult> {
     const mode = this.getMode();
     if (mode === 'fixture') {
-      return this.runFixture(ctx, envelope, eligible);
-    }
-    const inspectOn = /^(1|true|yes|on|enabled)$/i.test(
-      this.config.get<string>('AGENT_INSPECT') ?? '',
-    );
-    if (inspectOn) {
-      return maybeInspectRun(
-        'proactive-trip-attention',
-        () => this.runLive(ctx, envelope, eligible),
-        {
-          silent: true,
-          traceDir: '.agent-inspect',
-          correlationId: ctx.runId,
-          requestId: ctx.eventId,
-          metadata: { scenarioId: ctx.scenarioId, sessionId: ctx.sessionId },
-        },
+      return maybeStep('fixture_agent', () =>
+        this.runFixture(ctx, envelope, eligible),
       );
     }
+    // Live path: outer DecisionGraphService already owns inspectRun.
+    // Use step.llm / step.tool inside runLive when an active context exists.
     return this.runLive(ctx, envelope, eligible);
   }
 
@@ -357,11 +366,7 @@ export class TripAttentionAgentService {
               tools: this.tools.definitions(),
               tool_choice: 'auto',
             });
-          return /^(1|true|yes|on|enabled)$/i.test(
-            this.config.get<string>('AGENT_INSPECT') ?? '',
-          )
-            ? step.llm(model, call)
-            : call();
+          return maybeLlm(model, call);
         })();
       } catch (err) {
         accounting.liveFailures += 1;
@@ -443,11 +448,7 @@ export class TripAttentionAgentService {
         const executed = await (async () => {
           const call = () =>
             this.tools.execute(ctx, toolName, args, tc.id, 'model');
-          return /^(1|true|yes|on|enabled)$/i.test(
-            this.config.get<string>('AGENT_INSPECT') ?? '',
-          )
-            ? step.tool(toolName, call)
-            : call();
+          return maybeTool(toolName, call);
         })();
         toolResults.push(executed);
         if (executed.cached) accounting.toolCacheHits += 1;
@@ -517,11 +518,7 @@ export class TripAttentionAgentService {
               'decision_set',
             ),
           });
-        return /^(1|true|yes|on|enabled)$/i.test(
-          this.config.get<string>('AGENT_INSPECT') ?? '',
-        )
-          ? step.llm(model, call)
-          : call();
+        return maybeLlm(model, call);
       })();
 
       accounting.liveSuccesses += 1;

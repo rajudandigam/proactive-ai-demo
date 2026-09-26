@@ -1,0 +1,15 @@
+# Opt-in interop stack (P11). Defaults stay local; do not enable in ordinary CI.
+# Pin digests when you promote a profile from blocked → executed.
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector:0.109.0
+    profiles: ["interop"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+  # Phoenix / Langfuse images left commented until an owned digests matrix is recorded.
+  # phoenix:
+  #   image: arizephoenix/phoenix:latest
+  #   profiles: ["interop"]

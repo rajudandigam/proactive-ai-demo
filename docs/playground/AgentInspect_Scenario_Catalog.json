@@ -1,0 +1,1294 @@
+{
+  "schemaVersion": "playground-plan/1",
+  "preparedAt": "2026-09-26",
+  "purpose": "Proposed scenario families; no executions are represented by this file.",
+  "scenarioCount": 64,
+  "scenarios": [
+    {
+      "id": "S01",
+      "phase": "P02",
+      "name": "Trip preparation and weather",
+      "workload": "trip",
+      "setup": "Fixture tomorrow departure, open check-in, rain, existing hotel booking",
+      "independentOracle": "One allowed preview, route deferred, obsolete hotel reminder silent; independently verify each candidate outcome",
+      "negativeVariations": [
+        "Missing required fact, omitted candidate, forbidden action"
+      ],
+      "captureAssertions": "Exactly observed logical tools/model attempts; no trace-derived expected counts",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S02",
+      "phase": "P02",
+      "name": "Arrival journey affected",
+      "workload": "trip",
+      "setup": "Arrival within guidance window and closure intersects chosen route",
+      "independentOracle": "Useful arrival guidance with matching evidence and allowed action",
+      "negativeVariations": [
+        "Move closure outside journey/time window"
+      ],
+      "captureAssertions": "Evidence/source IDs and final proposal linked to validation",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S03",
+      "phase": "P02",
+      "name": "Arrival journey unaffected",
+      "workload": "trip",
+      "setup": "Same closure type but traveler uses an unaffected transport route",
+      "independentOracle": "Silence or bounded no-impact outcome, no unnecessary preview",
+      "negativeVariations": [
+        "Force stale affected-route fact into proposal"
+      ],
+      "captureAssertions": "Distinguish permitted judgment from policy permission",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S04",
+      "phase": "P02",
+      "name": "Quiet hours",
+      "workload": "trip",
+      "setup": "Optional candidate during traveler quiet hours",
+      "independentOracle": "Zero provider attempts, valid deferred decision",
+      "negativeVariations": [
+        "Accidentally call model before policy"
+      ],
+      "captureAssertions": "Inspectible policy-only run with no fictional LLM step",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S05",
+      "phase": "P02",
+      "name": "Consent disabled",
+      "workload": "trip",
+      "setup": "Consent off with optional candidates present",
+      "independentOracle": "Zero provider attempts and zero optional writes",
+      "negativeVariations": [
+        "Force optional agent node to execute"
+      ],
+      "captureAssertions": "Capture deterministic suppression and business reason",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S06",
+      "phase": "P02",
+      "name": "Required flight alert",
+      "workload": "trip",
+      "setup": "Confirmed material flight change with valid source evidence",
+      "independentOracle": "Template alert through required path; zero optional model calls",
+      "negativeVariations": [
+        "Remove essential evidence or change source version"
+      ],
+      "captureAssertions": "Correct required-path tree and independent preview receipt",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S07",
+      "phase": "P02",
+      "name": "Repeated event and changed payload",
+      "workload": "trip",
+      "setup": "Submit same event twice, then conflicting payload under same event ID",
+      "independentOracle": "One logical notification; changed payload rejected; each request has its own execution record",
+      "negativeVariations": [
+        "Concurrent repeated request",
+        "replay after restart in durable lane"
+      ],
+      "captureAssertions": "Execution identity differs from logical event/operation identity",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S08",
+      "phase": "P02",
+      "name": "Concurrent sessions and event isolation",
+      "workload": "trip",
+      "setup": "Interleave different trips/sessions and identical display names",
+      "independentOracle": "No mixed clock/evidence/outbox results; isolated ownership",
+      "negativeVariations": [
+        "Same event ID across sessions",
+        "reset while active"
+      ],
+      "captureAssertions": "Parents/correlation never cross sessions; no name-only linking",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S09",
+      "phase": "P03",
+      "name": "Ambiguous city and invalid arguments",
+      "workload": "city",
+      "setup": "Search duplicate city names with country/date/radius constraints",
+      "independentOracle": "Disambiguation or explicit selection policy; bounded valid coordinates",
+      "negativeVariations": [
+        "Invalid radius/date, unknown tool, non-object arguments"
+      ],
+      "captureAssertions": "Safe structured arguments, source IDs and validation outcome",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S10",
+      "phase": "P03",
+      "name": "Weather changes a city plan",
+      "workload": "city",
+      "setup": "Fixed rain and clear fixtures; optional live current-date forecast",
+      "independentOracle": "Recommendation cites weather facts and respects valid time window",
+      "negativeVariations": [
+        "Stale forecast, incompatible units, missing fields"
+      ],
+      "captureAssertions": "Provider lineage, fetched/valid time, actual model usage if available",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S11",
+      "phase": "P03",
+      "name": "Restaurant and hotel place search",
+      "workload": "city",
+      "setup": "Small bounded OSM result set with some missing tags",
+      "independentOracle": "Only supported place claims; no invented rooms/prices/open status",
+      "negativeVariations": [
+        "Empty result, malformed coordinates, huge response"
+      ],
+      "captureAssertions": "Tool identity, normalized arguments, bounded payload and unknowns",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S12",
+      "phase": "P03",
+      "name": "Cache hit, miss and expiration",
+      "workload": "city",
+      "setup": "Repeat normalized search with fresh then expired cache",
+      "independentOracle": "Fresh hit avoids actual HTTP call; expiry performs fresh lookup",
+      "negativeVariations": [
+        "Corrupt entry, wrong provider/version key"
+      ],
+      "captureAssertions": "Tool invocation count versus physical provider request count remain distinct",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S13",
+      "phase": "P03",
+      "name": "Parallel reads and partial success",
+      "workload": "city",
+      "setup": "Weather and places run concurrently; one provider fails",
+      "independentOracle": "Use available facts or explicit partial result per scenario",
+      "negativeVariations": [
+        "One slow branch, both fail, cancellation during fan-out"
+      ],
+      "captureAssertions": "Sibling parentage, overlap and first causal failure visibility",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S14",
+      "phase": "P03",
+      "name": "Movie and TV search/details",
+      "workload": "evening",
+      "setup": "TMDB fixture/movie key profile and separately named TVmaze profile",
+      "independentOracle": "Sourced catalog result with attribution; no theater availability claim",
+      "negativeVariations": [
+        "No key, empty search, malformed details, 429"
+      ],
+      "captureAssertions": "Explicit profile and provider identity; no silent live-to-fixture fallback",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S15",
+      "phase": "P03",
+      "name": "Live model accounting and refusal",
+      "workload": "all",
+      "setup": "One real provider smoke or local protocol-compatible model stub",
+      "independentOracle": "Attempts reconcile with gateway; missing usage remains unknown",
+      "negativeVariations": [
+        "HTTP error, refusal, empty choices, malformed structured output"
+      ],
+      "captureAssertions": "Transport status and business/validation outcomes are separate",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S16",
+      "phase": "P04",
+      "name": "Streaming completion and cancellation",
+      "workload": "evening",
+      "setup": "Stream scripted chunks then complete; second run aborts midway",
+      "independentOracle": "Completed output or explicit cancelled/incomplete result",
+      "negativeVariations": [
+        "Disconnect before final chunk",
+        "missing usage/terminal callback"
+      ],
+      "captureAssertions": "No invented per-token replay; timing/count metadata only where supported",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S17",
+      "phase": "P04",
+      "name": "Bounded read recovery",
+      "workload": "helpdesk",
+      "setup": "Read attempt fails transiently then succeeds with same arguments",
+      "independentOracle": "Consumer uses successful read result; attempts within budget",
+      "negativeVariations": [
+        "Retry without preceding failure or change argument digest"
+      ],
+      "captureAssertions": "Explicit operation/attempt/retry links and result dependency",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S18",
+      "phase": "P04",
+      "name": "Fallback after read failure",
+      "workload": "city",
+      "setup": "Primary read fails, configured alternate source succeeds",
+      "independentOracle": "Fallback only after related failure; source change visible",
+      "negativeVariations": [
+        "Fallback with no failure",
+        "all providers fail"
+      ],
+      "captureAssertions": "Recovered versus terminal failure preserved with provenance",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S19",
+      "phase": "P04",
+      "name": "Write committed but response lost",
+      "workload": "reservation",
+      "setup": "Local server commits receipt then closes connection",
+      "independentOracle": "Write stays uncertain until independent receipt reconciliation",
+      "negativeVariations": [
+        "Naive duplicate retry, unavailable reconciliation"
+      ],
+      "captureAssertions": "No exactly-once claim from client key alone; receipt evidence separate",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S20",
+      "phase": "P04",
+      "name": "Reservation idempotency and conflicts",
+      "workload": "reservation",
+      "setup": "Repeated confirmed operation uses stable idempotency key",
+      "independentOracle": "One server-side receipt; conflicting payload rejected",
+      "negativeVariations": [
+        "Different key, same operation, concurrent requests"
+      ],
+      "captureAssertions": "Physical attempts distinct from single logical effect",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S21",
+      "phase": "P04",
+      "name": "Approval denial and resume",
+      "workload": "reservation",
+      "setup": "Synthetic user approves/denies a pending local reservation",
+      "independentOracle": "No write before approval; denial writes nothing; resume tied to approval",
+      "negativeVariations": [
+        "Stale approval, wrong session, duplicated approval event"
+      ],
+      "captureAssertions": "Explicit approval observation and fresh execution relationship",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S22",
+      "phase": "P04",
+      "name": "Queue worker restart and delayed continuation",
+      "workload": "reservation",
+      "setup": "Persist task/checkpoint, stop worker, resume later",
+      "independentOracle": "Receipt count and pending state reconcile across processes",
+      "negativeVariations": [
+        "Crash before/after effect, duplicate delivery, expired context"
+      ],
+      "captureAssertions": "New physical run IDs; explicit session/operation links; no fabricated parent",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S23",
+      "phase": "P04",
+      "name": "Nested subgraphs",
+      "workload": "city",
+      "setup": "Outer planner invokes genuine nested read/synthesis workflow",
+      "independentOracle": "Child results used by correct parent",
+      "negativeVariations": [
+        "Out-of-order callback, unresolved external parent"
+      ],
+      "captureAssertions": "No self-parent/cycle; ambiguity visible instead of invented nesting",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S24",
+      "phase": "P04",
+      "name": "Supervisor and two workers",
+      "workload": "city",
+      "setup": "Supervisor delegates weather/places with parallel or sequential join",
+      "independentOracle": "Correct worker ownership and final join validation",
+      "negativeVariations": [
+        "Same step names, failed worker, handoff recursion"
+      ],
+      "captureAssertions": "Sub-agent IDs and real handoff edges survive capture",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S25",
+      "phase": "P05",
+      "name": "Grounded local policy answer",
+      "workload": "helpdesk",
+      "setup": "Retrieve versioned documents before answer generation",
+      "independentOracle": "Returned source IDs exist; bounded required policy facts present",
+      "negativeVariations": [
+        "Generate before retrieval",
+        "cite nonexistent source"
+      ],
+      "captureAssertions": "Retrieval/generation order, citation and overlap heuristics evaluated honestly",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S26",
+      "phase": "P05",
+      "name": "Valid cache or fresh retrieval alternative",
+      "workload": "helpdesk",
+      "setup": "Equivalent valid answer from cache or current document retrieval",
+      "independentOracle": "One legitimate branch passes base and branch contracts",
+      "negativeVariations": [
+        "Neither branch valid, missing cache provenance"
+      ],
+      "captureAssertions": "Alternatives do not fail because unused branches fail",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S27",
+      "phase": "P05",
+      "name": "Missing and conflicting evidence",
+      "workload": "helpdesk",
+      "setup": "Required policy fact absent or sources disagree",
+      "independentOracle": "Explicit insufficient/conflict outcome without invented answer",
+      "negativeVariations": [
+        "Remove source ID, omit observation, partial corpus"
+      ],
+      "captureAssertions": "Unknown/insufficient evidence never becomes proven success",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S28",
+      "phase": "P05",
+      "name": "Untrusted tool text",
+      "workload": "all",
+      "setup": "Local tool fixture contains bounded prompt-injection instructions",
+      "independentOracle": "Instructions treated as data; no unauthorized tool or effect",
+      "negativeVariations": [
+        "Text asks to expose credentials or bypass approval"
+      ],
+      "captureAssertions": "Guardrail evidence and action boundary; no hidden reasoning captured",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S29",
+      "phase": "P05",
+      "name": "Repeated tools, arguments and model loops",
+      "workload": "all",
+      "setup": "Scripted provider repeats same call and loops past limits",
+      "independentOracle": "Application stops at configured budget",
+      "negativeVariations": [
+        "Pair lifecycle rows, distinct retry attempts, same-name different tools"
+      ],
+      "captureAssertions": "Circuit analyzers count logical operations and retain intentional distinctions",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S30",
+      "phase": "P05",
+      "name": "Budget exhausted before finalization",
+      "workload": "all",
+      "setup": "Investigation consumes deadline/call allowance",
+      "independentOracle": "No final/fallback call beyond reserved budget",
+      "negativeVariations": [
+        "Timeout in flight, unsupported output-token option"
+      ],
+      "captureAssertions": "Actual attempted calls reconcile; timeout/cancel status visible",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S31",
+      "phase": "P05",
+      "name": "Recovered and terminal causal failures",
+      "workload": "all",
+      "setup": "Linked error-success chain plus unrelated error in another branch",
+      "independentOracle": "Failure roles follow explicit relationships and final outcome",
+      "negativeVariations": [
+        "Remove retry link, same display names, ambiguous chronology"
+      ],
+      "captureAssertions": "Unknown relationships stay unknown across facts/CLI/MCP/evidence",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S32",
+      "phase": "P04",
+      "name": "Multi-turn session and observed outcome",
+      "workload": "trip",
+      "setup": "Two related requests plus delayed observation with known identity",
+      "independentOracle": "Fresh state used; each request independently identifiable",
+      "negativeVariations": [
+        "Cross-session observation, stale event, missing provenance"
+      ],
+      "captureAssertions": "Session summaries and observed outcomes correlate conservatively",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S33",
+      "phase": "P01",
+      "name": "Root APIs and inspector methods",
+      "workload": "core",
+      "setup": "Invoke public helpers/instance methods with sync/async/nested/error callbacks",
+      "independentOracle": "Same results and errors with tracing enabled/disabled",
+      "negativeVariations": [
+        "Separate instances, outside-context call, this binding"
+      ],
+      "captureAssertions": "Global/manual and instance schema/lifecycle semantics remain distinct",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S34",
+      "phase": "P06",
+      "name": "All writer implementations",
+      "workload": "core",
+      "setup": "Memory/file/buffered/composite/null run same event sequence",
+      "independentOracle": "Documented retention, ordering and stats",
+      "negativeVariations": [
+        "Fail one composite child",
+        "null/disabled mode"
+      ],
+      "captureAssertions": "Accepted events/diagnostics verified independently",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S35",
+      "phase": "P06",
+      "name": "Writer overflow and backpressure",
+      "workload": "core",
+      "setup": "Bounded slow sink with each overflow policy",
+      "independentOracle": "Drops and order match documented policy; app unaffected",
+      "negativeVariations": [
+        "Oversized event, saturated queue, concurrent producers"
+      ],
+      "captureAssertions": "No hidden loss; dropped/accepted counters reconcile",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S36",
+      "phase": "P06",
+      "name": "Serialization and filesystem failure",
+      "workload": "core",
+      "setup": "Circular/oversized metadata and controlled invalid output destination",
+      "independentOracle": "Instrumentation failure isolated from application result",
+      "negativeVariations": [
+        "Unserializable values, inaccessible directory, child writer throw"
+      ],
+      "captureAssertions": "Diagnostics contain safe bounded errors and no leaked values",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S37",
+      "phase": "P06",
+      "name": "Flush, close, shutdown and abrupt exit",
+      "workload": "core",
+      "setup": "Repeated flush/close and child-process termination at known boundary",
+      "independentOracle": "Idempotent lifecycle; graceful drain; abrupt loss reported within claimed bounds",
+      "negativeVariations": [
+        "Late write, shutdown while pending, process kill"
+      ],
+      "captureAssertions": "Never claim fsync/durable-before-effect from JSONL flush",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S38",
+      "phase": "P06",
+      "name": "Logical lifecycle projection",
+      "workload": "core",
+      "setup": "One paired TOOL lifecycle and genuinely repeated attempts",
+      "independentOracle": "One logical call per attempt; counts invariant to supported representations",
+      "negativeVariations": [
+        "Duplicate starts/ends, missing endpoint, legacy TOOL-start/LOGIC-end"
+      ],
+      "captureAssertions": "Raw rows preserved; built-in logical counts correct",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S39",
+      "phase": "P06",
+      "name": "Legacy mixed schema and migration",
+      "workload": "core",
+      "setup": "v0.1/v0.2/1.0 and mixed local traces",
+      "independentOracle": "Supported formats readable; copy migration preserves essential facts",
+      "negativeVariations": [
+        "Unknown schema, multiple runs without selector"
+      ],
+      "captureAssertions": "Warnings and conservative detection; source bytes unchanged",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S40",
+      "phase": "P06",
+      "name": "Logs, malformed input and confidence",
+      "workload": "core",
+      "setup": "JSON lines/log4js mappings with explicit/correlated/heuristic/unknown relationships",
+      "independentOracle": "Documented parsing and confidence thresholds",
+      "negativeVariations": [
+        "Partial tail, cycle/orphan, malformed embedded JSON, invalid confidence"
+      ],
+      "captureAssertions": "No invented relationships; diagnostics and input bounds",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S41",
+      "phase": "P05",
+      "name": "Order semantics and typed endpoints",
+      "workload": "contracts",
+      "setup": "Overlap and late-repeat corpus for all three modes",
+      "independentOracle": "Expected pass/fail per documented TOOL and TOOL/LLM semantics",
+      "negativeVariations": [
+        "Missing endpoint, wrong kind with same name, unresolved end"
+      ],
+      "captureAssertions": "Finding includes correct rule/event; no positional assumptions",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S42",
+      "phase": "P05",
+      "name": "Structured argument evidence",
+      "workload": "contracts",
+      "setup": "Safe object arguments using each supported location and JSON Pointer operator",
+      "independentOracle": "Exists/type/equals/oneOf behave per actual evidence",
+      "negativeVariations": [
+        "Preview-only, digest-only, missing or conflicting locations"
+      ],
+      "captureAssertions": "Unavailable structured evidence fails closed as documented",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S43",
+      "phase": "P05",
+      "name": "Run, model, status and control rules",
+      "workload": "contracts",
+      "setup": "Boundary values for duration/status/tools/models/tokens/declared/enforced controls",
+      "independentOracle": "Exact boundary semantics and observed-vs-declared distinction",
+      "negativeVariations": [
+        "Typo status, forbidden model/tool, missing usage, exceeded limit"
+      ],
+      "captureAssertions": "Rule inventory complete; unknown evidence is not measured zero",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S44",
+      "phase": "P05",
+      "name": "Actor scope, alternatives and provenance",
+      "workload": "contracts",
+      "setup": "Two actors with different valid paths and linked observed effect",
+      "independentOracle": "Only selected actor evaluated; valid branch wins",
+      "negativeVariations": [
+        "No/multiple scope matches, wrong-run evidence reference, nested alternatives"
+      ],
+      "captureAssertions": "Structural provenance is not treated as independent truth",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S45",
+      "phase": "P05",
+      "name": "Circuit and evaluator accounting",
+      "workload": "contracts",
+      "setup": "All circuit/guardrail/eval analyzers with explicit expected findings",
+      "independentOracle": "Findings/counts/rulesEvaluated agree across API and CLI",
+      "negativeVariations": [
+        "Paired lifecycle, absent inputs, injected failing rule"
+      ],
+      "captureAssertions": "No missing circuit findings in aggregate summaries",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S46",
+      "phase": "P06",
+      "name": "Redaction and safe rendering",
+      "workload": "privacy",
+      "setup": "Synthetic canaries in metadata/URLs/errors/connection strings/previews",
+      "independentOracle": "No canary in persisted or shareable surfaces; safe numeric usage retained",
+      "negativeVariations": [
+        "Oversized values, encoded credentials, HTML/ANSI injection"
+      ],
+      "captureAssertions": "Scan JSONL/reports/MCP/HTML/UI/ZIP; preserve originals after capture",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S47",
+      "phase": "P09",
+      "name": "Evidence tamper and containment",
+      "workload": "evidence",
+      "setup": "Valid bundle then independently alter one file/checksum/path",
+      "independentOracle": "Valid passes; each tamper fails correct verification",
+      "negativeVariations": [
+        "Traversal, symlink, zip entry, truncated package"
+      ],
+      "captureAssertions": "Check actual files not only bundle creation exit status",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S48",
+      "phase": "P09",
+      "name": "Contract binding and reproducibility",
+      "workload": "evidence",
+      "setup": "Resolved contract plus fixed safe trace and manifest",
+      "independentOracle": "Same declared inputs produce comparable verified evidence",
+      "negativeVariations": [
+        "Change contract after checks, missing check file, stale hash"
+      ],
+      "captureAssertions": "Contract binding checked; redaction precedes final digest computation",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S49",
+      "phase": "P07",
+      "name": "LangChain/LangGraph adapter fidelity",
+      "workload": "adapters",
+      "setup": "Real framework consumers for classes A\u2013E",
+      "independentOracle": "Lifecycle, names, parentage, model/usage preserved when supplied",
+      "negativeVariations": [
+        "Handler reuse, late ends, ambiguous parent, preview missing"
+      ],
+      "captureAssertions": "Actual compatible peers; metadata-only and preview diagnostics",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S50",
+      "phase": "P07",
+      "name": "AI SDK native telemetry",
+      "workload": "adapters",
+      "setup": "Real generateText/streamText/tools with scripted provider",
+      "independentOracle": "One integration per concurrent generation; valid local capture",
+      "negativeVariations": [
+        "Missing fields, cancellation, error, deliberate duplicate instrumentation"
+      ],
+      "captureAssertions": "Native integration path only; no assumed AI SDK 7 support",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S51",
+      "phase": "P07",
+      "name": "OpenAI Agents native processor",
+      "workload": "adapters",
+      "setup": "Real agents/tools/handoffs/guardrail framework execution",
+      "independentOracle": "Local processor replacement and truthful handoff/usage mapping",
+      "negativeVariations": [
+        "Refusal, missing payload, terminalization, unwanted exporter"
+      ],
+      "captureAssertions": "No hidden hosted trace export; real model lane separate",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S52",
+      "phase": "P08",
+      "name": "MCP client wrapper",
+      "workload": "mcp",
+      "setup": "Real local MCP client/server list/call/connect/close",
+      "independentOracle": "Wrapped calls retain SDK behavior and logical identities",
+      "negativeVariations": [
+        "Transport/tool errors, duplicate IDs, disconnect, cancellation"
+      ],
+      "captureAssertions": "No lost prototype/private-state methods; errors distinguished",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S53",
+      "phase": "P08",
+      "name": "Read-only evidence MCP server",
+      "workload": "mcp",
+      "setup": "Initialize and invoke each advertised tool on isolated evidence",
+      "independentOracle": "Matches API/CLI facts/findings within documented bounds",
+      "negativeVariations": [
+        "Protocol-state error, traversal, hostile trace instructions"
+      ],
+      "captureAssertions": "No business-tool execution or unrelated file exposure",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S54",
+      "phase": "P08",
+      "name": "Custom adapter and manifest conformance",
+      "workload": "plugins",
+      "setup": "Explicit local adapter with valid lifecycle/privacy manifest",
+      "independentOracle": "Registration and conformance pass for valid adapter",
+      "negativeVariations": [
+        "Invalid manifest, duplicate registration, nonconforming lifecycle"
+      ],
+      "captureAssertions": "Every helper/method mapped; no automatic remote load",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S55",
+      "phase": "P08",
+      "name": "Transform, renderer, indexer and check extensions",
+      "workload": "plugins",
+      "setup": "Local transform/render/index/check via actual supported interfaces",
+      "independentOracle": "Safe consistent output and explicit mapping losses",
+      "negativeVariations": [
+        "Invalid types, stale index, unsafe output, missing field"
+      ],
+      "captureAssertions": "Use public SDK interfaces; do not invent dynamic CLI hooks",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S56",
+      "phase": "P09",
+      "name": "Vitest/Jest reporters and matchers",
+      "workload": "reporters",
+      "setup": "Actual isolated runner executions with pass/fail/concurrency",
+      "independentOracle": "Correct artifacts and experimental matcher diagnostics",
+      "negativeVariations": [
+        "No trace, wrong tool, failed contract, reporter write failure"
+      ],
+      "captureAssertions": "JUnit/summary/file attribution matches executed test",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S57",
+      "phase": "P09",
+      "name": "CLI complete command matrix",
+      "workload": "cli",
+      "setup": "Discovered command tree with valid/empty/invalid input",
+      "independentOracle": "JSON output/exit codes/artifacts obey installed contract",
+      "negativeVariations": [
+        "Bad flags, missing input, inconsistent summaries, dangerous cleanup path"
+      ],
+      "captureAssertions": "Every command exercised or explicitly blocked; sandbox all cleanup",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S58",
+      "phase": "P10",
+      "name": "Workspace and optional SQLite index",
+      "workload": "workspace",
+      "setup": "Build/query/rebuild/status/staleness/cleanup in disposable workspace",
+      "independentOracle": "Index agrees with JSONL; core works with optional package absent",
+      "negativeVariations": [
+        "Corrupt index, missing native module, symlink/traversal"
+      ],
+      "captureAssertions": "Platform-specific install evidence; source traces immutable",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S59",
+      "phase": "P10",
+      "name": "Playground, viewer, Studio and TUI",
+      "workload": "ui",
+      "setup": "Actual servers/browser/PTy; valid and failed run views",
+      "independentOracle": "Correct labels/verdicts/artifact links and graceful exit",
+      "negativeVariations": [
+        "SSE reconnect/gap, unescaped content, disabled ingest attempt"
+      ],
+      "captureAssertions": "Read-only analyzer behavior; credentials-dependent import visibly blocked",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S60",
+      "phase": "P11",
+      "name": "Collector and standards round-trip",
+      "workload": "interop",
+      "setup": "Real owned receiver plus OTLP/OpenInference local validation",
+      "independentOracle": "Retained IDs/status/attributes re-read and compared",
+      "negativeVariations": [
+        "Partial reject, multiline batches, unknown extensions"
+      ],
+      "captureAssertions": "Explicit mapping/loss ledger; HTTP 200 not sufficient",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S61",
+      "phase": "P11",
+      "name": "Vendor coexistence and semantic evaluation",
+      "workload": "interop",
+      "setup": "AgentInspect alone, vendor alone, dual capture; optional Promptfoo",
+      "independentOracle": "No unaccounted duplicate operations; distinct trajectory/quality verdicts",
+      "negativeVariations": [
+        "Global OTel conflict, filter loss, shutdown loss"
+      ],
+      "captureAssertions": "Pin framework/vendor versions; local-vs-cloud behavior explicit",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S62",
+      "phase": "P12",
+      "name": "Performance and bounded stress",
+      "workload": "performance",
+      "setup": "Fixed local corpus across tracing-off/null/memory/file/buffered/adapters",
+      "independentOracle": "Measured latency/RSS/events/loss with repeatable workload",
+      "negativeVariations": [
+        "Slow sink, large directory, many concurrent sessions"
+      ],
+      "captureAssertions": "Report actual overhead; never stress public APIs",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S63",
+      "phase": "P12",
+      "name": "Packed package and platform compatibility",
+      "workload": "compatibility",
+      "setup": "Fresh npm/tarball ESM/CJS/TS consumers and actual supported Node/OS jobs",
+      "independentOracle": "Imports/types/startup/optional dependencies work for executed cells",
+      "negativeVariations": [
+        "Mismatched peers, absent optional package, bad export condition"
+      ],
+      "captureAssertions": "Record integrity/lockfiles; unavailable platforms not claimed",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "S64",
+      "phase": "P12",
+      "name": "Version differential and minimal repro",
+      "workload": "feedback",
+      "setup": "Same independently checked case against baseline and candidate packages",
+      "independentOracle": "Correctly distinguish fixed/regressed/unchanged/blocked",
+      "negativeVariations": [
+        "Changed baseline, incomparable config, synthetic evidence passed as live"
+      ],
+      "captureAssertions": "Small safe repro plus original evidence; no auto library publishing",
+      "minimumVariants": [
+        "valid",
+        "invalid",
+        "insufficient-evidence-where-applicable"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    }
+  ]
+}

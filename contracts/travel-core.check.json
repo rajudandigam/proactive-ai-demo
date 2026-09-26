@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "run.requireCompleted",
+      "type": "run.requireCompleted"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@playground/example-adapter",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Example AgentInspect adapter plugin manifest (P08)",
+  "agentInspect": {
+    "kind": "adapter",
+    "id": "playground-example-adapter",
+    "version": "0.0.1",
+    "entry": "./index.js"
+  }
+}

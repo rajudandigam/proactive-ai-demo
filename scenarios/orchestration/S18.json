@@ -1,0 +1,20 @@
+{
+  "id": "S18",
+  "version": "1.0.0",
+  "name": "Reservation uncertain write",
+  "suite": "orchestration",
+  "workload": "reservation",
+  "variant": "valid",
+  "request": {
+    "resource": "table-12",
+    "idempotencyKey": "idem-s18-1",
+    "dropResponse": true
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectUncertain": true,
+    "expectReceiptPresent": true
+  }
+}

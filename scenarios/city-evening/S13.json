@@ -1,0 +1,19 @@
+{
+  "id": "S13",
+  "version": "1.0.0",
+  "name": "Evening TV fixture",
+  "suite": "city-evening",
+  "workload": "evening",
+  "variant": "valid",
+  "request": {
+    "query": "City",
+    "kind": "tv"
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectStatus": "completed",
+    "minItems": 1
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "S19",
+  "version": "1.0.0",
+  "name": "Helpdesk grounded quiet hours",
+  "suite": "orchestration",
+  "workload": "helpdesk",
+  "variant": "valid",
+  "request": {
+    "question": "When are quiet hours for optional messages?"
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectStatus": "answered",
+    "minCitations": 1
+  }
+}

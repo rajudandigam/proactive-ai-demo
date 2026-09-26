@@ -10,6 +10,7 @@ import { ReadToolsService } from './read-tools.service';
 import { TripAttentionAgentService } from './trip-attention.agent';
 import { DemoTraceService } from './trace-events.service';
 import { ValidationService } from './validation.service';
+import { InspectCaptureService } from '../instrumentation/inspect-capture.service';
 import {
   ApplicationResult,
   DecisionOutcome,
@@ -53,6 +54,8 @@ export class DecisionGraphService {
     private readonly agent: TripAttentionAgentService,
     @Inject(ReadToolsService) private readonly tools: ReadToolsService,
     @Inject(DemoTraceService) private readonly traces: DemoTraceService,
+    @Inject(InspectCaptureService)
+    private readonly inspect: InspectCaptureService,
   ) {
     this.compiled = this.buildGraph();
   }
@@ -63,7 +66,13 @@ export class DecisionGraphService {
 
   async run(
     rawRequest: unknown,
-    opts?: { sessionId?: string; runId?: string },
+    opts?: {
+      sessionId?: string;
+      runId?: string;
+      /** Lab: force AgentInspect capture even when AGENT_INSPECT is off. */
+      forceInspect?: boolean;
+      traceDir?: string;
+    },
   ): Promise<ApplicationResult> {
     const request = IntakeRequestSchema.parse(rawRequest);
     if (opts?.sessionId) {
@@ -84,114 +93,164 @@ export class DecisionGraphService {
       .digest('hex');
 
     try {
-      return await this.outbox.withEventLock(request.eventId, async () => {
-        const existing = this.outbox.getEventResult(
-          ctx.sessionId,
-          request.eventId,
-        );
-        if (existing) {
-          const priorHash = this.outbox.getPayloadHash(
-            ctx.sessionId,
-            request.eventId,
-          );
-          if (priorHash && priorHash !== payloadHash) {
-            throw new Error(
-              'EVENT_PAYLOAD_MISMATCH: same eventId with different payload in this session',
-            );
-          }
-          this.traces.emit(ctx, {
-            stage: 'dedupe',
-            status: 'ok',
-            summary: 'Repeated eventId — returning prior result',
-          });
-          return {
-            ...existing,
-            runStatus: 'duplicate',
-            duplicateOf: request.eventId,
-            outboxWrites: 0,
-            runId: ctx.runId,
-            sessionId: ctx.sessionId,
-          };
-        }
-
-        const initial: GraphStateType = {
-          ctx,
-          envelope: null,
-          appOutcomes: [],
-          requiredOutcomes: [],
-          agentDecisionSet: null,
-          agentOutcomes: [],
-          toolSummaries: [],
-          accounting: {
-            providerMode: this.agent.getMode(),
-            liveAttempts: 0,
-            liveSuccesses: 0,
-            liveFailures: 0,
-            fixtureInvocations: 0,
-            toolExecutions: 0,
-            toolCacheHits: 0,
-            requestedModelId: null,
-            returnedModelIds: [],
-            tokenUsage: { known: false },
-          },
-          nodeStatuses: {},
-          nodeTimings: {},
-          runStatus: 'completed',
-          failureReason: undefined,
-          outboxWrites: 0,
-        };
-
-        const finalState = await this.compiled.invoke(initial);
-        const decisions = [
-          ...finalState.requiredOutcomes,
-          ...finalState.appOutcomes,
-          ...finalState.agentOutcomes,
-        ];
-        const modelCalls =
-          finalState.accounting.liveAttempts +
-          finalState.accounting.fixtureInvocations;
-
-        const result: ApplicationResult = {
-          runStatus: finalState.runStatus,
-          runId: ctx.runId,
-          sessionId: ctx.sessionId,
+      const result = await this.inspect.withRun(
+        'proactive-trip-intake',
+        {
+          executionId: ctx.runId,
           eventId: request.eventId,
-          modelMode:
-            finalState.accounting.providerMode === 'fixture'
-              ? finalState.accounting.fixtureInvocations > 0
-                ? 'fixture'
-                : 'none'
-              : finalState.accounting.liveAttempts > 0
-                ? 'live'
-                : 'none',
-          modelCalls,
-          accounting: finalState.accounting,
-          decisions,
-          outboxWrites: finalState.outboxWrites,
-          modelDecisionSet: finalState.agentDecisionSet ?? undefined,
-          policyRules: finalState.envelope?.rules,
-          failureReason: finalState.failureReason,
-          trace: {
-            nodeStatuses: finalState.nodeStatuses,
-            nodeTimings: finalState.nodeTimings,
-            toolSummaries: finalState.toolSummaries,
-            events: this.traces.getEvents(ctx.runId),
+          sessionId: ctx.sessionId,
+          scenarioId: ctx.scenarioId,
+          force: opts?.forceInspect,
+          traceDir: opts?.traceDir,
+          metadata: {
+            tripId: request.tripId,
+            type: request.type,
+            providerMode: this.agent.getMode(),
           },
-        };
+        },
+        async () =>
+          this.outbox.withEventLock(request.eventId, async () => {
+            const existing = this.outbox.getEventResult(
+              ctx.sessionId,
+              request.eventId,
+            );
+            if (existing) {
+              const priorHash = this.outbox.getPayloadHash(
+                ctx.sessionId,
+                request.eventId,
+              );
+              if (priorHash && priorHash !== payloadHash) {
+                throw new Error(
+                  'EVENT_PAYLOAD_MISMATCH: same eventId with different payload in this session',
+                );
+              }
+              await this.inspect.tracedStep('dedupe', async () => {
+                this.traces.emit(ctx, {
+                  stage: 'dedupe',
+                  status: 'ok',
+                  summary: 'Repeated eventId — returning prior result',
+                });
+              });
+              const dup: ApplicationResult = {
+                ...existing,
+                runStatus: 'duplicate',
+                duplicateOf: request.eventId,
+                outboxWrites: 0,
+                runId: ctx.runId,
+                sessionId: ctx.sessionId,
+                agentInspectTraceId: this.inspect.getMappedRunId(ctx.runId),
+              };
+              await this.inspect.observeOutbox({
+                name: 'outbox_duplicate_skipped',
+                written: false,
+                outboxWrites: 0,
+                details: { duplicateOf: request.eventId },
+              });
+              return dup;
+            }
 
-        this.outbox.rememberEventResult(
-          ctx.sessionId,
-          request.eventId,
-          result,
-          payloadHash,
-        );
-        this.traces.emit(ctx, {
-          stage: 'complete',
-          status: result.runStatus,
-          summary: `Run ${result.runStatus}; outboxWrites=${result.outboxWrites}`,
-        });
-        return result;
-      });
+            const initial: GraphStateType = {
+              ctx,
+              envelope: null,
+              appOutcomes: [],
+              requiredOutcomes: [],
+              agentDecisionSet: null,
+              agentOutcomes: [],
+              toolSummaries: [],
+              accounting: {
+                providerMode: this.agent.getMode(),
+                liveAttempts: 0,
+                liveSuccesses: 0,
+                liveFailures: 0,
+                fixtureInvocations: 0,
+                toolExecutions: 0,
+                toolCacheHits: 0,
+                requestedModelId: null,
+                returnedModelIds: [],
+                tokenUsage: { known: false },
+              },
+              nodeStatuses: {},
+              nodeTimings: {},
+              runStatus: 'completed',
+              failureReason: undefined,
+              outboxWrites: 0,
+            };
+
+            const finalState = await this.compiled.invoke(initial);
+            const decisions = [
+              ...finalState.requiredOutcomes,
+              ...finalState.appOutcomes,
+              ...finalState.agentOutcomes,
+            ];
+            const modelCalls =
+              finalState.accounting.liveAttempts +
+              finalState.accounting.fixtureInvocations;
+
+            const result: ApplicationResult = {
+              runStatus: finalState.runStatus,
+              runId: ctx.runId,
+              sessionId: ctx.sessionId,
+              eventId: request.eventId,
+              modelMode:
+                finalState.accounting.providerMode === 'fixture'
+                  ? finalState.accounting.fixtureInvocations > 0
+                    ? 'fixture'
+                    : 'none'
+                  : finalState.accounting.liveAttempts > 0
+                    ? 'live'
+                    : 'none',
+              modelCalls,
+              accounting: finalState.accounting,
+              decisions,
+              outboxWrites: finalState.outboxWrites,
+              modelDecisionSet: finalState.agentDecisionSet ?? undefined,
+              policyRules: finalState.envelope?.rules,
+              failureReason: finalState.failureReason,
+              agentInspectTraceId: this.inspect.getMappedRunId(ctx.runId),
+              trace: {
+                nodeStatuses: finalState.nodeStatuses,
+                nodeTimings: finalState.nodeTimings,
+                toolSummaries: finalState.toolSummaries,
+                events: this.traces.getEvents(ctx.runId),
+                agentInspectRunId: this.inspect.getMappedRunId(ctx.runId),
+              },
+            };
+
+            this.outbox.rememberEventResult(
+              ctx.sessionId,
+              request.eventId,
+              result,
+              payloadHash,
+            );
+            await this.inspect.observeOutbox({
+              name: 'outbox_preview',
+              written: result.outboxWrites > 0,
+              outboxWrites: result.outboxWrites,
+              details: { runStatus: result.runStatus },
+            });
+            this.traces.emit(ctx, {
+              stage: 'complete',
+              status: result.runStatus,
+              summary: `Run ${result.runStatus}; outboxWrites=${result.outboxWrites}`,
+              detail: {
+                agentInspectRunId: result.agentInspectTraceId,
+              },
+            });
+            return result;
+          }),
+      );
+      const mapped =
+        this.inspect.getMappedRunId(ctx.runId) ??
+        (opts?.traceDir
+          ? this.inspect.resolveRunIdFromTraceDir(opts.traceDir, ctx.runId)
+          : undefined);
+      if (mapped) {
+        result.agentInspectTraceId = mapped;
+        if (result.trace && typeof result.trace === 'object') {
+          (result.trace as Record<string, unknown>).agentInspectRunId = mapped;
+        }
+      }
+      return result;
     } finally {
       this.outbox.markRunInactive(ctx.runId);
       this.traces.finish(ctx.runId);
@@ -244,320 +303,336 @@ export class DecisionGraphService {
   private async bindContext(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    this.traces.emit(state.ctx, {
-      stage: 'bind_context',
-      status: 'ok',
-      summary: `Bound scenario ${state.ctx.scenarioId}`,
-      detail: {
-        sessionId: state.ctx.sessionId,
-        demoTime: state.ctx.nowIso,
-      },
+    return this.inspect.tracedStep('bind_context', async () => {
+      this.traces.emit(state.ctx, {
+        stage: 'bind_context',
+        status: 'ok',
+        summary: `Bound scenario ${state.ctx.scenarioId}`,
+        detail: {
+          sessionId: state.ctx.sessionId,
+          demoTime: state.ctx.nowIso,
+        },
+      });
+      return this.timed(state, 'bind_context', 'ok', () => ({}));
     });
-    return this.timed(state, 'bind_context', 'ok', () => ({}));
   }
 
   private async policyNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    const envelope = this.policyService.evaluate(state.ctx);
-    this.traces.emit(state.ctx, {
-      stage: 'policy_envelope',
-      status: 'ok',
-      summary: `Policy v2: ${envelope.optionalEligible.length} optional, ${envelope.requiredEligible.length} required`,
-      detail: { rules: envelope.rules.map((r) => ({ id: r.id, result: r.result })) },
+    return this.inspect.tracedStep('policy_envelope', async () => {
+      const envelope = this.policyService.evaluate(state.ctx);
+      this.traces.emit(state.ctx, {
+        stage: 'policy_envelope',
+        status: 'ok',
+        summary: `Policy v2: ${envelope.optionalEligible.length} optional, ${envelope.requiredEligible.length} required`,
+        detail: {
+          rules: envelope.rules.map((r) => ({ id: r.id, result: r.result })),
+        },
+      });
+      return this.timed(state, 'policy_envelope', 'ok', () => ({ envelope }));
     });
-    return this.timed(state, 'policy_envelope', 'ok', () => ({ envelope }));
   }
 
   private async deterministicNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    const outcomes: DecisionOutcome[] = (
-      state.envelope?.deterministicOutcomes ?? []
-    ).map((d) => ({
-      candidates: [d.candidateId],
-      outcome: d.outcome,
-      reason: d.reason,
-      recheckAt: d.recheckAt,
-      decidedBy: 'application' as const,
-      proposedBy: 'application' as const,
-      validatedBy: 'application' as const,
-      finalizedBy: 'application' as const,
-      policyRuleIds: d.policyRuleIds,
-    }));
-    this.traces.emit(state.ctx, {
-      stage: 'resolve_deterministic',
-      status: 'ok',
-      summary: `${outcomes.length} application-resolved candidates`,
+    return this.inspect.tracedStep('resolve_deterministic', async () => {
+      const outcomes: DecisionOutcome[] = (
+        state.envelope?.deterministicOutcomes ?? []
+      ).map((d) => ({
+        candidates: [d.candidateId],
+        outcome: d.outcome,
+        reason: d.reason,
+        recheckAt: d.recheckAt,
+        decidedBy: 'application' as const,
+        proposedBy: 'application' as const,
+        validatedBy: 'application' as const,
+        finalizedBy: 'application' as const,
+        policyRuleIds: d.policyRuleIds,
+      }));
+      this.traces.emit(state.ctx, {
+        stage: 'resolve_deterministic',
+        status: 'ok',
+        summary: `${outcomes.length} application-resolved candidates`,
+      });
+      return this.timed(state, 'resolve_deterministic', 'ok', () => ({
+        appOutcomes: outcomes,
+      }));
     });
-    return this.timed(state, 'resolve_deterministic', 'ok', () => ({
-      appOutcomes: outcomes,
-    }));
   }
 
   private async requiredNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    const required = state.envelope?.requiredEligible ?? [];
-    const outcomes: DecisionOutcome[] = [];
-    let outboxWrites = 0;
-    let runStatus = state.runStatus;
-    let failureReason = state.failureReason;
+    return this.inspect.tracedStep('required_alerts', async () => {
+      const required = state.envelope?.requiredEligible ?? [];
+      const outcomes: DecisionOutcome[] = [];
+      let outboxWrites = 0;
+      let runStatus = state.runStatus;
+      let failureReason = state.failureReason;
 
-    for (const candidate of required) {
-      const flight = this.fixtures.matchFlightSource(
-        state.ctx,
-        candidate.claimedSourceVersion,
-      ) as
-        | { id: string; confirmedChange?: boolean; arrivalAt?: string }
-        | undefined;
+      for (const candidate of required) {
+        const flight = this.fixtures.matchFlightSource(
+          state.ctx,
+          candidate.claimedSourceVersion,
+        ) as
+          | { id: string; confirmedChange?: boolean; arrivalAt?: string }
+          | undefined;
 
-      if (!flight?.id || !flight.confirmedChange || !flight.arrivalAt) {
-        outcomes.push({
-          candidates: [candidate.id],
-          outcome: 'failure',
-          reason: 'MISSING_ESSENTIAL_FLIGHT_EVIDENCE',
-          decidedBy: 'application',
+        if (!flight?.id || !flight.confirmedChange || !flight.arrivalAt) {
+          outcomes.push({
+            candidates: [candidate.id],
+            outcome: 'failure',
+            reason: 'MISSING_ESSENTIAL_FLIGHT_EVIDENCE',
+            decidedBy: 'application',
+            proposedBy: 'template',
+            validatedBy: 'application',
+            finalizedBy: 'application',
+          });
+          runStatus = 'failed';
+          failureReason = 'MISSING_ESSENTIAL_FLIGHT_EVIDENCE';
+          continue;
+        }
+
+        const decisionSet: ModelDecisionSet = {
+          decisions: [
+            {
+              candidateIds: [candidate.id],
+              decision: 'act_now',
+              reasonCode: 'REQUIRED_FLIGHT_ALERT',
+              reasonSummary: 'Verified confirmed flight change.',
+              factIds: [flight.id],
+              messagePurpose: 'flight_change',
+              templateId: 'flight_change_confirmed',
+              action: 'view_flight',
+              recheckAt: null,
+              messageDraft: null,
+            },
+          ],
+        };
+
+        const validated = this.validation.validateDecisionSet({
+          ctx: state.ctx,
+          envelope: state.envelope!,
+          decisionSet,
+          modelCandidateIds: [candidate.id],
           proposedBy: 'template',
-          validatedBy: 'application',
-          finalizedBy: 'application',
+          required: true,
         });
-        runStatus = 'failed';
-        failureReason = 'MISSING_ESSENTIAL_FLIGHT_EVIDENCE';
-        continue;
-      }
+        outcomes.push(...validated.outcomes);
+        if (!validated.ok) {
+          runStatus = 'failed';
+          failureReason = validated.failureReason;
+          continue;
+        }
 
-      const decisionSet: ModelDecisionSet = {
-        decisions: [
-          {
-            candidateIds: [candidate.id],
-            decision: 'act_now',
-            reasonCode: 'REQUIRED_FLIGHT_ALERT',
-            reasonSummary: 'Verified confirmed flight change.',
-            factIds: [flight.id],
-            messagePurpose: 'flight_change',
-            templateId: 'flight_change_confirmed',
-            action: 'view_flight',
-            recheckAt: null,
-            messageDraft: null,
-          },
-        ],
-      };
-
-      const validated = this.validation.validateDecisionSet({
-        ctx: state.ctx,
-        envelope: state.envelope!,
-        decisionSet,
-        modelCandidateIds: [candidate.id],
-        proposedBy: 'template',
-        required: true,
-      });
-      outcomes.push(...validated.outcomes);
-      if (!validated.ok) {
-        runStatus = 'failed';
-        failureReason = validated.failureReason;
-        continue;
-      }
-
-      for (const o of validated.outcomes) {
-        if (o.outcome === 'act_now') {
-          const write = await this.outbox.withSessionWriteLock(
-            state.ctx.sessionId,
-            async () =>
-              this.outbox.tryWrite(
-                o,
-                state.ctx.eventId,
-                state.ctx.sessionId,
-                'flight_change',
-                state.ctx.nowIso,
-              ),
-          );
-          if (write.written) outboxWrites += 1;
+        for (const o of validated.outcomes) {
+          if (o.outcome === 'act_now') {
+            const write = await this.outbox.withSessionWriteLock(
+              state.ctx.sessionId,
+              async () =>
+                this.outbox.tryWrite(
+                  o,
+                  state.ctx.eventId,
+                  state.ctx.sessionId,
+                  'flight_change',
+                  state.ctx.nowIso,
+                ),
+            );
+            if (write.written) outboxWrites += 1;
+          }
         }
       }
-    }
 
-    this.traces.emit(state.ctx, {
-      stage: 'required_alerts',
-      status: failureReason ? 'failed' : 'ok',
-      summary: `${outcomes.length} required outcomes`,
+      this.traces.emit(state.ctx, {
+        stage: 'required_alerts',
+        status: failureReason ? 'failed' : 'ok',
+        summary: `${outcomes.length} required outcomes`,
+      });
+
+      return this.timed(
+        state,
+        'required_alerts',
+        failureReason ? 'failed' : 'ok',
+        () => ({
+          requiredOutcomes: outcomes,
+          outboxWrites: state.outboxWrites + outboxWrites,
+          runStatus,
+          failureReason,
+        }),
+      );
     });
-
-    return this.timed(
-      state,
-      'required_alerts',
-      failureReason ? 'failed' : 'ok',
-      () => ({
-        requiredOutcomes: outcomes,
-        outboxWrites: state.outboxWrites + outboxWrites,
-        runStatus,
-        failureReason,
-      }),
-    );
   }
 
   private async agentNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    const eligible = state.envelope?.optionalEligible ?? [];
-    if (!eligible.length) {
+    return this.inspect.tracedStep('investigate_agent', async () => {
+      const eligible = state.envelope?.optionalEligible ?? [];
+      if (!eligible.length) {
+        this.traces.emit(state.ctx, {
+          stage: 'investigate_agent',
+          status: 'skipped',
+          summary: 'No optional eligible candidates (or policy deferred them)',
+        });
+        return this.timed(state, 'investigate_agent', 'skipped', () => ({}));
+      }
+
+      await this.inspect.tracedTool('read_trip_snapshot', async () =>
+        this.tools.execute(
+          state.ctx,
+          'read_trip_snapshot',
+          {},
+          'app-mandatory-1',
+          'application',
+        ),
+      );
+
+      const result = await this.agent.run(state.ctx, state.envelope!, eligible);
+      const accounting = { ...result.accounting };
+
       this.traces.emit(state.ctx, {
         stage: 'investigate_agent',
-        status: 'skipped',
-        summary: 'No optional eligible candidates (or policy deferred them)',
+        status: result.failureReason ? 'failed' : 'ok',
+        summary: result.failureReason
+          ? result.failureReason
+          : `Agent finished; tools=${result.toolResults.length}`,
+        detail: {
+          accounting,
+          toolNames: result.toolResults.map((t) => t.name),
+        },
       });
-      return this.timed(state, 'investigate_agent', 'skipped', () => ({}));
-    }
 
-    // Mandatory application read tagged separately
-    const mandatory = this.tools.execute(
-      state.ctx,
-      'read_trip_snapshot',
-      {},
-      'app-mandatory-1',
-      'application',
-    );
+      if (result.failureReason) {
+        const failOutcomes: DecisionOutcome[] = eligible.map((c) => ({
+          candidates: [c.id],
+          outcome: 'failure',
+          reason: result.failureReason!,
+          decidedBy: 'model',
+          proposedBy: 'model',
+          validatedBy: 'application',
+          finalizedBy: 'application',
+        }));
+        const runStatus =
+          state.requiredOutcomes.length || state.appOutcomes.length
+            ? 'partial_failure'
+            : 'failed';
+        return this.timed(state, 'investigate_agent', 'failed', () => ({
+          accounting,
+          agentOutcomes: failOutcomes,
+          toolSummaries: result.toolResults,
+          runStatus,
+          failureReason: result.failureReason,
+        }));
+      }
 
-    const result = await this.agent.run(state.ctx, state.envelope!, eligible);
-    const accounting = { ...result.accounting };
-    if (!mandatory.cached) {
-      // application read not counted as model tool execution
-    }
-
-    this.traces.emit(state.ctx, {
-      stage: 'investigate_agent',
-      status: result.failureReason ? 'failed' : 'ok',
-      summary: result.failureReason
-        ? result.failureReason
-        : `Agent finished; tools=${result.toolResults.length}`,
-      detail: {
+      return this.timed(state, 'investigate_agent', 'ok', () => ({
         accounting,
-        toolNames: result.toolResults.map((t) => t.name),
-      },
-    });
-
-    if (result.failureReason) {
-      const failOutcomes: DecisionOutcome[] = eligible.map((c) => ({
-        candidates: [c.id],
-        outcome: 'failure',
-        reason: result.failureReason!,
-        decidedBy: 'model',
-        proposedBy: 'model',
-        validatedBy: 'application',
-        finalizedBy: 'application',
-      }));
-      const runStatus =
-        state.requiredOutcomes.length || state.appOutcomes.length
-          ? 'partial_failure'
-          : 'failed';
-      return this.timed(state, 'investigate_agent', 'failed', () => ({
-        accounting,
-        agentOutcomes: failOutcomes,
+        agentDecisionSet: result.decisionSet ?? null,
         toolSummaries: result.toolResults,
-        runStatus,
-        failureReason: result.failureReason,
       }));
-    }
-
-    return this.timed(state, 'investigate_agent', 'ok', () => ({
-      accounting,
-      agentDecisionSet: result.decisionSet ?? null,
-      toolSummaries: result.toolResults,
-    }));
+    });
   }
 
   private async validateNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    if (!state.agentDecisionSet) {
-      return this.timed(state, 'validate_result', 'skipped', () => ({}));
-    }
+    return this.inspect.tracedStep('validate_result', async () => {
+      if (!state.agentDecisionSet) {
+        return this.timed(state, 'validate_result', 'skipped', () => ({}));
+      }
 
-    const eligibleIds = (state.envelope?.optionalEligible ?? []).map(
-      (c) => c.id,
-    );
-    const validated = this.validation.validateDecisionSet({
-      ctx: state.ctx,
-      envelope: state.envelope!,
-      decisionSet: state.agentDecisionSet,
-      modelCandidateIds: eligibleIds,
-      proposedBy: 'model',
-      required: false,
-    });
+      const eligibleIds = (state.envelope?.optionalEligible ?? []).map(
+        (c) => c.id,
+      );
+      const validated = this.validation.validateDecisionSet({
+        ctx: state.ctx,
+        envelope: state.envelope!,
+        decisionSet: state.agentDecisionSet,
+        modelCandidateIds: eligibleIds,
+        proposedBy: 'model',
+        required: false,
+      });
 
-    let outboxWrites = 0;
-    let runStatus = state.runStatus;
-    let failureReason = state.failureReason;
+      let outboxWrites = 0;
+      let runStatus = state.runStatus;
+      let failureReason = state.failureReason;
 
-    if (!validated.ok) {
-      runStatus =
-        state.requiredOutcomes.length || state.appOutcomes.length
-          ? 'partial_failure'
-          : 'failed';
-      failureReason = validated.failureReason;
-    } else {
-      // Atomic delivery recheck + write for optional acts
-      for (const outcome of validated.outcomes) {
-        if (outcome.outcome !== 'act_now') continue;
-        const write = await this.outbox.withSessionWriteLock(
-          state.ctx.sessionId,
-          async () => {
-            if (this.policyService.optionalContactLimitExceeded(state.ctx)) {
-              return { written: false, duplicate: false, blocked: true as const };
-            }
-            return {
-              ...this.outbox.tryWrite(
-                outcome,
-                state.ctx.eventId,
-                state.ctx.sessionId,
-                outcome.notificationPreview?.templateId === 'arrival_guidance'
-                  ? 'arrival_guidance'
-                  : 'trip_preparation',
-                state.ctx.nowIso,
-              ),
-              blocked: false as const,
-            };
-          },
-        );
-        if ('blocked' in write && write.blocked) {
-          // convert to wait/silent handled by mutating — record failure to write
-          failureReason = 'CONTACT_LIMIT_DELIVERY';
-          runStatus = 'partial_failure';
-        } else if (write.written) {
-          outboxWrites += 1;
+      if (!validated.ok) {
+        runStatus =
+          state.requiredOutcomes.length || state.appOutcomes.length
+            ? 'partial_failure'
+            : 'failed';
+        failureReason = validated.failureReason;
+      } else {
+        for (const outcome of validated.outcomes) {
+          if (outcome.outcome !== 'act_now') continue;
+          const write = await this.outbox.withSessionWriteLock(
+            state.ctx.sessionId,
+            async () => {
+              if (this.policyService.optionalContactLimitExceeded(state.ctx)) {
+                return {
+                  written: false,
+                  duplicate: false,
+                  blocked: true as const,
+                };
+              }
+              return {
+                ...this.outbox.tryWrite(
+                  outcome,
+                  state.ctx.eventId,
+                  state.ctx.sessionId,
+                  outcome.notificationPreview?.templateId === 'arrival_guidance'
+                    ? 'arrival_guidance'
+                    : 'trip_preparation',
+                  state.ctx.nowIso,
+                ),
+                blocked: false as const,
+              };
+            },
+          );
+          if ('blocked' in write && write.blocked) {
+            failureReason = 'CONTACT_LIMIT_DELIVERY';
+            runStatus = 'partial_failure';
+          } else if (write.written) {
+            outboxWrites += 1;
+          }
         }
       }
-    }
 
-    this.traces.emit(state.ctx, {
-      stage: 'validate_result',
-      status: validated.ok ? 'ok' : 'failed',
-      summary: validated.ok
-        ? `Validated ${validated.outcomes.length} groups`
-        : validated.failureReason ?? 'validation failed',
+      this.traces.emit(state.ctx, {
+        stage: 'validate_result',
+        status: validated.ok ? 'ok' : 'failed',
+        summary: validated.ok
+          ? `Validated ${validated.outcomes.length} groups`
+          : validated.failureReason ?? 'validation failed',
+      });
+
+      return this.timed(
+        state,
+        'validate_result',
+        validated.ok ? 'ok' : 'failed',
+        () => ({
+          agentOutcomes: validated.outcomes,
+          outboxWrites: state.outboxWrites + outboxWrites,
+          runStatus,
+          failureReason,
+        }),
+      );
     });
-
-    return this.timed(
-      state,
-      'validate_result',
-      validated.ok ? 'ok' : 'failed',
-      () => ({
-        agentOutcomes: validated.outcomes,
-        outboxWrites: state.outboxWrites + outboxWrites,
-        runStatus,
-        failureReason,
-      }),
-    );
   }
 
   private async recordNode(
     state: GraphStateType,
   ): Promise<Partial<GraphStateType>> {
-    this.traces.emit(state.ctx, {
-      stage: 'record_result',
-      status: state.runStatus,
-      summary: 'Recorded application outcomes',
+    return this.inspect.tracedStep('record_result', async () => {
+      this.traces.emit(state.ctx, {
+        stage: 'record_result',
+        status: state.runStatus,
+        summary: 'Recorded application outcomes',
+      });
+      return this.timed(state, 'record_result', state.runStatus, () => ({}));
     });
-    return this.timed(state, 'record_result', state.runStatus, () => ({}));
   }
 }

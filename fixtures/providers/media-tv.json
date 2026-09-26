@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "id": "t1",
+      "title": "City Nights",
+      "kind": "tv",
+      "overview": "A series about evening plans.",
+      "year": "2020",
+      "attribution": "Fixture TVmaze-shaped metadata"
+    },
+    {
+      "id": "t2",
+      "title": "Travel Desk",
+      "kind": "tv",
+      "overview": "Helpdesk comedy.",
+      "year": "2018",
+      "attribution": "Fixture TVmaze-shaped metadata"
+    }
+  ]
+}

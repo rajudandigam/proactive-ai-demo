@@ -1,0 +1,23 @@
+{
+  "id": "S11",
+  "version": "1.0.0",
+  "name": "Invalid city radius",
+  "suite": "city-evening",
+  "workload": "city",
+  "variant": "invalid",
+  "expectFailure": false,
+  "request": {
+    "city": "Boston",
+    "country": "US",
+    "date": "2026-10-06",
+    "radiusMeters": 99999,
+    "limit": 3
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectStatus": "completed",
+    "expectPlacesInvalid": true
+  }
+}

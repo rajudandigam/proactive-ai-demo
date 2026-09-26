@@ -1,0 +1,19 @@
+{
+  "id": "S12",
+  "version": "1.0.0",
+  "name": "Evening movie fixture",
+  "suite": "city-evening",
+  "workload": "evening",
+  "variant": "valid",
+  "request": {
+    "query": "Boston",
+    "kind": "movie"
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectStatus": "completed",
+    "minItems": 1
+  }
+}

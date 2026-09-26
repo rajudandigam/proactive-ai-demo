@@ -1,0 +1,11 @@
+{
+  "places": [
+    {
+      "name": "Boston",
+      "country": "US",
+      "latitude": 42.3601,
+      "longitude": -71.0589,
+      "timezone": "America/New_York"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "S03",
+  "version": "1.0.0",
+  "name": "Arrival journey unaffected",
+  "suite": "travel-core",
+  "workload": "trip",
+  "variant": "valid",
+  "request": {
+    "eventId": "lab-s03-arrival-unaffected",
+    "tripId": "trip-jordan",
+    "type": "TRIP_REVIEW",
+    "scenarioId": "jordan-arrival-unaffected",
+    "signals": [{ "id": "route-1", "type": "DESTINATION_EVENT" }]
+  },
+  "expected": {
+    "runStatus": "completed",
+    "modelMode": "fixture",
+    "exactOutboxWrites": 0,
+    "exactFixtureInvocations": 1,
+    "exactLiveAttempts": 0,
+    "minModelCalls": 1
+  },
+  "contract": {
+    "requireCompleted": true,
+    "expectCheckPass": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@playground/langgraph-adapter-consumer",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Isolated @agent-inspect/langchain consumer — requires @langchain/core ^1.0.0",
+  "dependencies": {
+    "agent-inspect": "6.31.7",
+    "@agent-inspect/langchain": "6.31.7",
+    "@langchain/core": "^1.0.0",
+    "@langchain/langgraph": "^1.0.0"
+  },
+  "scripts": {
+    "smoke": "node -e \"console.log(JSON.stringify({blocked:false,note:'install peers before running'}))\""
+  },
+  "playground": {
+    "status": "blocked-until-install",
+    "reason": "Main app stays on @langchain/core 0.3.x; do not --force peer mismatch into root"
+  }
+}

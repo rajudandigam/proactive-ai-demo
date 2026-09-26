@@ -1,0 +1,28 @@
+{
+  "id": "S05",
+  "version": "1.0.0",
+  "name": "Consent disabled",
+  "suite": "travel-core",
+  "workload": "trip",
+  "variant": "valid",
+  "request": {
+    "eventId": "lab-s05-consent",
+    "tripId": "trip-jordan",
+    "type": "TRIP_REVIEW",
+    "scenarioId": "jordan-consent-disabled",
+    "signals": [
+      { "id": "preparation-1", "type": "TRIP_PREPARATION" },
+      { "id": "weather-1", "type": "WEATHER_UPDATE" }
+    ]
+  },
+  "expected": {
+    "runStatus": "completed",
+    "exactOutboxWrites": 0,
+    "exactLiveAttempts": 0,
+    "maxModelCalls": 0
+  },
+  "contract": {
+    "requireCompleted": true,
+    "expectCheckPass": true
+  }
+}

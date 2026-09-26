@@ -1,0 +1,35 @@
+{
+  "id": "S07",
+  "version": "1.0.0",
+  "name": "Duplicate flight event",
+  "suite": "travel-core",
+  "workload": "trip",
+  "variant": "valid",
+  "request": {
+    "eventId": "lab-s07-flight-dup",
+    "tripId": "trip-jordan",
+    "type": "FLIGHT_CHANGE_CONFIRMED",
+    "scenarioId": "jordan-flight-change",
+    "signals": [
+      {
+        "id": "flight-change-1",
+        "type": "FLIGHT_CHANGE_CONFIRMED",
+        "claimedSourceVersion": "flight-status-v2"
+      }
+    ]
+  },
+  "expected": {
+    "runStatus": "duplicate",
+    "exactOutboxWrites": 0,
+    "exactLiveAttempts": 0,
+    "maxModelCalls": 0
+  },
+  "contract": {
+    "requireCompleted": true,
+    "expectCheckPass": true
+  },
+  "_lab": {
+    "seedPriorEvent": true,
+    "note": "Runner executes the same request once before the measured run to seed the ledger."
+  }
+}

@@ -1,0 +1,970 @@
+{
+  "schemaVersion": "playground-coverage/1",
+  "generatedAt": "2026-09-26T19:11:02.348Z",
+  "sourceKind": "installed-tarball-inventory",
+  "app": {
+    "name": "proactive-ai-demo",
+    "version": "1.0.0",
+    "gitSha": "5981a1bf0a81dfb576b8fbf14bd169737f0c24aa",
+    "packageLockAgentInspect": "6.31.7",
+    "packageLockHash": "e498bfba2ef95ce0c9f544db1e93ef14bc3c6deac1aee8ef807c1ede88732f27"
+  },
+  "environment": {
+    "node": "v22.22.3",
+    "npm": "10.9.8",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "agentInspect": {
+    "installedVersion": "6.31.7",
+    "packageIntegrityHint": "sha512-6TU0v/m4wscLaXhUfZPt07oJ+Efob0TdgCHxx2q7LHT6ekcxiHcW1sOtxrBxSwiqebeHAyqVu22Jbuc4Ujx1dA==",
+    "reviewedPlanBaseline": "6.31.7",
+    "coreSubpaths": [
+      ".",
+      "./advanced",
+      "./checks",
+      "./diff",
+      "./exporters",
+      "./logs",
+      "./persisted",
+      "./readers",
+      "./reporters",
+      "./workspace",
+      "./writers"
+    ],
+    "rootRuntimeExports": [
+      "createInspector",
+      "getCurrentCorrelationMetadata",
+      "inspectRun",
+      "maybeInspectRun",
+      "observe",
+      "observeOutcome",
+      "step"
+    ],
+    "advancedExportCount": 200,
+    "checksExportCount": 48,
+    "readersExportCount": 18,
+    "writersExportCount": 5,
+    "cliCommands": [
+      "list",
+      "view",
+      "clean",
+      "logs",
+      "tail",
+      "export",
+      "open",
+      "migrate",
+      "check",
+      "serve",
+      "viewer",
+      "studio",
+      "eval",
+      "scan",
+      "verify-safe",
+      "artifacts",
+      "bundle",
+      "ci-summary",
+      "diff",
+      "timeline",
+      "stats",
+      "search",
+      "sessions",
+      "session",
+      "what",
+      "report",
+      "redact",
+      "explain",
+      "init",
+      "doctor",
+      "plugins",
+      "index",
+      "workspace",
+      "suite",
+      "cohort",
+      "mcp",
+      "gate",
+      "help"
+    ],
+    "tarballSha256OfPackageJson": "c9e92a6ef68d8ee2f297a4323c673a8df1005e04f78996be133654832505a957"
+  },
+  "packages": [
+    {
+      "id": "pkg:agent-inspect",
+      "name": "agent-inspect",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": "6.31.7",
+      "installed": true,
+      "exports": [
+        ".",
+        "./advanced",
+        "./checks",
+        "./diff",
+        "./exporters",
+        "./logs",
+        "./persisted",
+        "./readers",
+        "./reporters",
+        "./workspace",
+        "./writers"
+      ],
+      "status": "passed",
+      "testIds": [
+        "lab:suite:travel-core"
+      ],
+      "executedEvidence": [
+        "artifacts/batch-1790452736131/suite-summary.json"
+      ]
+    },
+    {
+      "id": "pkg:@agent-inspect/adapter-sdk",
+      "name": "@agent-inspect/adapter-sdk",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/ai-sdk",
+      "name": "@agent-inspect/ai-sdk",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/circuit",
+      "name": "@agent-inspect/circuit",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/eval",
+      "name": "@agent-inspect/eval",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/guardrails",
+      "name": "@agent-inspect/guardrails",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/harness",
+      "name": "@agent-inspect/harness",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/index-sqlite",
+      "name": "@agent-inspect/index-sqlite",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/jest",
+      "name": "@agent-inspect/jest",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/langchain",
+      "name": "@agent-inspect/langchain",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/mcp",
+      "name": "@agent-inspect/mcp",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/mcp-server",
+      "name": "@agent-inspect/mcp-server",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/openai-agents",
+      "name": "@agent-inspect/openai-agents",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/redact",
+      "name": "@agent-inspect/redact",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/studio",
+      "name": "@agent-inspect/studio",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/tui",
+      "name": "@agent-inspect/tui",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/viewer",
+      "name": "@agent-inspect/viewer",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "pkg:@agent-inspect/vitest",
+      "name": "@agent-inspect/vitest",
+      "kind": "package",
+      "reviewedVersion": "6.31.7",
+      "installedVersion": null,
+      "installed": false,
+      "exports": [
+        "."
+      ],
+      "status": "blocked",
+      "blockedReason": "Not installed in this app; deferred to isolated consumer or later phase",
+      "testIds": [],
+      "executedEvidence": []
+    }
+  ],
+  "symbols": [
+    {
+      "id": "export:agent-inspect:createInspector",
+      "package": "agent-inspect",
+      "subpath": ".",
+      "symbol": "createInspector",
+      "kind": "runtime-export",
+      "status": "implemented-unverified",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "export:agent-inspect:getCurrentCorrelationMetadata",
+      "package": "agent-inspect",
+      "subpath": ".",
+      "symbol": "getCurrentCorrelationMetadata",
+      "kind": "runtime-export",
+      "status": "implemented-unverified",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "export:agent-inspect:inspectRun",
+      "package": "agent-inspect",
+      "subpath": ".",
+      "symbol": "inspectRun",
+      "kind": "runtime-export",
+      "status": "passed",
+      "testIds": [
+        "lab:suite:travel-core"
+      ],
+      "executedEvidence": [
+        "artifacts/batch-1790448840295/suite-summary.json",
+        "artifacts/batch-ext-1790450260214/suite-summary.json",
+        "artifacts/batch-1790450275299/suite-summary.json",
+        "artifacts/batch-1790452736131/suite-summary.json"
+      ]
+    },
+    {
+      "id": "export:agent-inspect:maybeInspectRun",
+      "package": "agent-inspect",
+      "subpath": ".",
+      "symbol": "maybeInspectRun",
+      "kind": "runtime-export",
+      "status": "implemented-unverified",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "export:agent-inspect:observe",
+      "package": "agent-inspect",
+      "subpath": ".",
+      "symbol": "observe",
+      "kind": "runtime-export",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "export:agent-inspect:observeOutcome",
+      "package": "agent-inspect",
+      "subpath": ".",
+      "symbol": "observeOutcome",
+      "kind": "runtime-export",
+      "status": "passed",
+      "testIds": [
+        "lab:suite:travel-core"
+      ],
+      "executedEvidence": [
+        "artifacts/batch-1790448840295/suite-summary.json",
+        "artifacts/batch-ext-1790450260214/suite-summary.json",
+        "artifacts/batch-1790450275299/suite-summary.json",
+        "artifacts/batch-1790452736131/suite-summary.json"
+      ]
+    },
+    {
+      "id": "export:agent-inspect:step",
+      "package": "agent-inspect",
+      "subpath": ".",
+      "symbol": "step",
+      "kind": "runtime-export",
+      "status": "passed",
+      "testIds": [
+        "lab:suite:travel-core"
+      ],
+      "executedEvidence": [
+        "artifacts/batch-1790448840295/suite-summary.json",
+        "artifacts/batch-ext-1790450260214/suite-summary.json",
+        "artifacts/batch-1790450275299/suite-summary.json",
+        "artifacts/batch-1790452736131/suite-summary.json"
+      ]
+    },
+    {
+      "id": "subpath:agent-inspect:./advanced",
+      "package": "agent-inspect",
+      "subpath": "./advanced",
+      "symbol": "./advanced",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./checks",
+      "package": "agent-inspect",
+      "subpath": "./checks",
+      "symbol": "./checks",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./diff",
+      "package": "agent-inspect",
+      "subpath": "./diff",
+      "symbol": "./diff",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./exporters",
+      "package": "agent-inspect",
+      "subpath": "./exporters",
+      "symbol": "./exporters",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./logs",
+      "package": "agent-inspect",
+      "subpath": "./logs",
+      "symbol": "./logs",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./persisted",
+      "package": "agent-inspect",
+      "subpath": "./persisted",
+      "symbol": "./persisted",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./readers",
+      "package": "agent-inspect",
+      "subpath": "./readers",
+      "symbol": "./readers",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./reporters",
+      "package": "agent-inspect",
+      "subpath": "./reporters",
+      "symbol": "./reporters",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./workspace",
+      "package": "agent-inspect",
+      "subpath": "./workspace",
+      "symbol": "./workspace",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "subpath:agent-inspect:./writers",
+      "package": "agent-inspect",
+      "subpath": "./writers",
+      "symbol": "./writers",
+      "kind": "subpath",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:list",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "list",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:view",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "view",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:clean",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "clean",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:logs",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "logs",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:tail",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "tail",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:export",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "export",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:open",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "open",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:migrate",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "migrate",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:check",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "check",
+      "kind": "cli-command",
+      "status": "passed",
+      "testIds": [
+        "lab:suite:travel-core"
+      ],
+      "executedEvidence": [
+        "artifacts/batch-1790448840295/suite-summary.json",
+        "artifacts/batch-ext-1790450260214/suite-summary.json",
+        "artifacts/batch-1790450275299/suite-summary.json",
+        "artifacts/batch-1790452736131/suite-summary.json"
+      ]
+    },
+    {
+      "id": "cli:agent-inspect:serve",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "serve",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:viewer",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "viewer",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:studio",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "studio",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:eval",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "eval",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:scan",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "scan",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:verify-safe",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "verify-safe",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:artifacts",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "artifacts",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:bundle",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "bundle",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:ci-summary",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "ci-summary",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:diff",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "diff",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:timeline",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "timeline",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:stats",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "stats",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:search",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "search",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:sessions",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "sessions",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:session",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "session",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:what",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "what",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:report",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "report",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:redact",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "redact",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:explain",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "explain",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:init",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "init",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:doctor",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "doctor",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:plugins",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "plugins",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:index",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "index",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:workspace",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "workspace",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:suite",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "suite",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:cohort",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "cohort",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:mcp",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "mcp",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:gate",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "gate",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "cli:agent-inspect:help",
+      "package": "agent-inspect",
+      "subpath": "cli",
+      "symbol": "help",
+      "kind": "cli-command",
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    }
+  ],
+  "counts": {
+    "packagesTotal": 18,
+    "packagesInstalled": 1,
+    "packagesBlocked": 17,
+    "symbolsTotal": 55,
+    "symbolsPlanned": 48,
+    "symbolsImplementedUnverified": 3,
+    "symbolsPassed": 4,
+    "executedEvidence": 16
+  },
+  "limitations": [
+    "Scoped @agent-inspect/* packages are not installed in this app (blocked until P07+).",
+    "Type-only exports and instance methods need deeper .d.ts parsing in a later inventory pass.",
+    "Coverage statuses other than planned/blocked/implemented-unverified require executed evidence."
+  ]
+}

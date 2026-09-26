@@ -1,0 +1,33 @@
+{
+  "id": "S33",
+  "version": "1.0.0",
+  "name": "Manual inspectRun capture smoke",
+  "suite": "travel-core",
+  "workload": "trip",
+  "variant": "valid",
+  "request": {
+    "eventId": "lab-s33-quiet-capture",
+    "tripId": "trip-jordan",
+    "type": "TRIP_REVIEW",
+    "scenarioId": "jordan-quiet-hours",
+    "signals": [
+      { "id": "preparation-1", "type": "TRIP_PREPARATION" },
+      { "id": "weather-1", "type": "WEATHER_UPDATE" }
+    ]
+  },
+  "expected": {
+    "runStatus": "completed",
+    "exactOutboxWrites": 0,
+    "maxModelCalls": 0,
+    "exactLiveAttempts": 0,
+    "requireReasons": ["QUIET_HOURS"]
+  },
+  "contract": {
+    "requireCompleted": true,
+    "expectCheckPass": true
+  },
+  "_lab": {
+    "assertTraceHasSteps": ["policy_envelope"],
+    "assertNoLlmSteps": true
+  }
+}

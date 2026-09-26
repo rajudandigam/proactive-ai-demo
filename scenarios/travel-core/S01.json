@@ -1,0 +1,37 @@
+{
+  "id": "S01",
+  "version": "1.0.0",
+  "name": "Trip preparation and weather",
+  "suite": "travel-core",
+  "workload": "trip",
+  "variant": "valid",
+  "request": {
+    "eventId": "lab-s01-trip-review",
+    "tripId": "trip-jordan",
+    "type": "TRIP_REVIEW",
+    "scenarioId": "jordan-before-departure",
+    "signals": [
+      { "id": "preparation-1", "type": "TRIP_PREPARATION" },
+      { "id": "weather-1", "type": "WEATHER_UPDATE" },
+      { "id": "route-1", "type": "DESTINATION_EVENT" },
+      { "id": "search-1", "type": "HOTEL_SEARCH_ABANDONED" }
+    ]
+  },
+  "expected": {
+    "runStatus": "completed",
+    "modelMode": "fixture",
+    "exactOutboxWrites": 1,
+    "minModelCalls": 1,
+    "exactFixtureInvocations": 1,
+    "exactLiveAttempts": 0,
+    "requireReasons": [
+      "COMBINED_TRIP_PREPARATION",
+      "ARRIVAL_GUIDANCE_NOT_DUE",
+      "HOTEL_ALREADY_BOOKED"
+    ]
+  },
+  "contract": {
+    "requireCompleted": true,
+    "expectCheckPass": true
+  }
+}

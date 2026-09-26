@@ -1,0 +1,37 @@
+{
+  "places": [
+    {
+      "id": "r1",
+      "name": "Harbor Kitchen",
+      "category": "restaurant",
+      "latitude": 42.361,
+      "longitude": -71.05,
+      "tags": { "cuisine": "seafood" },
+      "openingHours": "unknown",
+      "rating": "unknown",
+      "priceLevel": "unknown"
+    },
+    {
+      "id": "r2",
+      "name": "North End Pasta",
+      "category": "restaurant",
+      "latitude": 42.365,
+      "longitude": -71.054,
+      "tags": { "cuisine": "italian" },
+      "openingHours": "unknown",
+      "rating": "unknown",
+      "priceLevel": "unknown"
+    },
+    {
+      "id": "h1",
+      "name": "Waterfront Inn",
+      "category": "hotel",
+      "latitude": 42.358,
+      "longitude": -71.05,
+      "tags": { "stars": "unknown" },
+      "openingHours": "unknown",
+      "rating": "unknown",
+      "priceLevel": "unknown"
+    }
+  ]
+}

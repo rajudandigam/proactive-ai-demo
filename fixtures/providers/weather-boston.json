@@ -1,0 +1,14 @@
+{
+  "place": {
+    "name": "Boston",
+    "country": "US",
+    "latitude": 42.3601,
+    "longitude": -71.0589,
+    "timezone": "America/New_York"
+  },
+  "date": "2026-10-06",
+  "summary": "partly cloudy with light rain chance",
+  "precipitationProbability": 40,
+  "temperatureMaxC": 18,
+  "temperatureMinC": 11
+}

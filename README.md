@@ -27,6 +27,23 @@ npm run demo:flight
 npm run demo:repeat
 ```
 
+## AgentInspect Playground (lab)
+
+Planning: [`docs/playground/`](docs/playground/) · Closure: [`docs/playground/reports/CLOSURE.md`](docs/playground/reports/CLOSURE.md)
+
+```bash
+npm run lab:inventory
+npm run lab:coverage
+npm run lab:suite -- travel-core          # S01–S08 + S33 offline
+npm run lab:extended -- --suite all-extended   # city/evening/orchestration/contracts/writers
+npm run lab:cli                           # CLI command evidence
+npm run lab:report                        # coverage.json + CLOSURE.md
+```
+
+UI: **http://127.0.0.1:3000/demo/ui** (talk demo) · **http://127.0.0.1:3000/playground/ui** (lab)
+
+Isolated adapter consumers live under `integration-apps/` (blocked until installed with matching peers). Docker interop profile: `scripts/lab/docker/` (opt-in).
+
 ## Modes
 
 | Mode | When | Label |

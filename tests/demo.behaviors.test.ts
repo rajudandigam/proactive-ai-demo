@@ -10,6 +10,7 @@ import { DemoTraceService } from '../src/demo/trace-events.service';
 import { TripAttentionAgentService } from '../src/demo/trip-attention.agent';
 import { ValidationService } from '../src/demo/validation.service';
 import { RunsService } from '../src/demo/runs.service';
+import { InspectCaptureService } from '../src/instrumentation/inspect-capture.service';
 import tripReview from '../fixtures/requests/trip-review.json';
 import flightChange from '../fixtures/requests/flight-change.json';
 import arrivalAffected from '../fixtures/requests/arrival-affected.json';
@@ -41,6 +42,7 @@ async function createApp() {
       TripAttentionAgentService,
       DecisionGraphService,
       RunsService,
+      InspectCaptureService,
     ],
   }).compile();
 

@@ -1,0 +1,18 @@
+{
+  "id": "S09",
+  "version": "1.0.0",
+  "name": "Ambiguous city Springfield",
+  "suite": "city-evening",
+  "workload": "city",
+  "variant": "valid",
+  "request": {
+    "city": "Springfield",
+    "date": "2026-10-06"
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectStatus": "needs_disambiguation"
+  }
+}

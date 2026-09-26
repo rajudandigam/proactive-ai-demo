@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "id": "m1",
+      "title": "The Boston Story",
+      "kind": "movie",
+      "overview": "A fictional drama set in Boston.",
+      "year": "2021",
+      "attribution": "Fixture TMDB-shaped metadata"
+    },
+    {
+      "id": "m2",
+      "title": "Harbor Lights",
+      "kind": "movie",
+      "overview": "A quiet film about arrivals.",
+      "year": "2019",
+      "attribution": "Fixture TMDB-shaped metadata"
+    }
+  ]
+}

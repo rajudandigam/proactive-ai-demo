@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "playground-compat/1",
+  "generatedAt": "2026-09-26T19:11:02.348Z",
+  "appGitSha": "5981a1bf0a81dfb576b8fbf14bd169737f0c24aa",
+  "agentInspect": {
+    "requested": "^6.31.7",
+    "installed": "6.31.7",
+    "planBaseline": "6.31.7",
+    "integrity": "sha512-6TU0v/m4wscLaXhUfZPt07oJ+Efob0TdgCHxx2q7LHT6ekcxiHcW1sOtxrBxSwiqebeHAyqVu22Jbuc4Ujx1dA=="
+  },
+  "langchain": {
+    "core": "0.3.80",
+    "langgraph": "0.2.74",
+    "note": "Manual AgentInspect instrumentation; official langchain adapter deferred (peer core ^1)"
+  },
+  "openai": "5.23.2",
+  "vitest": "3.2.7"
+}

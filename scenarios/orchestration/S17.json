@@ -1,0 +1,18 @@
+{
+  "id": "S17",
+  "version": "1.0.0",
+  "name": "City supervisor parallel graph",
+  "suite": "orchestration",
+  "workload": "supervisor",
+  "variant": "valid",
+  "request": {
+    "city": "Boston",
+    "date": "2026-10-06"
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectProposal": true
+  }
+}

@@ -1,0 +1,7378 @@
+{
+  "schemaVersion": "playground-plan/1",
+  "preparedAt": "2026-09-26",
+  "purpose": "Source-derived planning seed, not a coverage report or proof of executed tests.",
+  "reviewedLibrary": {
+    "repository": "rajudandigam/agent-inspect",
+    "commit": "3c3cbeda9c41776e67d79b068b4e28437c28cb23",
+    "manifestVersion": "6.31.7"
+  },
+  "reviewedApp": {
+    "repository": "rajudandigam/proactive-ai-demo",
+    "commit": "5981a1bf0a81dfb576b8fbf14bd169737f0c24aa",
+    "lockedVersions": {
+      "agent-inspect": "6.31.7",
+      "@langchain/core": "0.3.80",
+      "@langchain/langgraph": "0.2.74",
+      "openai": "5.23.2",
+      "vitest": "3.2.7"
+    }
+  },
+  "source": "https://github.com/rajudandigam/agent-inspect/blob/3c3cbeda9c41776e67d79b068b4e28437c28cb23/packages/core/test/fixtures/api-surface.snapshot.json",
+  "counts": {
+    "publicPackages": 18,
+    "coreSubpaths": 10,
+    "rootAndSubpathValueEntries": 359,
+    "additionalReviewedMethods": 27,
+    "executedTests": 0
+  },
+  "limitations": [
+    "Constants, aliases and functions are not yet distinguished in the core runtime snapshot.",
+    "Scoped-package symbols, complete public types/instance methods and installed CLI/MCP catalogs must be enumerated in P00.",
+    "Candidate scenario mappings are families; each public method needs a specific test and executed evidence.",
+    "Review of a source export snapshot is not validation of published tarballs or npm latest."
+  ],
+  "coverageStatusVocabulary": [
+    "planned",
+    "implemented-unverified",
+    "passed",
+    "failed",
+    "blocked",
+    "not-applicable"
+  ],
+  "publicPackages": [
+    {
+      "name": "agent-inspect",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "package.json",
+      "exports": [
+        ".",
+        "./advanced",
+        "./persisted",
+        "./logs",
+        "./exporters",
+        "./diff",
+        "./writers",
+        "./readers",
+        "./checks",
+        "./reporters",
+        "./workspace"
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/adapter-sdk",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/adapter-sdk/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/ai-sdk",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/ai-sdk/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {
+        "ai": "^6.0.0"
+      },
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/circuit",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/circuit/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/eval",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/eval/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/guardrails",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/guardrails/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/harness",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/harness/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/index-sqlite",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/index-sqlite/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/jest",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/jest/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {
+        "jest": "^29.0.0 || ^30.0.0"
+      },
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/langchain",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/langchain/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {
+        "@langchain/core": "^1.0.0"
+      },
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/mcp",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/mcp/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/mcp-server",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/mcp-server/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/openai-agents",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/openai-agents/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {
+        "@openai/agents": "^0.12.0"
+      },
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/redact",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/redact/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/studio",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/studio/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/tui",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/tui/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/viewer",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/viewer/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/vitest",
+      "reviewedVersion": "6.31.7",
+      "sourceManifest": "packages/vitest/package.json",
+      "exports": [
+        "."
+      ],
+      "peers": {
+        "vitest": "^2.1.0 || ^3.2.6"
+      },
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    }
+  ],
+  "privatePackagesSeparateLane": [
+    {
+      "name": "@agent-inspect/cli",
+      "reviewedVersion": "0.1.0",
+      "sourceManifest": "packages/cli/package.json",
+      "exports": [],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "@agent-inspect/core",
+      "reviewedVersion": "0.1.0",
+      "sourceManifest": "packages/core/package.json",
+      "exports": [
+        ".",
+        "./advanced",
+        "./persisted",
+        "./logs",
+        "./exporters",
+        "./diff",
+        "./writers",
+        "./readers",
+        "./checks",
+        "./reporters",
+        "./workspace"
+      ],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "name": "agent-inspect-vscode",
+      "reviewedVersion": "0.1.0",
+      "sourceManifest": "packages/vscode/package.json",
+      "exports": [],
+      "peers": {},
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    }
+  ],
+  "coreValueSurfaces": [
+    {
+      "id": "agent-inspect:.:createInspector",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect",
+      "symbol": "createInspector",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P01",
+      "candidateScenarioIds": [
+        "S33"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:.:getCurrentCorrelationMetadata",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect",
+      "symbol": "getCurrentCorrelationMetadata",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P01",
+      "candidateScenarioIds": [
+        "S33"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:.:inspectRun",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect",
+      "symbol": "inspectRun",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P01",
+      "candidateScenarioIds": [
+        "S33"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:.:maybeInspectRun",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect",
+      "symbol": "maybeInspectRun",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P01",
+      "candidateScenarioIds": [
+        "S33"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:.:observe",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect",
+      "symbol": "observe",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P01",
+      "candidateScenarioIds": [
+        "S33"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:.:observeOutcome",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect",
+      "symbol": "observeOutcome",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P01",
+      "candidateScenarioIds": [
+        "S33"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:.:step",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect",
+      "symbol": "step",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P01",
+      "candidateScenarioIds": [
+        "S33"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:ADAPTER_CAPTURE_DIAGNOSTIC_CODES",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "ADAPTER_CAPTURE_DIAGNOSTIC_CODES",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:ATTRIBUTION_CONFIDENCES",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "ATTRIBUTION_CONFIDENCES",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:ATTRIBUTION_CONFIDENCE_RANK",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "ATTRIBUTION_CONFIDENCE_RANK",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:COHORT_METRIC_IDS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "COHORT_METRIC_IDS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:DEFAULT_ADAPTER_MAX_PREVIEW_CHARS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "DEFAULT_ADAPTER_MAX_PREVIEW_CHARS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:DEFAULT_MAX_EVENT_BYTES",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "DEFAULT_MAX_EVENT_BYTES",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:DEFAULT_MAX_METADATA_VALUE_LENGTH",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "DEFAULT_MAX_METADATA_VALUE_LENGTH",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:DEFAULT_MAX_PREVIEW_LENGTH",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "DEFAULT_MAX_PREVIEW_LENGTH",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:DEFAULT_SUITE_ARTIFACTS_DIR",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "DEFAULT_SUITE_ARTIFACTS_DIR",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:DEFAULT_SUITE_CONFIG_NAMES",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "DEFAULT_SUITE_CONFIG_NAMES",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:DEFAULT_TRACE_DIR_NAME",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "DEFAULT_TRACE_DIR_NAME",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_ASSESSMENT_NOTE",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_ASSESSMENT_NOTE",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_CONTRACT_ASSURANCE_NOTE",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_CONTRACT_ASSURANCE_NOTE",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_CONTRACT_CANONICALIZATION_VERSION",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_CONTRACT_CANONICALIZATION_VERSION",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_CONTRACT_PARTIAL_NOTE",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_CONTRACT_PARTIAL_NOTE",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_CONTRACT_UNAVAILABLE_NOTE",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_CONTRACT_UNAVAILABLE_NOTE",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_FORMAT_VERSION",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_FORMAT_VERSION",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_HTML_FILENAME",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_HTML_FILENAME",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_MANIFEST_FILENAME",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_MANIFEST_FILENAME",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_RESOLVED_CONTRACT_FILENAME",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_RESOLVED_CONTRACT_FILENAME",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_VIEW_CSS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_VIEW_CSS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:EVIDENCE_VIEW_IDS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "EVIDENCE_VIEW_IDS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:FALLBACK_TRACE_DIR",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "FALLBACK_TRACE_DIR",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:MAX_NAME_LENGTH",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "MAX_NAME_LENGTH",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:MAX_TERMINAL_DEPTH",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "MAX_TERMINAL_DEPTH",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:MAX_TERMINAL_NAME_LENGTH",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "MAX_TERMINAL_NAME_LENGTH",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:OMITTED_PAYLOAD_MAX_DIGEST_INPUT_BYTES",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "OMITTED_PAYLOAD_MAX_DIGEST_INPUT_BYTES",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:RUNS_DIR_NAME",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "RUNS_DIR_NAME",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:SESSION_WORKFLOW_KEYS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "SESSION_WORKFLOW_KEYS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:SUITE_TEMPLATE_IDS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "SUITE_TEMPLATE_IDS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:TERMINAL_INDENT",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "TERMINAL_INDENT",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:TraceDirectory",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "TraceDirectory",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:aggregateBundleSafeStatus",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "aggregateBundleSafeStatus",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:aggregateSessionCheckResults",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "aggregateSessionCheckResults",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:analyzeCohort",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "analyzeCohort",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:assertBundlePathContained",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "assertBundlePathContained",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:assertEvidenceRelativePath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "assertEvidenceRelativePath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:bindCheckResultsToContract",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "bindCheckResultsToContract",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildActivitySummary",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildActivitySummary",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildBundleMetadata",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildBundleMetadata",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildBundleSummaryMarkdown",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildBundleSummaryMarkdown",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceCausalFailureViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceCausalFailureViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceCiPackage",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceCiPackage",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceCircuitViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceCircuitViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceContractPackage",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceContractPackage",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceContractsViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceContractsViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceDiffViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceDiffViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceFileEntries",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceFileEntries",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceHtmlShell",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceHtmlShell",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceHtmlShellFromManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceHtmlShellFromManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceOutcomesViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceOutcomesViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceProvenanceViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceProvenanceViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceSafetyViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceSafetyViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceTimelineViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceTimelineViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceToolsLlmViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceToolsLlmViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildEvidenceTreeViewHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildEvidenceTreeViewHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildLocalExplanation",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildLocalExplanation",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildPlaceholderArtifact",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildPlaceholderArtifact",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildRunSummary",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildRunSummary",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildRunTimeline",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildRunTimeline",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildRunWhatSummary",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildRunWhatSummary",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildSessionIndex",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildSessionIndex",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildTraceStats",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildTraceStats",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:buildZipArchive",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "buildZipArchive",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:bundleFailsOnSafety",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "bundleFailsOnSafety",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:bundleRunAssetRelativePath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "bundleRunAssetRelativePath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:collectResolvedContractRuleIds",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "collectResolvedContractRuleIds",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:collectTraceSchemaVersions",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "collectTraceSchemaVersions",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:compareCohortAggregates",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "compareCohortAggregates",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:createAdapterPreviewCapture",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "createAdapterPreviewCapture",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:createInspector",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "createInspector",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:createInspectorRuntime",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "createInspectorRuntime",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:createOmittedPayloadCommitment",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "createOmittedPayloadCommitment",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:createRunId",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "createRunId",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:createStepId",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "createStepId",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:defaultBundleOutputPath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "defaultBundleOutputPath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:defaultSuiteConfigTemplate",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "defaultSuiteConfigTemplate",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:deriveSessionStatus",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "deriveSessionStatus",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:encodeEmbeddedEvidenceJson",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "encodeEmbeddedEvidenceJson",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:enrichSessionRunRecord",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "enrichSessionRunRecord",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:enrichSessionSummary",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "enrichSessionSummary",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:ensureTraceDir",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "ensureTraceDir",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:extractMetadata",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "extractMetadata",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:extractOutcomesFromPersistedEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "extractOutcomesFromPersistedEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:extractOutcomesFromTraceEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "extractOutcomesFromTraceEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:extractSessionWorkflowMetadata",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "extractSessionWorkflowMetadata",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:filterMetasBySessionScope",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "filterMetasBySessionScope",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:filterTraces",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "filterTraces",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:findFirstCausalFailure",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "findFirstCausalFailure",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:formatDuration",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "formatDuration",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:formatError",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "formatError",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:formatStepLabel",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "formatStepLabel",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:formatTerminalName",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "formatTerminalName",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:formatTimestamp",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "formatTimestamp",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:gateHasThresholds",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "gateHasThresholds",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getCurrentContext",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getCurrentContext",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getCurrentCorrelationMetadata",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getCurrentCorrelationMetadata",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getCurrentDepth",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getCurrentDepth",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getCurrentRunId",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getCurrentRunId",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getCurrentRunName",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getCurrentRunName",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getCurrentStepId",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getCurrentStepId",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getDefaultTraceDir",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getDefaultTraceDir",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getIndent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getIndent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getParentStepId",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getParentStepId",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getRunIdFromTraceFileName",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getRunIdFromTraceFileName",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getSuiteTemplate",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getSuiteTemplate",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getTraceDirFromContext",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getTraceDirFromContext",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getTraceFilePath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getTraceFilePath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:getTraceSafetyFromContext",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "getTraceSafetyFromContext",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:groupSessionCohorts",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "groupSessionCohorts",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:hasActiveContext",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "hasActiveContext",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:inferEvidenceFileRole",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "inferEvidenceFileRole",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:initializeTraceFile",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "initializeTraceFile",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:isAgentInspectEnabled",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "isAgentInspectEnabled",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:isAgentInspectTrace",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "isAgentInspectTrace",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:isAttributionConfidence",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "isAttributionConfidence",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:isSha256Hex",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "isSha256Hex",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:isSilentContext",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "isSilentContext",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:isStepStatus",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "isStepStatus",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:isStepType",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "isStepType",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:isTraceEvent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "isTraceEvent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:listSuiteTemplates",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "listSuiteTemplates",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:listTraceFiles",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "listTraceFiles",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:loadSessionRunRecords",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "loadSessionRunRecords",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:loadSuiteConfig",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "loadSuiteConfig",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:loadTraceMetadataList",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "loadTraceMetadataList",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:maybeInspectRun",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "maybeInspectRun",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:normalizeBundleOutputPath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "normalizeBundleOutputPath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:normalizeSuiteConfig",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "normalizeSuiteConfig",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:omittedPayloadByteLength",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "omittedPayloadByteLength",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:parseCohortMetricList",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "parseCohortMetricList",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:parseDuration",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "parseDuration",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:parseDurationFilter",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "parseDurationFilter",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:parseEvidenceManifestJson",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "parseEvidenceManifestJson",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:parseGateList",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "parseGateList",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:parseGateNumber",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "parseGateNumber",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:parseGroupBySpec",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "parseGroupBySpec",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:parseTraceJsonl",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "parseTraceJsonl",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:prepareMetadataForDisk",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "prepareMetadataForDisk",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:prepareTraceEventForDisk",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "prepareTraceEventForDisk",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:printError",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "printError",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:printFailedAt",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "printFailedAt",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:printRunComplete",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "printRunComplete",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:printRunStart",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "printRunStart",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:printStepComplete",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "printStepComplete",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:printStepStart",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "printStepStart",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:readCheckResultsContractBinding",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "readCheckResultsContractBinding",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:readTraceEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "readTraceEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:readTraceFile",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "readTraceFile",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderActivitySummaryHuman",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderActivitySummaryHuman",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderCohortReport",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderCohortReport",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderCohortSummaryMarkdown",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderCohortSummaryMarkdown",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderErrorLine",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderErrorLine",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderGateGithubAnnotations",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderGateGithubAnnotations",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderGateGithubStepSummary",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderGateGithubStepSummary",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderGateJUnit",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderGateJUnit",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderGateReport",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderGateReport",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderGateSummaryMarkdown",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderGateSummaryMarkdown",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderRunSummary",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderRunSummary",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderRunWhat",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderRunWhat",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderStepLine",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderStepLine",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderSuiteReport",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderSuiteReport",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderSuiteReportMarkdown",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderSuiteReportMarkdown",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderTimeline",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderTimeline",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:renderTraceStats",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "renderTraceStats",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveAdapterMaxPreviewChars",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveAdapterMaxPreviewChars",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveBundleRunIds",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveBundleRunIds",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveRedactionProfile",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveRedactionProfile",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveSerializableTraceContract",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveSerializableTraceContract",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveSuiteCaseTrace",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveSuiteCaseTrace",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveSuiteConfigPath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveSuiteConfigPath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveSuiteTemplate",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveSuiteTemplate",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveTraceDir",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveTraceDir",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:resolveTraceSafetyOptions",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "resolveTraceSafetyOptions",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:runGate",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "runGate",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:runSuite",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "runSuite",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:runWithContext",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "runWithContext",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:runWithStepContext",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "runWithStepContext",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:sanitizeBundleRunId",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "sanitizeBundleRunId",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:searchTraces",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "searchTraces",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:serializeAdapterPreview",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "serializeAdapterPreview",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:serializeCanonicalJson",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "serializeCanonicalJson",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:serializeCheckResultsJson",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "serializeCheckResultsJson",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:serializeEvent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "serializeEvent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:serializeEvidenceManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "serializeEvidenceManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:sessionKeyForRun",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "sessionKeyForRun",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:sha256Equals",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "sha256Equals",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:sha256Hex",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "sha256Hex",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:toMetadataSafeStatus",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "toMetadataSafeStatus",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:traceMetasToSessionRunRecords",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "traceMetasToSessionRunRecords",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:truncateName",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "truncateName",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:unknownTraceFormatMessage",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "unknownTraceFormatMessage",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:validateEvent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "validateEvent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:validateEvidenceManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "validateEvidenceManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:validateSuiteConfig",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "validateSuiteConfig",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:verifyEvidenceContractBinding",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "verifyEvidenceContractBinding",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:verifyEvidenceDirectory",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "verifyEvidenceDirectory",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:warn",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "warn",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:advanced:writeTraceEvent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/advanced",
+      "symbol": "writeTraceEvent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P00",
+      "candidateScenarioIds": [
+        "S31",
+        "S32",
+        "S45",
+        "S47",
+        "S48",
+        "S57",
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:inspectEventToPersistedInspectEvent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "inspectEventToPersistedInspectEvent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:inspectEventsToPersistedInspectEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "inspectEventsToPersistedInspectEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:isPersistedInspectEvent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "isPersistedInspectEvent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:isPersistedInspectEventV02",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "isPersistedInspectEventV02",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:isPersistedInspectEventV10",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "isPersistedInspectEventV10",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:persistedInspectEventToInspectEvent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "persistedInspectEventToInspectEvent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:persistedInspectEventToTraceEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "persistedInspectEventToTraceEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:persistedInspectEventsToInspectEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "persistedInspectEventsToInspectEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:persistedInspectEventsToRunTrees",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "persistedInspectEventsToRunTrees",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:persistedInspectEventsToTraceEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "persistedInspectEventsToTraceEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:traceEventToPersistedInspectEvent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "traceEventToPersistedInspectEvent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:traceEventsToPersistedInspectEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "traceEventsToPersistedInspectEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:persisted:traceEventsToPersistedRunTrees",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/persisted",
+      "symbol": "traceEventsToPersistedRunTrees",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S38",
+        "S39"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:DEFAULT_LOG_INGEST_CONFIG",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "DEFAULT_LOG_INGEST_CONFIG",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:DEFAULT_REDACT_KEYS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "DEFAULT_REDACT_KEYS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:EventNormalizer",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "EventNormalizer",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:JsonLogParser",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "JsonLogParser",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:LiveLogAccumulator",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "LiveLogAccumulator",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:Log4jsParser",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "Log4jsParser",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:Redactor",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "Redactor",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:TreeBuilder",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "TreeBuilder",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:loadLogIngestConfig",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "loadLogIngestConfig",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:matchMapping",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "matchMapping",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:mergeLogIngestConfig",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "mergeLogIngestConfig",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:parseLogLine",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "parseLogLine",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:parseLogsToTrees",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "parseLogsToTrees",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:renderRunTree",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "renderRunTree",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:renderRunTrees",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "renderRunTrees",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:logs:wildcardMatch",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/logs",
+      "symbol": "wildcardMatch",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S40"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:EXPORT_PAYLOAD_VERSION",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "EXPORT_PAYLOAD_VERSION",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:OTEL_GEN_AI_SEMCONV_PIN",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "OTEL_GEN_AI_SEMCONV_PIN",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:buildRunReport",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "buildRunReport",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:compactAttributes",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "compactAttributes",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:escapeHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "escapeHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:escapeMarkdown",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "escapeMarkdown",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:exportHtml",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "exportHtml",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:exportMarkdown",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "exportMarkdown",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:exportOpenInference",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "exportOpenInference",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:exportOtlpJson",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "exportOtlpJson",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:exportRunTree",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "exportRunTree",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:flattenTree",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "flattenTree",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:manualTraceEventsToRunTree",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "manualTraceEventsToRunTree",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:mergeExportDefaults",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "mergeExportDefaults",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:redactRunTreeForExport",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "redactRunTreeForExport",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:safeString",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "safeString",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:stableJson",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "stableJson",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:summarizeTree",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "summarizeTree",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:validateExport",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "validateExport",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:validateExportContent",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "validateExportContent",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:validateOpenInferenceFixture",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "validateOpenInferenceFixture",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:validateOpenInferenceSemanticFixture",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "validateOpenInferenceSemanticFixture",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:validateOtlpJsonFixture",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "validateOtlpJsonFixture",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:exporters:validateOtlpJsonSemanticFixture",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/exporters",
+      "symbol": "validateOtlpJsonSemanticFixture",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S46",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:diff:diffRuns",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/diff",
+      "symbol": "diffRuns",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S57",
+        "S64"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:diff:diffTraceEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/diff",
+      "symbol": "diffTraceEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S57",
+        "S64"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:diff:manualTraceEventsToComparableRun",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/diff",
+      "symbol": "manualTraceEventsToComparableRun",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S57",
+        "S64"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:diff:renderRunDiff",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/diff",
+      "symbol": "renderRunDiff",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S57",
+        "S64"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:writers:bufferedFileWriter",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/writers",
+      "symbol": "bufferedFileWriter",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S34",
+        "S35",
+        "S36",
+        "S37"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:writers:compositeWriter",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/writers",
+      "symbol": "compositeWriter",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S34",
+        "S35",
+        "S36",
+        "S37"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:writers:fileWriter",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/writers",
+      "symbol": "fileWriter",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S34",
+        "S35",
+        "S36",
+        "S37"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:writers:memoryWriter",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/writers",
+      "symbol": "memoryWriter",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S34",
+        "S35",
+        "S36",
+        "S37"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:writers:nullWriter",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/writers",
+      "symbol": "nullWriter",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S34",
+        "S35",
+        "S36",
+        "S37"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:BUILTIN_MAPPING_LEDGERS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "BUILTIN_MAPPING_LEDGERS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:DEFAULT_TRACE_READERS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "DEFAULT_TRACE_READERS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:OPENINFERENCE_MAPPING_LEDGER",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "OPENINFERENCE_MAPPING_LEDGER",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:OTLP_JSON_MAPPING_LEDGER",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "OTLP_JSON_MAPPING_LEDGER",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:PROGRAMMATIC_DIAGNOSTIC_SPECS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "PROGRAMMATIC_DIAGNOSTIC_SPECS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:TraceReadError",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "TraceReadError",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:agentInspectJsonlReader",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "agentInspectJsonlReader",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:assertTraceInput",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "assertTraceInput",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:detectTraceFormat",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "detectTraceFormat",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:formatProgrammaticDiagnostic",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "formatProgrammaticDiagnostic",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:getMappingLedger",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "getMappingLedger",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:openInferenceJsonReader",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "openInferenceJsonReader",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:openTrace",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "openTrace",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:openTraceDirectory",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "openTraceDirectory",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:openTraceFile",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "openTraceFile",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:openTraceText",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "openTraceText",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:otlpJsonReader",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "otlpJsonReader",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:readers:readTrace",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/readers",
+      "symbol": "readTrace",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P06",
+      "candidateScenarioIds": [
+        "S39",
+        "S40",
+        "S60"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:ATTRIBUTION_CONFIDENCES",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "ATTRIBUTION_CONFIDENCES",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:ATTRIBUTION_CONFIDENCE_RANK",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "ATTRIBUTION_CONFIDENCE_RANK",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:PROGRAMMATIC_DIAGNOSTIC_SPECS",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "PROGRAMMATIC_DIAGNOSTIC_SPECS",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:buildTraceFacts",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "buildTraceFacts",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createBaselineRegressionRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createBaselineRegressionRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createDecisionRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createDecisionRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createGuardrailRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createGuardrailRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createLlmUsageRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createLlmUsageRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createMaxStepDurationRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createMaxStepDurationRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createObservedOutcomeRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createObservedOutcomeRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createRequireCompletedRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createRequireCompletedRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createRetrievalRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createRetrievalRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createRunDepthRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createRunDepthRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createRunDurationRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createRunDurationRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createRunEventCountRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createRunEventCountRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createRunStatusRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createRunStatusRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createSafetyOversizedAttributeRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createSafetyOversizedAttributeRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createSafetyRawContentRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createSafetyRawContentRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createSafetyRedactionRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createSafetyRedactionRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createSafetySecretPatternRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createSafetySecretPatternRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createStallDetectionRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createStallDetectionRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createStepOrderingRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createStepOrderingRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createStructureCycleRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createStructureCycleRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createStructureIncompleteRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createStructureIncompleteRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createStructureOrphanRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createStructureOrphanRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createStructureParallelWidthRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createStructureParallelWidthRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createStructureRelationshipRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createStructureRelationshipRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createToolFailureRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createToolFailureRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createToolOrderingRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createToolOrderingRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:createToolUsageRule",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "createToolUsageRule",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:defineTraceContract",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "defineTraceContract",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:deriveFailureFacts",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "deriveFailureFacts",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:deriveRelationshipFacts",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "deriveRelationshipFacts",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:evaluateToolArgumentValue",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "evaluateToolArgumentValue",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:evaluateTraceContract",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "evaluateTraceContract",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:evaluateTraceContractRead",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "evaluateTraceContractRead",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:explainTraceContract",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "explainTraceContract",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:extractToolArgumentPayload",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "extractToolArgumentPayload",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:formatProgrammaticDiagnostic",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "formatProgrammaticDiagnostic",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:isAttributionConfidence",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "isAttributionConfidence",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:lintTraceContract",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "lintTraceContract",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:projectLogicalEvents",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "projectLogicalEvents",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:resolveCanonicalToolName",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "resolveCanonicalToolName",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:resolveJsonPointer",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "resolveJsonPointer",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:resolveTraceContractScope",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "resolveTraceContractScope",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:runTraceChecks",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "runTraceChecks",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:summarizeSemanticParity",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "summarizeSemanticParity",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:checks:workflowMetadataForRun",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/checks",
+      "symbol": "workflowMetadataForRun",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P05",
+      "candidateScenarioIds": [
+        "S25",
+        "S26",
+        "S27",
+        "S29",
+        "S30",
+        "S31",
+        "S38",
+        "S41",
+        "S42",
+        "S43",
+        "S44",
+        "S45"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:reporters:EVIDENCE_CI_ARTIFACT_FILES",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/reporters",
+      "symbol": "EVIDENCE_CI_ARTIFACT_FILES",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S47",
+        "S48",
+        "S56"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:reporters:TRACE_ARTIFACT_MANIFEST_SCHEMA_VERSION",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/reporters",
+      "symbol": "TRACE_ARTIFACT_MANIFEST_SCHEMA_VERSION",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S47",
+        "S48",
+        "S56"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:reporters:createEvidenceCiArtifacts",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/reporters",
+      "symbol": "createEvidenceCiArtifacts",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S47",
+        "S48",
+        "S56"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:reporters:createReporterArtifactPath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/reporters",
+      "symbol": "createReporterArtifactPath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S47",
+        "S48",
+        "S56"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:reporters:createReporterFailureDiagnostic",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/reporters",
+      "symbol": "createReporterFailureDiagnostic",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S47",
+        "S48",
+        "S56"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:reporters:createTraceArtifactManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/reporters",
+      "symbol": "createTraceArtifactManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S47",
+        "S48",
+        "S56"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:reporters:validateReporterArtifactPath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/reporters",
+      "symbol": "validateReporterArtifactPath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P09",
+      "candidateScenarioIds": [
+        "S47",
+        "S48",
+        "S56"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:DEFAULT_WORKSPACE_LAYOUT",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "DEFAULT_WORKSPACE_LAYOUT",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:MAX_WORKSPACE_MANIFEST_BYTES",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "MAX_WORKSPACE_MANIFEST_BYTES",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:WORKSPACE_DIR_NAME",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "WORKSPACE_DIR_NAME",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:WORKSPACE_MANIFEST_FILENAME",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "WORKSPACE_MANIFEST_FILENAME",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:WORKSPACE_SCHEMA_VERSION",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "WORKSPACE_SCHEMA_VERSION",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:cleanWorkspace",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "cleanWorkspace",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:createDefaultWorkspaceManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "createDefaultWorkspaceManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:createWorkspace",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "createWorkspace",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:doctorWorkspace",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "doctorWorkspace",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:getWorkspaceStatus",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "getWorkspaceStatus",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:isSafeRelativeWorkspacePath",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "isSafeRelativeWorkspacePath",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:parseWorkspaceManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "parseWorkspaceManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:readWorkspaceManifestFile",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "readWorkspaceManifestFile",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:resolveInsideWorkspace",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "resolveInsideWorkspace",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:resolveWorkspaceLocation",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "resolveWorkspaceLocation",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:serializeWorkspaceManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "serializeWorkspaceManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "id": "agent-inspect:workspace:validateWorkspaceManifest",
+      "package": "agent-inspect",
+      "importPath": "agent-inspect/workspace",
+      "symbol": "validateWorkspaceManifest",
+      "kind": "runtime-value-needs-declaration-classification",
+      "phaseHint": "P10",
+      "candidateScenarioIds": [
+        "S58"
+      ],
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    }
+  ],
+  "additionalReviewedMethods": [
+    {
+      "owner": "Inspector",
+      "method": "run",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "Inspector",
+      "method": "step",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "Inspector",
+      "method": "tool",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "Inspector",
+      "method": "llm",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "Inspector",
+      "method": "observe",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "Inspector",
+      "method": "observeOutcome",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "Inspector",
+      "method": "getDiagnostics",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "Inspector",
+      "method": "flush",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "Inspector",
+      "method": "close",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "step",
+      "method": "llm",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "step",
+      "method": "tool",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "requireSuccess",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "requiredTools",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "forbiddenTools",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "maxDurationMs",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "maxDepth",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "maxRetries",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "maxTotalTokens",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "noFailedSteps",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "requiredRetrievalBeforeGeneration",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "requiredDecisionMetadata",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "contextOverlap",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "quoteOverlap",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "citationPresence",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "requiredSourceIds",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "answerLengthBounds",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    },
+    {
+      "owner": "@agent-inspect/eval:checks",
+      "method": "bannedUnsupportedPhrases",
+      "coverageStatus": "planned",
+      "testIds": [],
+      "executedEvidence": []
+    }
+  ]
+}

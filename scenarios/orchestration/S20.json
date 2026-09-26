@@ -1,0 +1,17 @@
+{
+  "id": "S20",
+  "version": "1.0.0",
+  "name": "Helpdesk insufficient evidence",
+  "suite": "orchestration",
+  "workload": "helpdesk",
+  "variant": "insufficient-evidence",
+  "request": {
+    "question": "Zogblat xenon teleport refund xylophone?"
+  },
+  "expected": {
+    "runStatus": "completed"
+  },
+  "_lab": {
+    "expectStatus": "insufficient"
+  }
+}

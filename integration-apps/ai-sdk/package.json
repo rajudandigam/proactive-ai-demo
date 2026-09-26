@@ -1,0 +1,14 @@
+{
+  "name": "@playground/ai-sdk-adapter-consumer",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "agent-inspect": "6.31.7",
+    "@agent-inspect/ai-sdk": "6.31.7",
+    "ai": "^6.0.0"
+  },
+  "playground": {
+    "status": "blocked-until-install",
+    "reason": "Optional isolated consumer; not installed in root package"
+  }
+}

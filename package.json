@@ -19,7 +19,15 @@
     "demo:repeat": "tsx scripts/demo-cli.ts repeat",
     "demo:arrival": "tsx scripts/demo-cli.ts arrival",
     "demo:noimpact": "tsx scripts/demo-cli.ts noimpact",
-    "demo:live-eval": "tsx scripts/live-eval.ts"
+    "demo:live-eval": "tsx scripts/live-eval.ts",
+    "lab:inventory": "tsx scripts/lab/inventory.ts",
+    "lab:coverage": "tsx scripts/lab/coverage.ts",
+    "lab:run": "tsx scripts/lab/run.ts",
+    "lab:suite": "tsx scripts/lab/run.ts --suite",
+    "lab:extended": "tsx scripts/lab/run-extended.ts",
+    "lab:cli": "tsx scripts/lab/cli-suite.ts",
+    "lab:mark-m1-evidence": "tsx scripts/lab/mark-m1-evidence.ts",
+    "lab:report": "tsx scripts/lab/report.ts"
   },
   "dependencies": {
     "@langchain/core": "^0.3.78",
