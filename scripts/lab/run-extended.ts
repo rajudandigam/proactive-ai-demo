@@ -4,13 +4,20 @@
  */
 import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, writeFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  writeFileSync,
+  existsSync,
+  readdirSync,
+  readFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
-import { inspectRun, step, observeOutcome } from 'agent-inspect';
+import { createInspector, inspectRun, step, observeOutcome } from 'agent-inspect';
 import { fileWriter, memoryWriter, nullWriter } from 'agent-inspect/writers';
+import { openTraceFile } from 'agent-inspect/readers';
+import { defineTraceContract, evaluateTraceContract } from 'agent-inspect/checks';
 import { createRequire } from 'node:module';
-import { listSuite } from '../../src/playground/scenario-registry';
+import { listSuite, KNOWN_SUITES } from '../../src/playground/scenario-registry';
 import {
   createArtifactDir,
   finalizeChecksums,
@@ -20,11 +27,8 @@ import { runCityPlanner } from '../../src/workloads/city-planner';
 import { runEveningPlanner } from '../../src/workloads/evening-planner';
 import { runCitySupervisorGraph } from '../../src/workloads/city-supervisor.graph';
 import { runTravelHelpdesk } from '../../src/workloads/travel-helpdesk';
-import {
-  ReservationSimulator,
-} from '../../src/workloads/reservation-simulator';
+import { ReservationSimulator } from '../../src/workloads/reservation-simulator';
 import { createCounters } from '../../src/providers/types';
-import { defineTraceContract, evaluateTraceContract } from 'agent-inspect/checks';
 
 const requireAdv = createRequire(__filename);
 const { getCurrentRunId } = requireAdv('agent-inspect/advanced') as {
@@ -64,7 +68,7 @@ async function runCityEvening(batchId: string): Promise<Row[]> {
         method: 'IndependentCounters on fixture providers',
       });
       let ok = true;
-      let detail = result.status;
+      let detail: string = result.status;
       if (lab?.expectStatus && result.status !== lab.expectStatus) {
         ok = false;
         detail = `status ${result.status} != ${lab.expectStatus}`;
@@ -77,15 +81,22 @@ async function runCityEvening(batchId: string): Promise<Row[]> {
         detail = 'too few restaurants';
       }
       if (lab?.expectPlacesInvalid) {
-        // Invalid radius should fail places but city planner may still complete with empty restaurants
         ok = (result.restaurants?.length ?? 0) === 0;
-        detail = ok ? 'invalid radius yielded no restaurants' : 'expected empty restaurants';
+        detail = ok
+          ? 'invalid radius yielded no restaurants'
+          : 'expected empty restaurants';
       }
-      // Independent oracle: counters not taken from AgentInspect
       if (result.counters.geocodeCalls < 1) {
         ok = false;
         detail = 'geocode counter zero';
       }
+      writeJson(artifactDir, 'result.json', {
+        scenarioId: s.id,
+        overallVerdict: ok ? 'pass' : 'fail',
+        applicationVerdict: ok ? 'pass' : 'fail',
+        captureFidelityVerdict: 'insufficient',
+        contractVerdict: 'insufficient',
+      });
       finalizeChecksums(artifactDir);
       rows.push({
         scenarioId: s.id,
@@ -110,6 +121,10 @@ async function runCityEvening(batchId: string): Promise<Row[]> {
       ) {
         ok = false;
       }
+      writeJson(artifactDir, 'result.json', {
+        scenarioId: s.id,
+        overallVerdict: ok ? 'pass' : 'fail',
+      });
       finalizeChecksums(artifactDir);
       rows.push({
         scenarioId: s.id,
@@ -151,52 +166,109 @@ async function runOrchestration(batchId: string): Promise<Row[]> {
     if (s.workload === 'reservation') {
       const counters = createCounters();
       const dataDir = join(artifactDir, 'receipts-db');
-      const sim = new ReservationSimulator(
-        dataDir,
-        counters,
-        Boolean((s.request as { dropResponse?: boolean }).dropResponse),
+      const dropResponse = Boolean(
+        (s.request as { dropResponse?: boolean }).dropResponse,
       );
+      const sim = new ReservationSimulator(dataDir, counters, dropResponse);
       const key = (s.request as { idempotencyKey: string }).idempotencyKey;
       const resource = (s.request as { resource: string }).resource;
 
-      const agentView = await inspectRun(
-        'reservation-hold',
-        async () => {
-          const result = await step.tool('hold_reservation', () =>
-            sim.hold({ resource, idempotencyKey: key }),
-          );
-          await observeOutcome('reservation_effect', {
-            expectation: 'receipt store is authority when response uncertain',
-            status: 'passed',
-            method: 'database',
-            actual: {
-              agentOk: result.ok,
-              receipt: sim.getByIdempotencyKey(key),
-              counters,
-            },
-          });
-          return result;
-        },
-        { silent: true, traceDir, correlationId: executionId },
-      );
+      // Use HTTP path so drop-after-commit is independently observed
+      const http = await sim.startHttp(0);
+      let agentView:
+        | { ok: true; receipt: unknown }
+        | { ok: false; uncertain: true; message: string }
+        | { ok: false; error: string };
+      try {
+        agentView = await inspectRun(
+          'reservation-hold',
+          async () => {
+            const result = await step.tool('hold_reservation', async () => {
+              try {
+                const res = await fetch(`http://127.0.0.1:${http.port}/holds`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ resource, idempotencyKey: key }),
+                });
+                if (!res.ok && res.status === 0) {
+                  return {
+                    ok: false as const,
+                    uncertain: true as const,
+                    message: 'response lost',
+                  };
+                }
+                if (!res.ok) {
+                  // network destroy after commit surfaces as fetch failure
+                  throw new Error(`HTTP ${res.status}`);
+                }
+                const receipt = await res.json();
+                return { ok: true as const, receipt };
+              } catch (err) {
+                return {
+                  ok: false as const,
+                  uncertain: true as const,
+                  message:
+                    err instanceof Error ? err.message : String(err),
+                };
+              }
+            });
+            // Reconcile via receipt store (independent of agent response)
+            const receipt = sim.getByIdempotencyKey(key);
+            await observeOutcome('reservation_effect', {
+              expectation: 'exactly one commit; receipt is authority',
+              status: receipt ? 'passed' : 'failed',
+              method: 'database',
+              actual: {
+                agentOk: result.ok,
+                receipt,
+                commits: counters.reservationCommits,
+                writes: counters.reservationWrites,
+                drops: counters.reservationResponseDrops,
+              },
+            });
+            return result;
+          },
+          { silent: true, traceDir, correlationId: executionId },
+        );
+
+        // Retry same idempotency key — must not double-commit
+        await fetch(`http://127.0.0.1:${http.port}/holds`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resource, idempotencyKey: key }),
+        }).catch(() => undefined);
+      } finally {
+        await http.close();
+      }
 
       const receipt = sim.getByIdempotencyKey(key);
-      writeJson(artifactDir, 'output.safe.json', { agentView, receipt, counters });
-      writeJson(artifactDir, 'oracle.json', {
-        method: 'ReservationSimulator receipt DB',
+      writeJson(artifactDir, 'output.safe.json', {
+        agentView,
         receipt,
         counters,
+        runId: getCurrentRunId?.(),
       });
-      const ok =
-        Boolean(lab?.expectReceiptPresent ? receipt : true) &&
-        Boolean(lab?.expectUncertain ? !agentView.ok && 'uncertain' in agentView : true) &&
-        counters.reservationCommits >= 1;
+      writeJson(artifactDir, 'oracle.json', {
+        method: 'HTTP hold + ReservationSimulator receipt DB',
+        receipt,
+        counters,
+        expectExactCommits: 1,
+      });
+
+      const expectUncertain = Boolean(lab?.expectUncertain);
+      const uncertainOk = expectUncertain
+        ? !agentView.ok && 'uncertain' in agentView
+        : true;
+      const receiptOk = Boolean(lab?.expectReceiptPresent ? receipt : true);
+      const exactCommit = counters.reservationCommits === 1;
+      const ok = receiptOk && uncertainOk && exactCommit && Boolean(receipt);
+
       finalizeChecksums(artifactDir);
       rows.push({
         scenarioId: s.id,
         overall: ok ? 'pass' : 'fail',
         detail: receipt
-          ? `receipt=${receipt.receiptId}; commits=${counters.reservationCommits}`
+          ? `receipt=${receipt.receiptId}; commits=${counters.reservationCommits}; writes=${counters.reservationWrites}; drops=${counters.reservationResponseDrops}; uncertain=${expectUncertain ? uncertainOk : 'n/a'}`
           : 'missing receipt',
         artifactDir,
       });
@@ -227,190 +299,201 @@ async function runContracts(batchId: string): Promise<Row[]> {
   const traceDir = join(artifactDir, 'inspect-traces');
   mkdirSync(traceDir, { recursive: true });
 
-  await inspectRun(
-    'contract-pass-run',
-    async () => {
-      await step.tool('ping', async () => ({ ok: true }));
-      await observeOutcome('ping_ok', {
-        expectation: 'tool completed',
-        status: 'passed',
-        method: 'custom',
-      });
-    },
-    { silent: true, traceDir },
+  const fileW = fileWriter({ dir: traceDir });
+  const inspector = createInspector({ writer: fileW, silent: true });
+  await inspector.run('contract-pass-run', () =>
+    inspector.tool('ping', async () => ({ ok: true })),
   );
+  await inspector.flush();
+  await inspector.close();
 
   const files = readdirSync(traceDir).filter((f) => f.endsWith('.jsonl'));
+  if (files.length === 0) {
+    return [
+      {
+        scenarioId: 'S41',
+        overall: 'fail',
+        detail: 'no trace file written',
+        artifactDir,
+      },
+    ];
+  }
   const tracePath = join(traceDir, files[0]!);
-  const events = readFileSync(tracePath, 'utf8')
-    .trim()
-    .split('\n')
-    .map((l) => JSON.parse(l));
+  writeFileSync(join(artifactDir, 'trace.jsonl'), readFileSync(tracePath));
 
+  const read = await openTraceFile(tracePath);
   const contract = defineTraceContract({
-    id: 'playground-basic',
-    version: '1.0.0',
     tools: { required: ['ping'] },
   });
+  const evaluated = evaluateTraceContract({ read }, contract);
+  writeJson(artifactDir, 'checks.json', evaluated);
 
-  let checkOk = false;
-  let checkDetail = '';
-  try {
-    const evaluated = evaluateTraceContract(contract, {
-      events,
-    } as never);
-    const ev = await Promise.resolve(evaluated);
-    writeJson(artifactDir, 'checks.json', ev);
-    checkOk = Boolean(
-      (ev as { ok?: boolean }).ok === true ||
-        (ev as { status?: string }).status === 'pass' ||
-        (ev as { status?: string }).status === 'passed',
-    );
-    checkDetail = JSON.stringify(ev).slice(0, 400);
-  } catch (err) {
-    try {
-      const out = execFileSync(
-        'npx',
-        [
-          '--no-install',
-          'agent-inspect',
-          'check',
-          tracePath,
-          '--json',
-          '--require-completed',
-          '--required-tool',
-          'ping',
-        ],
-        { encoding: 'utf8' },
-      );
-      writeFileSync(join(artifactDir, 'checks.stdout.txt'), out);
-      const parsed = JSON.parse(out.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as {
-        ok?: boolean;
-        status?: string;
-      };
-      checkOk =
-        parsed.ok === true ||
-        parsed.status === 'pass' ||
-        parsed.status === 'passed';
-      checkDetail = 'cli-fallback';
-      writeJson(artifactDir, 'checks.json', parsed);
-    } catch (e) {
-      checkDetail = e instanceof Error ? e.message : String(e);
-    }
-  }
+  const rulesEvaluated =
+    (evaluated as { summary?: { rulesEvaluated?: number } }).summary
+      ?.rulesEvaluated ?? 0;
+  const checkOk =
+    (evaluated as { ok?: boolean }).ok === true &&
+    rulesEvaluated > 0 &&
+    ((evaluated as { status?: string }).status === 'pass' ||
+      (evaluated as { status?: string }).status === 'passed');
 
-  // Negative: mutate by removing tool requirement evidence expectation
-  const invalidDir = createArtifactDir(batchId, 'S42', randomUUID());
-  const invalidTrace = join(invalidDir, 'trace.jsonl');
-  writeFileSync(
-    invalidTrace,
-    JSON.stringify({
-      schemaVersion: '0.1',
-      event: 'run_started',
-      runId: 'run_mutated',
-      name: 'empty',
-      startTime: Date.now(),
-    }) +
-      '\n' +
-      JSON.stringify({
-        schemaVersion: '0.1',
-        event: 'run_completed',
-        runId: 'run_mutated',
-        status: 'completed',
-        endTime: Date.now(),
-      }) +
-      '\n',
-  );
-  let negOk = false;
-  try {
-    execFileSync(
-      'npx',
-      [
-        '--no-install',
-        'agent-inspect',
-        'check',
-        invalidTrace,
-        '--json',
-        '--required-tool',
-        'must-exist-tool',
-      ],
-      { encoding: 'utf8' },
-    );
-    negOk = false; // should have failed
-  } catch {
-    negOk = true;
-  }
-  writeJson(invalidDir, 'oracle.json', {
-    expect: 'required-tool failure',
-    observed: negOk,
-  });
   finalizeChecksums(artifactDir);
+
+  // S42: readable completed run with a different tool; require missing tool
+  const invalidDir = createArtifactDir(batchId, 'S42', randomUUID());
+  const negTraceDir = join(invalidDir, 'inspect-traces');
+  mkdirSync(negTraceDir, { recursive: true });
+  const negWriter = fileWriter({ dir: negTraceDir });
+  const negInspector = createInspector({ writer: negWriter, silent: true });
+  await negInspector.run('contract-neg-run', () =>
+    negInspector.tool('ping', async () => ({ ok: true })),
+  );
+  await negInspector.flush();
+  await negInspector.close();
+
+  const negFiles = readdirSync(negTraceDir).filter((f) => f.endsWith('.jsonl'));
+  const negPath = join(negTraceDir, negFiles[0]!);
+  writeFileSync(join(invalidDir, 'trace.jsonl'), readFileSync(negPath));
+  const negRead = await openTraceFile(negPath);
+  const negContract = defineTraceContract({
+    tools: { required: ['must-exist-tool'] },
+  });
+  const negResult = evaluateTraceContract({ read: negRead }, negContract);
+  writeJson(invalidDir, 'checks.json', negResult);
+
+  const findings = (
+    negResult as {
+      findings?: Array<{
+        ruleId?: string;
+        message?: string;
+        expected?: string;
+        status?: string;
+      }>;
+      summary?: { rulesEvaluated?: number; failed?: number };
+      ok?: boolean;
+      status?: string;
+    }
+  ).findings ?? [];
+  const negRules =
+    (negResult as { summary?: { rulesEvaluated?: number } }).summary
+      ?.rulesEvaluated ?? 0;
+  const missingToolFinding = findings.find(
+    (f) =>
+      f.ruleId === 'tool.usage' &&
+      (f.expected === 'must-exist-tool' ||
+        (f.message ?? '').includes('must-exist-tool')),
+  );
+  const negOk =
+    (negResult as { ok?: boolean }).ok === false &&
+    negRules > 0 &&
+    Boolean(missingToolFinding);
+
+  writeJson(invalidDir, 'oracle.json', {
+    expect: 'tool.usage finding for must-exist-tool with rulesEvaluated > 0',
+    observed: {
+      ok: (negResult as { ok?: boolean }).ok,
+      status: (negResult as { status?: string }).status,
+      rulesEvaluated: negRules,
+      finding: missingToolFinding ?? null,
+    },
+  });
   finalizeChecksums(invalidDir);
 
   return [
     {
       scenarioId: 'S41',
       overall: checkOk ? 'pass' : 'fail',
-      detail: checkDetail.slice(0, 120),
+      detail: checkOk
+        ? `programmatic contract pass; rulesEvaluated=${rulesEvaluated}`
+        : `contract fail: ${JSON.stringify(evaluated).slice(0, 160)}`,
       artifactDir,
     },
     {
       scenarioId: 'S42',
       overall: negOk ? 'pass' : 'fail',
       detail: negOk
-        ? 'mutated missing-tool detected'
-        : 'expected contract failure not observed',
+        ? `missing-tool finding: ${missingToolFinding?.message ?? 'ok'}; rulesEvaluated=${negRules}`
+        : `expected tool.usage finding not observed (rulesEvaluated=${negRules})`,
       artifactDir: invalidDir,
     },
   ];
 }
 
 async function runLifecycle(batchId: string): Promise<Row[]> {
-  const artifactDir = createArtifactDir(batchId, 'S33-writers', randomUUID());
+  const artifactDir = createArtifactDir(batchId, 'S34-writers', randomUUID());
   const rows: Row[] = [];
 
-  // memory / null / file writers via public API when available
   try {
+    // Memory writer — assert events actually received
     const mem = memoryWriter();
+    const memInspector = createInspector({ writer: mem, silent: true });
+    await memInspector.run('writer-mem', () =>
+      memInspector.tool('ping', async () => ({ ok: true })),
+    );
+    await memInspector.flush();
+    const memEvents = mem.getEvents();
+    await memInspector.close();
+    const memOk = memEvents.length >= 2;
+
+    // Null writer — events counted, no disk files in a dedicated dir
+    const nullProbeDir = join(artifactDir, 'null-probe');
+    mkdirSync(nullProbeDir, { recursive: true });
+    const beforeNull = readdirSync(nullProbeDir);
     const nul = nullWriter();
+    const nullInspector = createInspector({ writer: nul, silent: true });
+    await nullInspector.run('writer-null', () =>
+      nullInspector.tool('ping', async () => ({ ok: true })),
+    );
+    await nullInspector.flush();
+    await nullInspector.close();
+    const afterNull = readdirSync(nullProbeDir);
+    const nullStats = typeof nul.getStats === 'function' ? nul.getStats() : {
+      writtenEvents: 0,
+      droppedEvents: 0,
+      flushCount: 0,
+      lastFlushAt: null as string | null,
+    };
+    const nullOk =
+      nullStats.writtenEvents >= 2 &&
+      afterNull.length === beforeNull.length;
+
+    // File writer — persist and reopen
     const fdir = join(artifactDir, 'file-writer');
     mkdirSync(fdir, { recursive: true });
     const file = fileWriter({ dir: fdir });
-    await inspectRun(
-      'writer-smoke',
-      async () => {
-        await step('noop', async () => 1);
-      },
-      { silent: true, writer: mem as never },
+    const fileInspector = createInspector({ writer: file, silent: true });
+    await fileInspector.run('writer-file', () =>
+      fileInspector.tool('ping', async () => ({ ok: true })),
     );
-    await inspectRun(
-      'writer-null',
-      async () => {
-        await step('noop', async () => 1);
-      },
-      { silent: true, writer: nul as never },
-    );
-    await inspectRun(
-      'writer-file',
-      async () => {
-        await step('noop', async () => 1);
-        await observeOutcome('file_writer_ok', {
-          expectation: 'persisted',
-          status: 'passed',
-          method: 'filesystem',
-        });
-      },
-      { silent: true, writer: file as never, traceDir: fdir },
-    );
+    await fileInspector.flush();
+    await fileInspector.close();
+    const fileTraces = readdirSync(fdir).filter((f) => f.endsWith('.jsonl'));
+    let fileOk = fileTraces.length === 1;
+    if (fileOk) {
+      const read = await openTraceFile(join(fdir, fileTraces[0]!));
+      fileOk = (read.events?.length ?? 0) > 0 && (read.runs?.length ?? 0) > 0;
+    }
+
+    const ok = memOk && nullOk && fileOk;
     writeJson(artifactDir, 'output.safe.json', {
-      writers: ['memory', 'null', 'file'],
-      fileDir: fdir,
+      memoryEventCount: memEvents.length,
+      nullStats,
+      nullDirUnchanged: afterNull.length === beforeNull.length,
+      fileTraces,
+    });
+    writeJson(artifactDir, 'oracle.json', {
+      method: 'createInspector({ writer }) + getEvents/getStats/openTraceFile',
+      memOk,
+      nullOk,
+      fileOk,
     });
     finalizeChecksums(artifactDir);
     rows.push({
       scenarioId: 'S34',
-      overall: 'pass',
-      detail: 'memory/null/file writers exercised',
+      overall: ok ? 'pass' : 'fail',
+      detail: ok
+        ? `mem=${memEvents.length}; nullWritten=${nullStats.writtenEvents}; files=${fileTraces.length}`
+        : `memOk=${memOk} nullOk=${nullOk} fileOk=${fileOk}`,
       artifactDir,
     });
   } catch (err) {
@@ -422,7 +505,7 @@ async function runLifecycle(batchId: string): Promise<Row[]> {
     });
   }
 
-  // Redaction canary — ensure secret-looking metadata is not blindly echoed in share checks
+  // Redaction canary — require trace + metadata event + redacted secrets + preserved safe field
   const canaryDir = createArtifactDir(batchId, 'S46', randomUUID());
   const canaryTrace = join(canaryDir, 'inspect-traces');
   mkdirSync(canaryTrace, { recursive: true });
@@ -445,16 +528,29 @@ async function runLifecycle(batchId: string): Promise<Row[]> {
   const text = files.length
     ? readFileSync(join(canaryTrace, files[0]!), 'utf8')
     : '';
-  const leaked = text.includes('sk-canary-should-redact') || text.includes('hunter2');
+  if (files[0]) {
+    writeFileSync(join(canaryDir, 'trace.jsonl'), text);
+  }
+  const hasTrace = text.trim().length > 0 && files.length === 1;
+  const leaked =
+    text.includes('sk-canary-should-redact') || text.includes('hunter2');
+  const hasRedacted = text.includes('[REDACTED]');
+  const preservedSafe = text.includes('safeTokenCount');
+  const redactionOk = hasTrace && !leaked && hasRedacted && preservedSafe;
   writeJson(canaryDir, 'oracle.json', {
+    hasTrace,
     leaked,
-    note: 'share profile should redact credential-like keys',
+    hasRedacted,
+    preservedSafe,
+    note: 'share profile must redact credential-like keys and keep safeTokenCount',
   });
   finalizeChecksums(canaryDir);
   rows.push({
     scenarioId: 'S46',
-    overall: leaked ? 'fail' : 'pass',
-    detail: leaked ? 'canary leaked into JSONL' : 'canary redacted or absent',
+    overall: redactionOk ? 'pass' : 'fail',
+    detail: redactionOk
+      ? 'canary redacted; safeTokenCount preserved'
+      : `hasTrace=${hasTrace} leaked=${leaked} redacted=${hasRedacted} safe=${preservedSafe}`,
     artifactDir: canaryDir,
   });
 
@@ -465,6 +561,26 @@ async function main() {
   const suiteArg = process.argv.includes('--suite')
     ? process.argv[process.argv.indexOf('--suite') + 1]
     : 'all-extended';
+
+  const allowed = new Set([
+    'all-extended',
+    'city-evening',
+    'orchestration',
+    'contracts',
+    'lifecycle',
+    ...KNOWN_SUITES,
+  ]);
+  if (!suiteArg || !allowed.has(suiteArg)) {
+    console.error(
+      JSON.stringify({
+        error: 'unknown_or_empty_suite',
+        suite: suiteArg,
+        allowed: [...allowed],
+      }),
+    );
+    process.exit(2);
+  }
+
   const batchId = `batch-ext-${Date.now()}`;
   const all: Row[] = [];
 
@@ -479,6 +595,17 @@ async function main() {
   }
   if (suiteArg === 'lifecycle' || suiteArg === 'all-extended') {
     all.push(...(await runLifecycle(batchId)));
+  }
+
+  if (all.length === 0) {
+    console.error(
+      JSON.stringify({
+        error: 'empty_suite',
+        suite: suiteArg,
+        message: 'No cases executed — refusing green exit',
+      }),
+    );
+    process.exit(2);
   }
 
   const failed = all.filter((r) => r.overall !== 'pass').length;

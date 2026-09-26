@@ -5,15 +5,14 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
-export type ArtifactBundle = {
-  dir: string;
-  files: string[];
-  checksums: Record<string, string>;
-};
+function sha256(buf: Buffer | string): string {
+  return createHash('sha256').update(buf).digest('hex');
+}
 
 export function createArtifactDir(
   batchId: string,
@@ -31,10 +30,6 @@ export function createArtifactDir(
   return dir;
 }
 
-function sha256(buf: Buffer | string): string {
-  return createHash('sha256').update(buf).digest('hex');
-}
-
 export function writeJson(dir: string, name: string, value: unknown): string {
   const path = join(dir, name);
   writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
@@ -47,53 +42,31 @@ export function writeText(dir: string, name: string, value: string): string {
   return path;
 }
 
-export function copyTraceIntoArtifacts(
-  dir: string,
-  traceDir: string,
-  runId: string | undefined,
-): string | null {
-  if (!runId || !existsSync(traceDir)) return null;
-  const entries = readdirSync(traceDir);
-  const match = entries.find((e) => e.includes(runId) || e.startsWith(runId));
-  // AgentInspect typically uses run-id.jsonl or nested folders
-  for (const e of entries) {
-    const full = join(traceDir, e);
-    if (e.includes(runId) || e === `${runId}.jsonl`) {
-      const dest = join(dir, 'trace.jsonl');
-      if (e.endsWith('.jsonl')) {
-        copyFileSync(full, dest);
-        return dest;
-      }
+/** Recursively list files under dir as posix-relative paths. */
+export function listFilesRecursive(dir: string, base = dir): string[] {
+  if (!existsSync(dir)) return [];
+  const out: string[] = [];
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name);
+    const st = statSync(full);
+    if (st.isDirectory()) {
+      out.push(...listFilesRecursive(full, base));
+    } else if (st.isFile()) {
+      out.push(relative(base, full).split('\\').join('/'));
     }
   }
-  // Fallback: find any .jsonl mentioning correlation / list newest
-  const jsonl = entries.filter((e) => e.endsWith('.jsonl'));
-  if (jsonl.length === 1) {
-    const dest = join(dir, 'trace.jsonl');
-    copyFileSync(join(traceDir, jsonl[0]), dest);
-    return dest;
-  }
-  // Search file contents for run id
-  for (const e of jsonl) {
-    const full = join(traceDir, e);
-    const text = readFileSync(full, 'utf8');
-    if (runId && text.includes(runId)) {
-      const dest = join(dir, 'trace.jsonl');
-      writeFileSync(dest, text);
-      return dest;
-    }
-  }
-  void match;
-  return null;
+  return out.sort();
 }
 
+/**
+ * Hash all nested files except SHA256SUMS.txt itself.
+ * Paths are relative to the artifact directory.
+ */
 export function finalizeChecksums(dir: string): Record<string, string> {
   const checksums: Record<string, string> = {};
-  for (const name of readdirSync(dir, { withFileTypes: true })) {
-    if (!name.isFile()) continue;
-    if (name.name === 'SHA256SUMS.txt') continue;
-    const path = join(dir, name.name);
-    checksums[name.name] = sha256(readFileSync(path));
+  for (const rel of listFilesRecursive(dir)) {
+    if (rel === 'SHA256SUMS.txt') continue;
+    checksums[rel] = sha256(readFileSync(join(dir, rel)));
   }
   const lines = Object.entries(checksums)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -101,4 +74,34 @@ export function finalizeChecksums(dir: string): Record<string, string> {
     .join('\n');
   writeFileSync(join(dir, 'SHA256SUMS.txt'), lines + (lines ? '\n' : ''));
   return checksums;
+}
+
+/** Verify checksums; returns failed relative paths. */
+export function verifyChecksums(dir: string): string[] {
+  const sumPath = join(dir, 'SHA256SUMS.txt');
+  if (!existsSync(sumPath)) return ['SHA256SUMS.txt missing'];
+  const failed: string[] = [];
+  for (const line of readFileSync(sumPath, 'utf8').split('\n')) {
+    const m = line.match(/^([a-f0-9]{64})\s{2}(.+)$/);
+    if (!m) continue;
+    const [, expect, rel] = m;
+    const full = join(dir, rel!);
+    if (!existsSync(full)) {
+      failed.push(`${rel} missing`);
+      continue;
+    }
+    const got = sha256(readFileSync(full));
+    if (got !== expect) failed.push(`${rel} mismatch`);
+  }
+  return failed;
+}
+
+export function copyTraceIntoArtifacts(
+  dir: string,
+  tracePath: string,
+): string | null {
+  if (!existsSync(tracePath)) return null;
+  const dest = join(dir, 'trace.jsonl');
+  copyFileSync(tracePath, dest);
+  return dest;
 }

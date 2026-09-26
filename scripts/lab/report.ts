@@ -60,12 +60,31 @@ const report = {
     mcpPackages: 'blocked — @agent-inspect/mcp not installed in root',
     liveProviders: 'opt-in; record blocked when credentials/network unavailable',
   },
-  openDefects: [] as Array<{ id: string; summary: string }>,
+  openDefects: [
+    {
+      id: 'R-remaining-live',
+      summary:
+        'Live trip agent not yet the default lab lane; use --profile live-model explicitly',
+    },
+    {
+      id: 'R-remaining-city-agent',
+      summary:
+        'City/evening/helpdesk still construct answers deterministically — need real model loop',
+    },
+    {
+      id: 'R-remaining-adapters',
+      summary:
+        'Framework adapter consumers remain scaffolds without executed capture evidence',
+    },
+  ] as Array<{ id: string; summary: string }>,
   remainingWork: [
+    'Harness R1–R8 repairs landed; keep refusing empty suites and verifying checksums',
+    'Bring existing live trip agent into lab with --profile live-model and independent oracles',
+    'Complete one everyday city assistant with real tool/model loop',
+    'Deepen HTTP reservation restart/reconcile campaign beyond S18',
     'Install and run integration-apps/* with matching peer locks (P07)',
     'Add @agent-inspect/mcp client/server consumers (P08)',
     'Execute Docker interop profile and retain OTLP loss ledger (P11)',
-    'Expand contract rule-family matrix beyond S41/S42 (P05 remainder)',
     'Browser smoke for /playground/ui and TUI PTY tests (P10 remainder)',
   ],
 };
@@ -99,6 +118,10 @@ ${report.packages.blocked.map((p: { name: string; reason: string }) => `- **${p.
 ${Object.entries(report.lanes)
   .map(([k, v]) => `- **${k}**: ${v}`)
   .join('\n')}
+
+## Open defects
+
+${report.openDefects.map((d: { id: string; summary: string }) => `- **${d.id}**: ${d.summary}`).join('\n')}
 
 ## Remaining work
 

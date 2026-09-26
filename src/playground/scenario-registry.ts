@@ -15,13 +15,17 @@ export type ScenarioFile = ScenarioDefinition & {
   };
 };
 
-const SUITE_DIRS = [
+export const KNOWN_SUITES = [
   'travel-core',
   'city-evening',
   'orchestration',
   'contracts',
   'lifecycle',
-];
+] as const;
+
+export type KnownSuite = (typeof KNOWN_SUITES)[number];
+
+const SUITE_DIRS = [...KNOWN_SUITES];
 
 export function loadScenarios(
   dir?: string,
@@ -52,5 +56,17 @@ export function getScenario(id: string): ScenarioFile {
 }
 
 export function listSuite(suite: string): ScenarioFile[] {
-  return loadScenarios().filter((s) => s.suite === suite);
+  if (!(KNOWN_SUITES as readonly string[]).includes(suite)) {
+    throw new Error(
+      `Unknown suite: ${suite}. Known: ${KNOWN_SUITES.join(', ')}`,
+    );
+  }
+  const found = loadScenarios().filter((s) => s.suite === suite);
+  if (found.length === 0) {
+    throw new Error(`Suite ${suite} has zero scenarios — refusing empty run`);
+  }
+  return found;
 }
+
+/** Expected case count for travel-core evidence gating. */
+export const TRAVEL_CORE_EXPECTED_COUNT = 9;

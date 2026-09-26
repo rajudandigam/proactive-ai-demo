@@ -113,7 +113,7 @@
         "lab:suite:travel-core"
       ],
       "executedEvidence": [
-        "artifacts/batch-1790452736131/suite-summary.json"
+        "artifacts/batch-1790458322946/suite-summary.json"
       ]
     },
     {
@@ -407,7 +407,9 @@
         "artifacts/batch-1790448840295/suite-summary.json",
         "artifacts/batch-ext-1790450260214/suite-summary.json",
         "artifacts/batch-1790450275299/suite-summary.json",
-        "artifacts/batch-1790452736131/suite-summary.json"
+        "artifacts/batch-1790452736131/suite-summary.json",
+        "artifacts/batch-1790456178064/suite-summary.json",
+        "artifacts/batch-1790458322946/suite-summary.json"
       ]
     },
     {
@@ -444,7 +446,9 @@
         "artifacts/batch-1790448840295/suite-summary.json",
         "artifacts/batch-ext-1790450260214/suite-summary.json",
         "artifacts/batch-1790450275299/suite-summary.json",
-        "artifacts/batch-1790452736131/suite-summary.json"
+        "artifacts/batch-1790452736131/suite-summary.json",
+        "artifacts/batch-1790456178064/suite-summary.json",
+        "artifacts/batch-1790458322946/suite-summary.json"
       ]
     },
     {
@@ -461,7 +465,9 @@
         "artifacts/batch-1790448840295/suite-summary.json",
         "artifacts/batch-ext-1790450260214/suite-summary.json",
         "artifacts/batch-1790450275299/suite-summary.json",
-        "artifacts/batch-1790452736131/suite-summary.json"
+        "artifacts/batch-1790452736131/suite-summary.json",
+        "artifacts/batch-1790456178064/suite-summary.json",
+        "artifacts/batch-1790458322946/suite-summary.json"
       ]
     },
     {
@@ -658,7 +664,9 @@
         "artifacts/batch-1790448840295/suite-summary.json",
         "artifacts/batch-ext-1790450260214/suite-summary.json",
         "artifacts/batch-1790450275299/suite-summary.json",
-        "artifacts/batch-1790452736131/suite-summary.json"
+        "artifacts/batch-1790452736131/suite-summary.json",
+        "artifacts/batch-1790456178064/suite-summary.json",
+        "artifacts/batch-1790458322946/suite-summary.json"
       ]
     },
     {
@@ -960,7 +968,7 @@
     "symbolsPlanned": 48,
     "symbolsImplementedUnverified": 3,
     "symbolsPassed": 4,
-    "executedEvidence": 16
+    "executedEvidence": 24
   },
   "limitations": [
     "Scoped @agent-inspect/* packages are not installed in this app (blocked until P07+).",

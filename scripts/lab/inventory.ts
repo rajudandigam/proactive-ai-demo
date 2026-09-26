@@ -118,15 +118,30 @@ async function main() {
     };
   });
 
+  type SymbolStatus =
+    | 'planned'
+    | 'implemented-unverified'
+    | 'passed'
+    | 'blocked';
+
   // Core runtime symbols from installed root
-  const symbolRows = [
+  const symbolRows: Array<{
+    id: string;
+    package: string;
+    subpath: string;
+    symbol: string;
+    kind: 'runtime-export' | 'subpath' | 'cli-command';
+    status: SymbolStatus;
+    testIds: string[];
+    executedEvidence: string[];
+  }> = [
     ...rootExports.map((name) => ({
       id: `export:agent-inspect:${name}`,
       package: 'agent-inspect',
       subpath: '.',
       symbol: name,
       kind: 'runtime-export' as const,
-      status: 'planned' as const,
+      status: 'planned' as SymbolStatus,
       testIds: [] as string[],
       executedEvidence: [] as string[],
     })),
@@ -138,7 +153,7 @@ async function main() {
         subpath: sub,
         symbol: sub,
         kind: 'subpath' as const,
-        status: 'planned' as const,
+        status: 'planned' as SymbolStatus,
         testIds: [] as string[],
         executedEvidence: [] as string[],
       })),
@@ -148,7 +163,7 @@ async function main() {
       subpath: 'cli',
       symbol: cmd,
       kind: 'cli-command' as const,
-      status: 'planned' as const,
+      status: 'planned' as SymbolStatus,
       testIds: [] as string[],
       executedEvidence: [] as string[],
     })),

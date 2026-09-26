@@ -1,10 +1,12 @@
 #!/usr/bin/env npx tsx
 /**
  * Mark M1 executed evidence on the coverage ledger after a successful travel-core suite.
- * Does not invent passes for unrun symbols.
+ * Requires expected case count and verified artifact checksums — refuses green without proof.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { verifyChecksums } from '../../src/playground/artifact-writer';
+import { TRAVEL_CORE_EXPECTED_COUNT } from '../../src/playground/scenario-registry';
 
 const ROOT = process.cwd();
 const ledgerPath = join(ROOT, 'docs', 'playground', 'coverage-ledger.json');
@@ -14,12 +16,19 @@ function latestSuiteSummary(): {
   batchId: string;
   failed: number;
   total: number;
+  expectedTotal?: number;
   suite?: string;
+  results?: Array<{ scenarioId: string; overallVerdict: string; artifactDir: string }>;
 } | null {
   if (!existsSync(summaryGlob)) return null;
   const { readdirSync } = require('node:fs') as typeof import('node:fs');
   const batches = readdirSync(summaryGlob)
-    .filter((d) => d.startsWith('batch-') && !d.startsWith('batch-ext-') && !d.startsWith('cli-'))
+    .filter(
+      (d) =>
+        d.startsWith('batch-') &&
+        !d.startsWith('batch-ext-') &&
+        !d.startsWith('cli-'),
+    )
     .sort()
     .reverse();
   for (const b of batches) {
@@ -29,7 +38,13 @@ function latestSuiteSummary(): {
         batchId: string;
         failed: number;
         total: number;
+        expectedTotal?: number;
         suite?: string;
+        results?: Array<{
+          scenarioId: string;
+          overallVerdict: string;
+          artifactDir: string;
+        }>;
       };
       if (!parsed.suite || parsed.suite === 'travel-core') return parsed;
     }
@@ -62,6 +77,50 @@ if (!summary || summary.failed !== 0) {
   process.exit(1);
 }
 
+if (summary.total !== TRAVEL_CORE_EXPECTED_COUNT) {
+  console.error(
+    JSON.stringify({
+      error: 'unexpected_case_count',
+      expected: TRAVEL_CORE_EXPECTED_COUNT,
+      total: summary.total,
+    }),
+  );
+  process.exit(1);
+}
+
+const results = summary.results ?? [];
+if (results.length !== TRAVEL_CORE_EXPECTED_COUNT) {
+  console.error('suite-summary missing per-scenario results');
+  process.exit(1);
+}
+
+const checksumProblems: string[] = [];
+for (const r of results) {
+  if (r.overallVerdict !== 'pass') {
+    checksumProblems.push(`${r.scenarioId}: overall not pass`);
+    continue;
+  }
+  if (!r.artifactDir || !existsSync(r.artifactDir)) {
+    checksumProblems.push(`${r.scenarioId}: missing artifactDir`);
+    continue;
+  }
+  const failed = verifyChecksums(r.artifactDir);
+  if (failed.length) {
+    checksumProblems.push(`${r.scenarioId}: ${failed.join('; ')}`);
+  }
+  const resultPath = join(r.artifactDir, 'result.json');
+  if (!existsSync(resultPath)) {
+    checksumProblems.push(`${r.scenarioId}: missing result.json`);
+  }
+}
+
+if (checksumProblems.length) {
+  console.error(
+    JSON.stringify({ error: 'artifact_verification_failed', checksumProblems }, null, 2),
+  );
+  process.exit(1);
+}
+
 const evidence = [`artifacts/${summary.batchId}/suite-summary.json`];
 /** Only symbols physically exercised by lab:suite travel-core. */
 const m1Runtime = new Set(['inspectRun', 'step', 'observeOutcome']);
@@ -73,14 +132,19 @@ for (const row of ledger.symbols) {
   const isM1 = m1Runtime.has(sym) || m1Cli.has(sym);
   if (!isM1) continue;
   row.status = 'passed';
-  row.testIds = Array.from(new Set([...(row.testIds ?? []), 'lab:suite:travel-core']));
+  row.testIds = Array.from(
+    new Set([...(row.testIds ?? []), 'lab:suite:travel-core']),
+  );
   row.executedEvidence = Array.from(
     new Set([...(row.executedEvidence ?? []), ...evidence]),
   );
 }
 
-// Keep other M1 wiring targets as implemented-unverified (present in app, not suite-proven)
-const wired = new Set(['maybeInspectRun', 'createInspector', 'getCurrentCorrelationMetadata']);
+const wired = new Set([
+  'maybeInspectRun',
+  'createInspector',
+  'getCurrentCorrelationMetadata',
+]);
 for (const row of ledger.symbols) {
   const sym = (row as { symbol?: string }).symbol;
   if (!sym || !wired.has(sym)) continue;
@@ -96,11 +160,15 @@ for (const pkg of ledger.packages) {
   }
 }
 
-ledger.counts.symbolsPassed = ledger.symbols.filter((s) => s.status === 'passed').length;
+ledger.counts.symbolsPassed = ledger.symbols.filter(
+  (s) => s.status === 'passed',
+).length;
 ledger.counts.symbolsImplementedUnverified = ledger.symbols.filter(
   (s) => s.status === 'implemented-unverified',
 ).length;
-ledger.counts.symbolsPlanned = ledger.symbols.filter((s) => s.status === 'planned').length;
+ledger.counts.symbolsPlanned = ledger.symbols.filter(
+  (s) => s.status === 'planned',
+).length;
 ledger.counts.executedEvidence = ledger.symbols.reduce(
   (n, s) => n + (s.executedEvidence?.length ?? 0),
   0,
@@ -112,6 +180,9 @@ console.log(
     {
       ok: true,
       batchId: summary.batchId,
+      total: summary.total,
+      expected: TRAVEL_CORE_EXPECTED_COUNT,
+      checksumsVerified: results.length,
       symbolsPassed: ledger.counts.symbolsPassed,
       evidence,
     },

@@ -1,9 +1,16 @@
 import 'reflect-metadata';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { randomUUID } from 'node:crypto';
-import { existsSync, readFileSync, mkdirSync, readdirSync, copyFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { createHash, randomUUID } from 'node:crypto';
+import {
+  existsSync,
+  readFileSync,
+  mkdirSync,
+  readdirSync,
+  copyFileSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { DecisionGraphService } from '../../src/demo/decision.graph';
 import { DemoClockService } from '../../src/demo/demo-clock.service';
@@ -15,10 +22,11 @@ import { DemoTraceService } from '../../src/demo/trace-events.service';
 import { TripAttentionAgentService } from '../../src/demo/trip-attention.agent';
 import { ValidationService } from '../../src/demo/validation.service';
 import { InspectCaptureService } from '../../src/instrumentation/inspect-capture.service';
-import { createSessionId } from '../../src/demo/schemas';
+import { createSessionId, type ApplicationResult } from '../../src/demo/schemas';
 import {
   createArtifactDir,
   finalizeChecksums,
+  verifyChecksums,
   writeJson,
   writeText,
 } from '../../src/playground/artifact-writer';
@@ -26,16 +34,92 @@ import {
   evaluateApplicationOracle,
   evaluateCaptureFidelity,
 } from '../../src/playground/oracle';
-import { getScenario, listSuite, ScenarioFile } from '../../src/playground/scenario-registry';
-import { OFFLINE_PROFILE, ScenarioResult, VerdictSchema } from '../../src/playground/schemas';
+import {
+  getScenario,
+  listSuite,
+  ScenarioFile,
+  TRAVEL_CORE_EXPECTED_COUNT,
+  KNOWN_SUITES,
+} from '../../src/playground/scenario-registry';
+import {
+  OFFLINE_PROFILE,
+  PROFILES,
+  resolveProfile,
+  ScenarioResult,
+  VerdictSchema,
+  type RunProfile,
+} from '../../src/playground/schemas';
 import type { z } from 'zod';
 
 type Verdict = z.infer<typeof VerdictSchema>;
 
-async function createLabModule(traceDir: string) {
+/** Load .env without overriding already-set process.env (for live profiles). */
+function loadEnvFile() {
+  const path = join(process.cwd(), '.env');
+  if (!existsSync(path)) return;
+  for (const line of readFileSync(path, 'utf8').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq < 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let val = trimmed.slice(eq + 1).trim();
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1);
+    }
+    if (process.env[key] === undefined) process.env[key] = val;
+  }
+}
+
+loadEnvFile();
+
+function installedAgentInspectVersion(): string {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(
+        join(process.cwd(), 'node_modules', 'agent-inspect', 'package.json'),
+        'utf8',
+      ),
+    ) as { version?: string };
+    return pkg.version ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+function lockfileDigest(): string {
+  try {
+    const lock = readFileSync(join(process.cwd(), 'package-lock.json'));
+    return createHash('sha256').update(lock).digest('hex').slice(0, 16);
+  } catch {
+    return 'unknown';
+  }
+}
+
+function gitState(): { sha: string; dirty: boolean } {
+  try {
+    const sha = execFileSync('git', ['rev-parse', 'HEAD'], {
+      encoding: 'utf8',
+    }).trim();
+    const dirty =
+      execFileSync('git', ['status', '--porcelain'], {
+        encoding: 'utf8',
+      }).trim().length > 0;
+    return { sha, dirty };
+  } catch {
+    return { sha: 'unknown', dirty: false };
+  }
+}
+
+async function createLabModule(traceDir: string, profile: RunProfile) {
+  const decisionProvider =
+    profile.modelMode === 'live' ? 'live' : 'fixture';
   process.env.AGENT_INSPECT = '1';
   process.env.AGENT_INSPECT_TRACE_DIR = traceDir;
-  process.env.DECISION_PROVIDER = 'fixture';
+  process.env.DECISION_PROVIDER = decisionProvider;
 
   const module: TestingModule = await Test.createTestingModule({
     imports: [
@@ -43,7 +127,7 @@ async function createLabModule(traceDir: string) {
         isGlobal: true,
         load: [
           () => ({
-            DECISION_PROVIDER: 'fixture',
+            DECISION_PROVIDER: decisionProvider,
             OPENAI_TIMEOUT_MS: '15000',
             AGENT_INSPECT: '1',
             AGENT_INSPECT_TRACE_DIR: traceDir,
@@ -73,43 +157,76 @@ function combineVerdict(
   fidelity: Verdict,
   contract: Verdict,
   expectFailure: boolean,
+  expectedFailureCode: string | undefined,
+  assertions: ScenarioResult['assertions'],
 ): Verdict {
   if (app === 'blocked' || fidelity === 'blocked' || contract === 'blocked') {
     return 'blocked';
   }
   if (expectFailure) {
-    // Deliberately invalid scenario: overall pass only when a failure was detected
+    if (expectedFailureCode) {
+      const matched = assertions.some(
+        (a) =>
+          !a.passed &&
+          (a.id === expectedFailureCode ||
+            a.id.includes(expectedFailureCode) ||
+            a.message.includes(expectedFailureCode) ||
+            JSON.stringify(a.observed ?? {}).includes(expectedFailureCode)),
+      );
+      return matched ? 'pass' : 'fail';
+    }
     const detected =
       app === 'fail' || fidelity === 'fail' || contract === 'fail';
     return detected ? 'pass' : 'fail';
   }
-  if (app === 'pass' && (fidelity === 'pass' || fidelity === 'insufficient') && contract !== 'fail') {
-    // insufficient fidelity is not a green pass for M1 when we expect a trace
+  if (
+    app === 'pass' &&
+    (fidelity === 'pass' || fidelity === 'insufficient') &&
+    contract !== 'fail'
+  ) {
     if (fidelity === 'insufficient') return 'fail';
     return contract === 'pass' || contract === 'insufficient' ? 'pass' : 'fail';
   }
   return 'fail';
 }
 
-function findTraceFile(traceDir: string, runId: string | undefined): string | null {
-  if (!existsSync(traceDir)) return null;
-  const entries = readdirSync(traceDir, { withFileTypes: true });
-  for (const e of entries) {
-    const full = join(traceDir, e.name);
-    if (e.isFile() && e.name.endsWith('.jsonl')) {
+/** Locate a JSONL whose contents bind the mapped run id — no arbitrary fallback. */
+function findTraceFile(
+  traceDir: string,
+  runId: string | undefined,
+): string | null {
+  if (!runId || !existsSync(traceDir)) return null;
+  const matches: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!e.isFile() || !e.name.endsWith('.jsonl')) continue;
       const text = readFileSync(full, 'utf8');
-      if (!runId || text.includes(runId) || e.name.includes(runId)) return full;
+      if (text.includes(runId) || e.name.includes(runId)) {
+        matches.push(full);
+      }
     }
-    if (e.isDirectory()) {
-      const nested = findTraceFile(full, runId);
-      if (nested) return nested;
+  };
+  walk(traceDir);
+  return matches[0] ?? null;
+}
+
+function listTraceFiles(traceDir: string): string[] {
+  if (!existsSync(traceDir)) return [];
+  const out: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (e.isFile() && e.name.endsWith('.jsonl')) out.push(full);
     }
-  }
-  // newest jsonl fallback
-  const files = entries
-    .filter((e) => e.isFile() && e.name.endsWith('.jsonl'))
-    .map((e) => join(traceDir, e.name));
-  return files[0] ?? null;
+  };
+  walk(traceDir);
+  return out;
 }
 
 function runContractCheck(
@@ -152,13 +269,16 @@ function runContractCheck(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     writeText(artifactDir, 'checks.stdout.txt', stdout);
-    let parsed: { status?: string; ok?: boolean } = {};
+    let parsed: {
+      status?: string;
+      ok?: boolean;
+      summary?: { rulesEvaluated?: number };
+    } = {};
     try {
-      parsed = JSON.parse(stdout) as { status?: string; ok?: boolean };
+      parsed = JSON.parse(stdout) as typeof parsed;
     } catch {
-      // some CLI versions wrap JSON
       const m = stdout.match(/\{[\s\S]*\}/);
-      if (m) parsed = JSON.parse(m[0]) as { status?: string; ok?: boolean };
+      if (m) parsed = JSON.parse(m[0]) as typeof parsed;
     }
     writeJson(artifactDir, 'checks.json', parsed);
     const ok =
@@ -189,31 +309,51 @@ function runContractCheck(
       err && typeof err === 'object' && 'stderr' in err
         ? String((err as { stderr: unknown }).stderr)
         : '';
+    const stdout =
+      err && typeof err === 'object' && 'stdout' in err
+        ? String((err as { stdout: unknown }).stdout)
+        : '';
     writeText(artifactDir, 'checks.stderr.txt', stderr || message);
-    // CLI non-zero often means check failed — parse if possible
-    if (stderr || message) {
-      try {
-        const m = (stderr || message).match(/\{[\s\S]*\}/);
-        if (m) {
-          const parsed = JSON.parse(m[0]) as { status?: string; ok?: boolean };
-          writeJson(artifactDir, 'checks.json', parsed);
-          const ok = parsed.ok === true || parsed.status === 'passed';
-          const expectPass = scenario.contract?.expectCheckPass !== false;
+    if (stdout) writeText(artifactDir, 'checks.stdout.txt', stdout);
+    const combined = `${stdout}\n${stderr}\n${message}`;
+    try {
+      const m = combined.match(/\{[\s\S]*\}/);
+      if (m) {
+        const parsed = JSON.parse(m[0]) as {
+          status?: string;
+          ok?: boolean;
+          code?: string;
+          summary?: { rulesEvaluated?: number };
+        };
+        writeJson(artifactDir, 'checks.json', parsed);
+        // Unreadable traces with zero rules must not satisfy expectCheckPass=false
+        const rules = parsed.summary?.rulesEvaluated ?? 0;
+        if (parsed.code === 'AI_CHECK_TRACE_UNREADABLE' || rules === 0) {
           assertions.push({
             id: 'contract.requireCompleted',
-            passed: expectPass ? ok : !ok,
-            message: 'check CLI exited non-zero',
+            passed: false,
+            message:
+              'CLI reported unreadable/zero-rules failure — not a semantic contract rejection',
             observed: parsed,
           });
-          return {
-            verdict: assertions.every((a) => a.passed) ? 'pass' : 'fail',
-            assertions,
-            raw: parsed,
-          };
+          return { verdict: 'fail', assertions, raw: parsed };
         }
-      } catch {
-        /* fall through */
+        const ok = parsed.ok === true || parsed.status === 'passed';
+        const expectPass = scenario.contract?.expectCheckPass !== false;
+        assertions.push({
+          id: 'contract.requireCompleted',
+          passed: expectPass ? ok : !ok,
+          message: 'check CLI exited non-zero',
+          observed: parsed,
+        });
+        return {
+          verdict: assertions.every((a) => a.passed) ? 'pass' : 'fail',
+          assertions,
+          raw: parsed,
+        };
       }
+    } catch {
+      /* fall through */
     }
     assertions.push({
       id: 'contract.requireCompleted',
@@ -229,7 +369,7 @@ export async function runScenario(
   opts?: { batchId?: string; profileId?: string },
 ): Promise<ScenarioResult> {
   const scenario = getScenario(scenarioId);
-  const profile = OFFLINE_PROFILE;
+  const profile = resolveProfile(opts?.profileId ?? OFFLINE_PROFILE.id);
   const batchId = opts?.batchId ?? `batch-${Date.now()}`;
   const executionId = randomUUID();
   const startedAt = new Date().toISOString();
@@ -237,7 +377,30 @@ export async function runScenario(
   const traceDir = join(artifactDir, 'inspect-traces');
   mkdirSync(traceDir, { recursive: true });
 
-  const module = await createLabModule(traceDir);
+  if (profile.modelMode === 'live' && !process.env.OPENAI_API_KEY) {
+    const blocked: ScenarioResult = {
+      batchId,
+      scenarioId: scenario.id,
+      scenarioVersion: scenario.version,
+      executionId,
+      profileId: profile.id,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      sourceKind: 'physical-execution',
+      applicationVerdict: 'blocked',
+      captureFidelityVerdict: 'blocked',
+      contractVerdict: 'blocked',
+      overallVerdict: 'blocked',
+      assertions: [],
+      artifactDir,
+      blockedReason: 'OPENAI_API_KEY missing for live-model profile',
+    };
+    writeJson(artifactDir, 'result.json', blocked);
+    finalizeChecksums(artifactDir);
+    return blocked;
+  }
+
+  const module = await createLabModule(traceDir, profile);
   const graph = module.get(DecisionGraphService);
   const outbox = module.get(OutboxService);
   const inspect = module.get(InspectCaptureService);
@@ -245,7 +408,6 @@ export async function runScenario(
 
   const sessionId = createSessionId();
 
-  // S07: seed prior event in same session
   if (scenario._lab?.seedPriorEvent) {
     await graph.run(scenario.request, {
       sessionId,
@@ -254,9 +416,10 @@ export async function runScenario(
     });
   }
 
-  let result;
+  let result: ApplicationResult;
+  let siblingResult: ApplicationResult | undefined;
   if (scenario._lab?.parallelSibling) {
-    const [a] = await Promise.all([
+    const [a, b] = await Promise.all([
       graph.run(scenario.request, {
         sessionId: createSessionId(),
         runId: executionId,
@@ -270,6 +433,7 @@ export async function runScenario(
       }),
     ]);
     result = a;
+    siblingResult = b;
   } else {
     result = await graph.run(scenario.request, {
       sessionId,
@@ -279,41 +443,73 @@ export async function runScenario(
     });
   }
 
-  const independentOutbox = outbox.getOutbox(result.sessionId ?? sessionId).length;
+  const independentOutbox = outbox.getOutbox(result.sessionId ?? sessionId)
+    .length;
   const app = evaluateApplicationOracle(scenario, result, independentOutbox);
 
   const agentInspectRunId =
     result.agentInspectTraceId ?? inspect.getMappedRunId(executionId);
   const tracePath = findTraceFile(traceDir, agentInspectRunId);
-  let traceText: string | null = null;
   if (tracePath) {
-    traceText = readFileSync(tracePath, 'utf8');
     copyFileSync(tracePath, join(artifactDir, 'trace.jsonl'));
   }
 
-  const fidelity = evaluateCaptureFidelity({
+  const fidelity = await evaluateCaptureFidelity({
     scenario,
     agentInspectRunId,
-    traceText,
+    tracePath,
     independentModelCalls: result.modelCalls,
     independentLiveAttempts: result.accounting?.liveAttempts ?? 0,
   });
 
+  // S08: both concurrent sessions must produce distinct traces
+  if (siblingResult) {
+    const allTraces = listTraceFiles(traceDir);
+    const siblingRunId = siblingResult.agentInspectTraceId;
+    const siblingTrace = findTraceFile(traceDir, siblingRunId);
+    const distinct =
+      allTraces.length >= 2 &&
+      Boolean(siblingTrace) &&
+      siblingTrace !== tracePath &&
+      result.sessionId !== siblingResult.sessionId;
+    fidelity.assertions.push({
+      id: 'fidelity.concurrentSessions',
+      passed: distinct,
+      message: distinct
+        ? `Two distinct traces/sessions (${allTraces.length} files)`
+        : `Expected two distinct session traces; got ${allTraces.length} files`,
+      observed: {
+        primaryRunId: agentInspectRunId,
+        siblingRunId,
+        sessionA: result.sessionId,
+        sessionB: siblingResult.sessionId,
+        traceCount: allTraces.length,
+      },
+    });
+    if (!distinct) {
+      fidelity.verdict = 'fail';
+    }
+  }
+
   const contract = runContractCheck(artifactDir, tracePath, scenario);
+
+  const allAssertions = [
+    ...app.assertions,
+    ...fidelity.assertions,
+    ...contract.assertions,
+  ];
 
   const overall = combineVerdict(
     app.verdict,
     fidelity.verdict,
     contract.verdict,
     scenario.expectFailure,
+    scenario.expectedFailureCode,
+    allAssertions,
   );
 
   const finishedAt = new Date().toISOString();
-  const allAssertions = [
-    ...app.assertions,
-    ...fidelity.assertions,
-    ...contract.assertions,
-  ];
+  const git = gitState();
 
   const scenarioResult: ScenarioResult = {
     batchId,
@@ -335,11 +531,14 @@ export async function runScenario(
 
   writeJson(artifactDir, 'manifest.json', {
     ...scenarioResult,
-    appGitSha: execSafe('git rev-parse HEAD'),
-    agentInspectVersion: '6.31.7',
-    decisionProvider: 'fixture',
+    appGitSha: git.sha,
+    appDirty: git.dirty,
+    agentInspectVersion: installedAgentInspectVersion(),
+    lockfileDigest: lockfileDigest(),
+    decisionProvider: profile.modelMode === 'live' ? 'live' : 'fixture',
     modelMode: profile.modelMode,
     toolMode: profile.toolMode,
+    profileId: profile.id,
     sourceKind: 'physical-execution',
   });
   writeJson(artifactDir, 'input.safe.json', {
@@ -358,6 +557,14 @@ export async function runScenario(
       decidedBy: d.decidedBy,
     })),
     agentInspectTraceId: result.agentInspectTraceId,
+    sibling:
+      siblingResult == null
+        ? undefined
+        : {
+            sessionId: siblingResult.sessionId,
+            agentInspectTraceId: siblingResult.agentInspectTraceId,
+            outboxWrites: siblingResult.outboxWrites,
+          },
   });
   writeJson(artifactDir, 'oracle.json', {
     independentOutboxCount: independentOutbox,
@@ -371,29 +578,41 @@ export async function runScenario(
   });
   writeJson(artifactDir, 'result.json', scenarioResult);
   finalizeChecksums(artifactDir);
+  const checksumFailures = verifyChecksums(artifactDir);
+  if (checksumFailures.length) {
+    writeJson(artifactDir, 'checksum-verify.json', { failed: checksumFailures });
+  }
 
   await module.close();
   return scenarioResult;
 }
 
-function execSafe(cmd: string): string {
-  try {
-    return execFileSync('sh', ['-c', cmd], { encoding: 'utf8' }).trim();
-  } catch {
-    return 'unknown';
-  }
-}
-
-export async function runSuite(suite: string): Promise<{
+export async function runSuite(
+  suite: string,
+  opts?: { profileId?: string },
+): Promise<{
   batchId: string;
   results: ScenarioResult[];
   failed: number;
 }> {
-  const batchId = `batch-${Date.now()}`;
+  if (!(KNOWN_SUITES as readonly string[]).includes(suite)) {
+    throw new Error(
+      `Unknown suite: ${suite}. Known: ${KNOWN_SUITES.join(', ')}`,
+    );
+  }
   const scenarios = listSuite(suite);
+  if (suite === 'travel-core' && scenarios.length !== TRAVEL_CORE_EXPECTED_COUNT) {
+    throw new Error(
+      `travel-core expected ${TRAVEL_CORE_EXPECTED_COUNT} cases, found ${scenarios.length}`,
+    );
+  }
+  const batchId = `batch-${Date.now()}`;
   const results: ScenarioResult[] = [];
   for (const s of scenarios) {
-    const r = await runScenario(s.id, { batchId });
+    const r = await runScenario(s.id, {
+      batchId,
+      profileId: opts?.profileId,
+    });
     results.push(r);
     console.log(
       JSON.stringify({
@@ -406,6 +625,9 @@ export async function runSuite(suite: string): Promise<{
       }),
     );
   }
+  if (results.length === 0) {
+    throw new Error(`Suite ${suite} produced zero results`);
+  }
   const failed = results.filter((r) => r.overallVerdict !== 'pass').length;
   const summaryDir = join(process.cwd(), 'artifacts', batchId);
   mkdirSync(summaryDir, { recursive: true });
@@ -414,6 +636,9 @@ export async function runSuite(suite: string): Promise<{
     batchId,
     failed,
     total: results.length,
+    expectedTotal:
+      suite === 'travel-core' ? TRAVEL_CORE_EXPECTED_COUNT : results.length,
+    profileId: opts?.profileId ?? OFFLINE_PROFILE.id,
     results: results.map((r) => ({
       scenarioId: r.scenarioId,
       overallVerdict: r.overallVerdict,
@@ -425,21 +650,47 @@ export async function runSuite(suite: string): Promise<{
 
 // CLI
 const args = process.argv.slice(2);
+
+function flagValue(name: string): string | undefined {
+  const i = args.indexOf(name);
+  return i >= 0 ? args[i + 1] : undefined;
+}
+
 async function main() {
+  const resultFile = flagValue('--result-file');
+  const profileId = flagValue('--profile') ?? OFFLINE_PROFILE.id;
+
   if (args[0] === '--scenario') {
     const id = args[1];
     if (!id) throw new Error('--scenario <id> required');
-    const r = await runScenario(id);
-    console.log(JSON.stringify(r, null, 2));
+    const r = await runScenario(id, { profileId });
+    const text = JSON.stringify(r, null, 2);
+    if (resultFile) {
+      mkdirSync(dirname(resultFile), { recursive: true });
+      writeFileSync(resultFile, text + '\n');
+    }
+    console.log(text);
     process.exit(r.overallVerdict === 'pass' ? 0 : 1);
   }
   if (args[0] === '--suite') {
     const suite = args[1] ?? 'travel-core';
-    const { failed, results, batchId } = await runSuite(suite);
-    console.log(JSON.stringify({ batchId, failed, total: results.length }, null, 2));
-    process.exit(failed === 0 ? 0 : 1);
+    try {
+      const { failed, results, batchId } = await runSuite(suite, { profileId });
+      const summary = { batchId, failed, total: results.length, profileId };
+      if (resultFile) {
+        writeFileSync(resultFile, JSON.stringify(summary, null, 2) + '\n');
+      }
+      console.log(JSON.stringify(summary, null, 2));
+      process.exit(failed === 0 ? 0 : 1);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      process.exit(2);
+    }
   }
-  console.error('Usage: lab:run -- --scenario S01 | lab:suite -- --suite travel-core');
+  console.error(
+    `Usage: lab:run -- --scenario S01 [--profile offline] [--result-file path]\n` +
+      `Profiles: ${Object.keys(PROFILES).join(', ')}`,
+  );
   process.exit(2);
 }
 

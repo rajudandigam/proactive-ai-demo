@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-26T19:59:11.948Z",
-  "appGitSha": "5981a1bf0a81dfb576b8fbf14bd169737f0c24aa",
+  "generatedAt": "2026-09-26T21:32:14.136Z",
+  "appGitSha": "679fd82ec37a8a1f39edd0c6fe03e9f8762e38e9",
   "node": "v22.22.3",
   "agentInspectInstalled": "6.31.7",
   "coverageCounts": {
@@ -11,7 +11,7 @@
     "symbolsPlanned": 48,
     "symbolsImplementedUnverified": 3,
     "symbolsPassed": 4,
-    "executedEvidence": 16
+    "executedEvidence": 24
   },
   "packages": {
     "installed": [
@@ -98,9 +98,15 @@
     "batch-1790448840295",
     "batch-1790450275299",
     "batch-1790452736131",
+    "batch-1790455402548",
+    "batch-1790456178064",
+    "batch-1790458322946",
     "batch-ext-1790450148064",
     "batch-ext-1790450260214",
-    "batch-ext-1790452743860"
+    "batch-ext-1790452743860",
+    "batch-ext-1790455439883",
+    "batch-ext-1790456185903",
+    "batch-ext-1790458328523"
   ],
   "lanes": {
     "travelCoreOffline": "see lab:suite travel-core",
@@ -113,12 +119,28 @@
     "mcpPackages": "blocked — @agent-inspect/mcp not installed in root",
     "liveProviders": "opt-in; record blocked when credentials/network unavailable"
   },
-  "openDefects": [],
+  "openDefects": [
+    {
+      "id": "R-remaining-live",
+      "summary": "Live trip agent not yet the default lab lane; use --profile live-model explicitly"
+    },
+    {
+      "id": "R-remaining-city-agent",
+      "summary": "City/evening/helpdesk still construct answers deterministically — need real model loop"
+    },
+    {
+      "id": "R-remaining-adapters",
+      "summary": "Framework adapter consumers remain scaffolds without executed capture evidence"
+    }
+  ],
   "remainingWork": [
+    "Harness R1–R8 repairs landed; keep refusing empty suites and verifying checksums",
+    "Bring existing live trip agent into lab with --profile live-model and independent oracles",
+    "Complete one everyday city assistant with real tool/model loop",
+    "Deepen HTTP reservation restart/reconcile campaign beyond S18",
     "Install and run integration-apps/* with matching peer locks (P07)",
     "Add @agent-inspect/mcp client/server consumers (P08)",
     "Execute Docker interop profile and retain OTLP loss ledger (P11)",
-    "Expand contract rule-family matrix beyond S41/S42 (P05 remainder)",
     "Browser smoke for /playground/ui and TUI PTY tests (P10 remainder)"
   ]
 }

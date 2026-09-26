@@ -349,13 +349,19 @@ export class LivePlacesProvider implements PlacesProvider {
         message: 'live Overpass bound: radius<=1500, limit<=5',
       };
     }
-    const amenity = args.category === 'hotel' ? 'hotel' : 'restaurant';
+    // Hotels use tourism=hotel (not amenity=hotel). Include node/way/relation + centers.
+    const filter =
+      args.category === 'hotel'
+        ? '["tourism"="hotel"]'
+        : '["amenity"="restaurant"]';
     const query = `
       [out:json][timeout:15];
       (
-        node["amenity"="${amenity}"](around:${args.radiusMeters},${args.latitude},${args.longitude});
+        node${filter}(around:${args.radiusMeters},${args.latitude},${args.longitude});
+        way${filter}(around:${args.radiusMeters},${args.latitude},${args.longitude});
+        relation${filter}(around:${args.radiusMeters},${args.latitude},${args.longitude});
       );
-      out body ${args.limit};
+      out center ${args.limit};
     `;
     try {
       const res = await fetch('https://overpass-api.de/api/interpreter', {
@@ -380,22 +386,31 @@ export class LivePlacesProvider implements PlacesProvider {
       const body = (await res.json()) as {
         elements?: Array<{
           id: number;
-          lat: number;
-          lon: number;
+          type?: string;
+          lat?: number;
+          lon?: number;
+          center?: { lat: number; lon: number };
           tags?: Record<string, string>;
         }>;
       };
-      const places: MappedPlace[] = (body.elements ?? []).slice(0, args.limit).map((e) => ({
-        id: String(e.id),
-        name: e.tags?.name ?? `unnamed-${e.id}`,
-        category: args.category,
-        latitude: e.lat,
-        longitude: e.lon,
-        tags: e.tags ?? {},
-        openingHours: e.tags?.opening_hours ?? 'unknown',
-        rating: 'unknown',
-        priceLevel: 'unknown',
-      }));
+      const places: MappedPlace[] = [];
+      for (const e of body.elements ?? []) {
+        const latitude = e.lat ?? e.center?.lat;
+        const longitude = e.lon ?? e.center?.lon;
+        if (latitude == null || longitude == null) continue;
+        places.push({
+          id: String(e.id),
+          name: e.tags?.name ?? `unnamed-${e.id}`,
+          category: args.category,
+          latitude,
+          longitude,
+          tags: e.tags ?? {},
+          openingHours: e.tags?.opening_hours ?? 'unknown',
+          rating: 'unknown',
+          priceLevel: 'unknown',
+        });
+        if (places.length >= args.limit) break;
+      }
       return {
         ok: true,
         data: places,

@@ -8,9 +8,11 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { listSuite, getScenario } from '../playground/scenario-registry';
+import { listSuite, getScenario, KNOWN_SUITES } from '../playground/scenario-registry';
+import { PROFILES } from '../playground/schemas';
 
 @Controller('playground')
 export class PlaygroundController {
@@ -62,15 +64,30 @@ export class PlaygroundController {
     };
   }
 
+  @Get('profiles')
+  profiles() {
+    return Object.values(PROFILES);
+  }
+
   @Get('scenarios')
   scenarios(@Query('suite') suite = 'travel-core') {
-    return listSuite(suite).map((s) => ({
-      id: s.id,
-      name: s.name,
-      suite: s.suite,
-      workload: s.workload,
-      variant: s.variant,
-    }));
+    if (!(KNOWN_SUITES as readonly string[]).includes(suite)) {
+      return { error: `Unknown suite: ${suite}`, known: KNOWN_SUITES };
+    }
+    try {
+      return listSuite(suite).map((s) => ({
+        id: s.id,
+        name: s.name,
+        suite: s.suite,
+        workload: s.workload,
+        variant: s.variant,
+      }));
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : String(err),
+        known: KNOWN_SUITES,
+      };
+    }
   }
 
   @Post('run')
@@ -80,8 +97,17 @@ export class PlaygroundController {
   ) {
     const scenarioId = body.scenarioId;
     if (!scenarioId) {
-      return { overall: 'fail', blockedReason: 'scenarioId required' };
+      return { overallVerdict: 'fail', blockedReason: 'scenarioId required' };
     }
+    const profile = body.profile ?? 'offline';
+    if (!PROFILES[profile]) {
+      return {
+        overallVerdict: 'blocked',
+        blockedReason: `Unknown profile: ${profile}`,
+        knownProfiles: Object.keys(PROFILES),
+      };
+    }
+    let tmp: string | undefined;
     try {
       const scenario = getScenario(scenarioId);
       if (scenario.suite !== 'travel-core') {
@@ -89,23 +115,81 @@ export class PlaygroundController {
           overallVerdict: 'blocked',
           blockedReason: `Suite ${scenario.suite} — run via npm run lab:extended -- --suite ${scenario.suite}`,
           scenarioId,
-          profile: body.profile ?? 'offline',
+          profile,
         };
       }
+      tmp = mkdtempSync(join(tmpdir(), 'playground-run-'));
+      const resultFile = join(tmp, 'result.json');
       const { execFileSync } = await import('node:child_process');
-      const out = execFileSync(
+      // Logs go to stdout/stderr; machine-readable result is only in resultFile.
+      execFileSync(
         'npx',
-        ['tsx', 'scripts/lab/run.ts', '--scenario', scenarioId],
-        { cwd: process.cwd(), encoding: 'utf8', timeout: 120_000 },
+        [
+          'tsx',
+          'scripts/lab/run.ts',
+          '--scenario',
+          scenarioId,
+          '--profile',
+          profile,
+          '--result-file',
+          resultFile,
+        ],
+        {
+          cwd: process.cwd(),
+          encoding: 'utf8',
+          timeout: 120_000,
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
       );
-      const jsonStart = out.lastIndexOf('{');
-      const parsed = JSON.parse(out.slice(jsonStart)) as Record<string, unknown>;
-      return parsed;
+      if (!existsSync(resultFile)) {
+        return {
+          overallVerdict: 'fail',
+          error: 'Lab runner did not write result file',
+          scenarioId,
+          profile,
+        };
+      }
+      return JSON.parse(readFileSync(resultFile, 'utf8')) as Record<
+        string,
+        unknown
+      >;
     } catch (err) {
+      const stdout =
+        err && typeof err === 'object' && 'stdout' in err
+          ? String((err as { stdout: unknown }).stdout)
+          : '';
+      const stderr =
+        err && typeof err === 'object' && 'stderr' in err
+          ? String((err as { stderr: unknown }).stderr)
+          : '';
+      // Prefer dedicated result file even on non-zero exit
+      if (tmp) {
+        const resultFile = join(tmp, 'result.json');
+        if (existsSync(resultFile)) {
+          try {
+            return JSON.parse(readFileSync(resultFile, 'utf8')) as Record<
+              string,
+              unknown
+            >;
+          } catch {
+            /* fall through */
+          }
+        }
+      }
       return {
         overallVerdict: 'fail',
         error: err instanceof Error ? err.message : String(err),
+        stdout: stdout.slice(-2000),
+        stderr: stderr.slice(-2000),
       };
+    } finally {
+      if (tmp) {
+        try {
+          rmSync(tmp, { recursive: true, force: true });
+        } catch {
+          /* ignore */
+        }
+      }
     }
   }
 }

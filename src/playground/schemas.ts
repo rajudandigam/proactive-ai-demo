@@ -98,3 +98,41 @@ export const OFFLINE_PROFILE: RunProfile = {
   toolMode: 'fixture',
   agentInspect: true,
 };
+
+export const LIVE_MODEL_PROFILE: RunProfile = {
+  id: 'live-model',
+  modelMode: 'live',
+  toolMode: 'fixture',
+  agentInspect: true,
+};
+
+export const LIVE_TOOLS_PROFILE: RunProfile = {
+  id: 'live-tools',
+  modelMode: 'scripted',
+  toolMode: 'live',
+  agentInspect: true,
+};
+
+export const LIVE_FULL_PROFILE: RunProfile = {
+  id: 'live-full',
+  modelMode: 'live',
+  toolMode: 'live',
+  agentInspect: true,
+};
+
+export const PROFILES: Record<string, RunProfile> = {
+  offline: OFFLINE_PROFILE,
+  'live-model': LIVE_MODEL_PROFILE,
+  'live-tools': LIVE_TOOLS_PROFILE,
+  'live-full': LIVE_FULL_PROFILE,
+};
+
+export function resolveProfile(id: string): RunProfile {
+  const profile = PROFILES[id];
+  if (!profile) {
+    throw new Error(
+      `Unknown profile: ${id}. Known: ${Object.keys(PROFILES).join(', ')}`,
+    );
+  }
+  return profile;
+}

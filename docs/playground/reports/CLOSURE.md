@@ -1,12 +1,12 @@
 # AgentInspect Playground closure report
 
-Generated: 2026-09-26T19:59:11.948Z
+Generated: 2026-09-26T21:32:14.136Z
 
 ## Versions
 
 | Field | Value |
 | --- | --- |
-| App SHA | `5981a1bf0a81dfb576b8fbf14bd169737f0c24aa` |
+| App SHA | `679fd82ec37a8a1f39edd0c6fe03e9f8762e38e9` |
 | Node | v22.22.3 |
 | agent-inspect | 6.31.7 |
 
@@ -21,7 +21,7 @@ Generated: 2026-09-26T19:59:11.948Z
   "symbolsPlanned": 48,
   "symbolsImplementedUnverified": 3,
   "symbolsPassed": 4,
-  "executedEvidence": 16
+  "executedEvidence": 24
 }
 ```
 
@@ -57,12 +57,21 @@ Generated: 2026-09-26T19:59:11.948Z
 - **mcpPackages**: blocked — @agent-inspect/mcp not installed in root
 - **liveProviders**: opt-in; record blocked when credentials/network unavailable
 
+## Open defects
+
+- **R-remaining-live**: Live trip agent not yet the default lab lane; use --profile live-model explicitly
+- **R-remaining-city-agent**: City/evening/helpdesk still construct answers deterministically — need real model loop
+- **R-remaining-adapters**: Framework adapter consumers remain scaffolds without executed capture evidence
+
 ## Remaining work
 
+- Harness R1–R8 repairs landed; keep refusing empty suites and verifying checksums
+- Bring existing live trip agent into lab with --profile live-model and independent oracles
+- Complete one everyday city assistant with real tool/model loop
+- Deepen HTTP reservation restart/reconcile campaign beyond S18
 - Install and run integration-apps/* with matching peer locks (P07)
 - Add @agent-inspect/mcp client/server consumers (P08)
 - Execute Docker interop profile and retain OTLP loss ledger (P11)
-- Expand contract rule-family matrix beyond S41/S42 (P05 remainder)
 - Browser smoke for /playground/ui and TUI PTY tests (P10 remainder)
 
 ## Commands
