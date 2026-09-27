@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-09-26T21:32:14.136Z",
-  "appGitSha": "679fd82ec37a8a1f39edd0c6fe03e9f8762e38e9",
+  "generatedAt": "2026-09-27T19:16:41.269Z",
+  "appGitSha": "a4c9768d3cb08d04d822db511b83036c42504186",
   "node": "v22.22.3",
-  "agentInspectInstalled": "6.31.7",
+  "agentInspectInstalled": "6.31.11",
   "coverageCounts": {
     "packagesTotal": 18,
     "packagesInstalled": 1,
     "packagesBlocked": 17,
     "symbolsTotal": 55,
-    "symbolsPlanned": 48,
-    "symbolsImplementedUnverified": 3,
-    "symbolsPassed": 4,
-    "executedEvidence": 24
+    "symbolsPlanned": 49,
+    "symbolsImplementedUnverified": 6,
+    "symbolsPassed": 0,
+    "executedEvidence": 0
   },
   "packages": {
     "installed": [
       {
         "name": "agent-inspect",
-        "status": "passed"
+        "status": "implemented-unverified"
       }
     ],
     "blocked": [
@@ -101,12 +101,16 @@
     "batch-1790455402548",
     "batch-1790456178064",
     "batch-1790458322946",
+    "batch-1790458357031",
+    "batch-1790535513673",
+    "batch-1790535545142",
     "batch-ext-1790450148064",
     "batch-ext-1790450260214",
     "batch-ext-1790452743860",
     "batch-ext-1790455439883",
     "batch-ext-1790456185903",
-    "batch-ext-1790458328523"
+    "batch-ext-1790458328523",
+    "batch-ext-1790535519296"
   ],
   "lanes": {
     "travelCoreOffline": "see lab:suite travel-core",

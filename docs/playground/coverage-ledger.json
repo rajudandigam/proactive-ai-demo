@@ -1,13 +1,13 @@
 {
   "schemaVersion": "playground-coverage/1",
-  "generatedAt": "2026-09-26T19:11:02.348Z",
+  "generatedAt": "2026-09-27T19:16:37.346Z",
   "sourceKind": "installed-tarball-inventory",
   "app": {
     "name": "proactive-ai-demo",
     "version": "1.0.0",
-    "gitSha": "5981a1bf0a81dfb576b8fbf14bd169737f0c24aa",
-    "packageLockAgentInspect": "6.31.7",
-    "packageLockHash": "e498bfba2ef95ce0c9f544db1e93ef14bc3c6deac1aee8ef807c1ede88732f27"
+    "gitSha": "a4c9768d3cb08d04d822db511b83036c42504186",
+    "packageLockAgentInspect": "6.31.11",
+    "packageLockHash": "4e45ec4afc1379e05a45396ba6ac767cdabbef6e70489272118455c8b6c05fce"
   },
   "environment": {
     "node": "v22.22.3",
@@ -16,7 +16,7 @@
     "arch": "arm64"
   },
   "agentInspect": {
-    "installedVersion": "6.31.7",
+    "installedVersion": "6.31.11",
     "packageIntegrityHint": "sha512-6TU0v/m4wscLaXhUfZPt07oJ+Efob0TdgCHxx2q7LHT6ekcxiHcW1sOtxrBxSwiqebeHAyqVu22Jbuc4Ujx1dA==",
     "reviewedPlanBaseline": "6.31.7",
     "coreSubpaths": [
@@ -85,7 +85,7 @@
       "gate",
       "help"
     ],
-    "tarballSha256OfPackageJson": "c9e92a6ef68d8ee2f297a4323c673a8df1005e04f78996be133654832505a957"
+    "tarballSha256OfPackageJson": "bc1790f276202e7dc85be7c1dd2e2a43da9ac20d5b993d5a4fbac5f05cf5deab"
   },
   "packages": [
     {
@@ -93,7 +93,7 @@
       "name": "agent-inspect",
       "kind": "package",
       "reviewedVersion": "6.31.7",
-      "installedVersion": "6.31.7",
+      "installedVersion": "6.31.11",
       "installed": true,
       "exports": [
         ".",
@@ -108,13 +108,9 @@
         "./workspace",
         "./writers"
       ],
-      "status": "passed",
-      "testIds": [
-        "lab:suite:travel-core"
-      ],
-      "executedEvidence": [
-        "artifacts/batch-1790458322946/suite-summary.json"
-      ]
+      "status": "implemented-unverified",
+      "testIds": [],
+      "executedEvidence": []
     },
     {
       "id": "pkg:@agent-inspect/adapter-sdk",
@@ -399,18 +395,9 @@
       "subpath": ".",
       "symbol": "inspectRun",
       "kind": "runtime-export",
-      "status": "passed",
-      "testIds": [
-        "lab:suite:travel-core"
-      ],
-      "executedEvidence": [
-        "artifacts/batch-1790448840295/suite-summary.json",
-        "artifacts/batch-ext-1790450260214/suite-summary.json",
-        "artifacts/batch-1790450275299/suite-summary.json",
-        "artifacts/batch-1790452736131/suite-summary.json",
-        "artifacts/batch-1790456178064/suite-summary.json",
-        "artifacts/batch-1790458322946/suite-summary.json"
-      ]
+      "status": "implemented-unverified",
+      "testIds": [],
+      "executedEvidence": []
     },
     {
       "id": "export:agent-inspect:maybeInspectRun",
@@ -438,18 +425,9 @@
       "subpath": ".",
       "symbol": "observeOutcome",
       "kind": "runtime-export",
-      "status": "passed",
-      "testIds": [
-        "lab:suite:travel-core"
-      ],
-      "executedEvidence": [
-        "artifacts/batch-1790448840295/suite-summary.json",
-        "artifacts/batch-ext-1790450260214/suite-summary.json",
-        "artifacts/batch-1790450275299/suite-summary.json",
-        "artifacts/batch-1790452736131/suite-summary.json",
-        "artifacts/batch-1790456178064/suite-summary.json",
-        "artifacts/batch-1790458322946/suite-summary.json"
-      ]
+      "status": "implemented-unverified",
+      "testIds": [],
+      "executedEvidence": []
     },
     {
       "id": "export:agent-inspect:step",
@@ -457,18 +435,9 @@
       "subpath": ".",
       "symbol": "step",
       "kind": "runtime-export",
-      "status": "passed",
-      "testIds": [
-        "lab:suite:travel-core"
-      ],
-      "executedEvidence": [
-        "artifacts/batch-1790448840295/suite-summary.json",
-        "artifacts/batch-ext-1790450260214/suite-summary.json",
-        "artifacts/batch-1790450275299/suite-summary.json",
-        "artifacts/batch-1790452736131/suite-summary.json",
-        "artifacts/batch-1790456178064/suite-summary.json",
-        "artifacts/batch-1790458322946/suite-summary.json"
-      ]
+      "status": "implemented-unverified",
+      "testIds": [],
+      "executedEvidence": []
     },
     {
       "id": "subpath:agent-inspect:./advanced",
@@ -656,18 +625,9 @@
       "subpath": "cli",
       "symbol": "check",
       "kind": "cli-command",
-      "status": "passed",
-      "testIds": [
-        "lab:suite:travel-core"
-      ],
-      "executedEvidence": [
-        "artifacts/batch-1790448840295/suite-summary.json",
-        "artifacts/batch-ext-1790450260214/suite-summary.json",
-        "artifacts/batch-1790450275299/suite-summary.json",
-        "artifacts/batch-1790452736131/suite-summary.json",
-        "artifacts/batch-1790456178064/suite-summary.json",
-        "artifacts/batch-1790458322946/suite-summary.json"
-      ]
+      "status": "planned",
+      "testIds": [],
+      "executedEvidence": []
     },
     {
       "id": "cli:agent-inspect:serve",
@@ -965,10 +925,10 @@
     "packagesInstalled": 1,
     "packagesBlocked": 17,
     "symbolsTotal": 55,
-    "symbolsPlanned": 48,
-    "symbolsImplementedUnverified": 3,
-    "symbolsPassed": 4,
-    "executedEvidence": 24
+    "symbolsPlanned": 49,
+    "symbolsImplementedUnverified": 6,
+    "symbolsPassed": 0,
+    "executedEvidence": 0
   },
   "limitations": [
     "Scoped @agent-inspect/* packages are not installed in this app (blocked until P07+).",

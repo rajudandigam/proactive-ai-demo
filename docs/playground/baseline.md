@@ -1,15 +1,15 @@
 # AgentInspect Playground baseline (P00)
 
-Generated: 2026-09-26T19:11:02.348Z
+Generated: 2026-09-27T19:16:37.346Z
 
 ## Application
 
 | Field | Value |
 | --- | --- |
 | Package | proactive-ai-demo@1.0.0 |
-| Git SHA | `5981a1bf0a81dfb576b8fbf14bd169737f0c24aa` |
-| package-lock agent-inspect | 6.31.7 |
-| package-lock SHA-256 | `e498bfba2ef95ce0c9f544db1e93ef14bc3c6deac1aee8ef807c1ede88732f27` |
+| Git SHA | `a4c9768d3cb08d04d822db511b83036c42504186` |
+| package-lock agent-inspect | 6.31.11 |
+| package-lock SHA-256 | `4e45ec4afc1379e05a45396ba6ac767cdabbef6e70489272118455c8b6c05fce` |
 
 ## Environment
 
@@ -24,7 +24,7 @@ Generated: 2026-09-26T19:11:02.348Z
 | Field | Value |
 | --- | --- |
 | Plan review baseline | 6.31.7 |
-| Installed | **6.31.7** |
+| Installed | **6.31.11** |
 | npm dist.integrity (when reachable) | sha512-6TU0v/m4wscLaXhUfZPt07oJ+Efob0TdgCHxx2q7LHT6ekcxiHcW1sOtxrBxSwiqebeHAyqVu22Jbuc4Ujx1dA== |
 | Core export subpaths | ., ./advanced, ./checks, ./diff, ./exporters, ./logs, ./persisted, ./readers, ./reporters, ./workspace, ./writers |
 | Root runtime exports | 7 |
@@ -51,11 +51,3 @@ Generated: 2026-09-26T19:11:02.348Z
 
 - Coverage ledger: `docs/playground/coverage-ledger.json`
 - Scenario catalog (planned): `docs/playground/AgentInspect_Scenario_Catalog.json`
-
-
-## P03–P12 progress
-
-- Extended offline suite `all-extended`: 13/13 pass (`batch-ext-1790450260214`)
-- CLI suite: 11/11 pass
-- Playground UI route `/playground/ui`
-- Integration apps / MCP / Docker interop: **blocked** until isolated install or compose evidence (see CLOSURE.md)

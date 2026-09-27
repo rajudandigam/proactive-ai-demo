@@ -1,14 +1,14 @@
 # AgentInspect Playground closure report
 
-Generated: 2026-09-26T21:32:14.136Z
+Generated: 2026-09-27T19:16:41.269Z
 
 ## Versions
 
 | Field | Value |
 | --- | --- |
-| App SHA | `679fd82ec37a8a1f39edd0c6fe03e9f8762e38e9` |
+| App SHA | `a4c9768d3cb08d04d822db511b83036c42504186` |
 | Node | v22.22.3 |
-| agent-inspect | 6.31.7 |
+| agent-inspect | 6.31.11 |
 
 ## Coverage counts
 
@@ -18,10 +18,10 @@ Generated: 2026-09-26T21:32:14.136Z
   "packagesInstalled": 1,
   "packagesBlocked": 17,
   "symbolsTotal": 55,
-  "symbolsPlanned": 48,
-  "symbolsImplementedUnverified": 3,
-  "symbolsPassed": 4,
-  "executedEvidence": 24
+  "symbolsPlanned": 49,
+  "symbolsImplementedUnverified": 6,
+  "symbolsPassed": 0,
+  "executedEvidence": 0
 }
 ```
 
