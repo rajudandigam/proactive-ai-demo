@@ -1,13 +1,13 @@
 {
   "schemaVersion": "playground-compat/1",
-  "generatedAt": "2026-09-28T21:09:03.021Z",
-  "appGitSha": "76d6d8f5e7f69412e5c53849a5c1516810b638fa",
+  "generatedAt": "2026-09-28T22:56:20.110Z",
+  "appGitSha": "02e62dd15c25dbe5a42ac70aef24c0a4dafea0c0",
   "agentInspect": {
-    "requested": "6.31.15",
-    "installed": "6.31.15",
-    "planBaseline": "6.31.15",
-    "lockIntegrity": "sha512-d7GmUzAM3+gcHzbAH0HVSL0uK2afbK+YGT4xV+QBMj5qXWDsKVHLEXF0I7AchuN/HuP9J4KbZ52fypkoPBA9vw==",
-    "integrity": "sha512-d7GmUzAM3+gcHzbAH0HVSL0uK2afbK+YGT4xV+QBMj5qXWDsKVHLEXF0I7AchuN/HuP9J4KbZ52fypkoPBA9vw=="
+    "requested": "6.31.16",
+    "installed": "6.31.16",
+    "planBaseline": "6.31.16",
+    "lockIntegrity": "sha512-k8rCmlH6v8v492VtkNmaWseK4zSTEiZDmlvM185X2uqPjNTPiN7JCPhZrELPxkDN/jC8ci/HgbxZHl+GI3FboQ==",
+    "integrity": "sha512-k8rCmlH6v8v492VtkNmaWseK4zSTEiZDmlvM185X2uqPjNTPiN7JCPhZrELPxkDN/jC8ci/HgbxZHl+GI3FboQ=="
   },
   "langchain": {
     "core": "0.3.80",
