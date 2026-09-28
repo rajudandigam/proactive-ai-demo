@@ -11,6 +11,7 @@ import { RunsService } from './runs.service';
 import { DemoTraceService } from './trace-events.service';
 import { TripAttentionAgentService } from './trip-attention.agent';
 import { ValidationService } from './validation.service';
+import { CaptureOperationJournal } from '../instrumentation/capture-operation-journal';
 import { InspectCaptureService } from '../instrumentation/inspect-capture.service';
 import { PlaygroundController } from '../playground/playground.controller';
 
@@ -30,6 +31,7 @@ import { PlaygroundController } from '../playground/playground.controller';
     OutboxService,
     ReadToolsService,
     DemoTraceService,
+    CaptureOperationJournal,
     InspectCaptureService,
     TripAttentionAgentService,
     DecisionGraphService,
@@ -45,6 +47,7 @@ import { PlaygroundController } from '../playground/playground.controller';
     DemoTraceService,
     RunsService,
     InspectCaptureService,
+    CaptureOperationJournal,
   ],
 })
 export class DemoModule {}

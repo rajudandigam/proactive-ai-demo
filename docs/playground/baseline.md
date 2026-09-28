@@ -1,15 +1,15 @@
 # AgentInspect Playground baseline (P00)
 
-Generated: 2026-09-27T19:16:37.346Z
+Generated: 2026-09-28T21:09:03.021Z
 
 ## Application
 
 | Field | Value |
 | --- | --- |
 | Package | proactive-ai-demo@1.0.0 |
-| Git SHA | `a4c9768d3cb08d04d822db511b83036c42504186` |
-| package-lock agent-inspect | 6.31.11 |
-| package-lock SHA-256 | `4e45ec4afc1379e05a45396ba6ac767cdabbef6e70489272118455c8b6c05fce` |
+| Git SHA | `76d6d8f5e7f69412e5c53849a5c1516810b638fa` |
+| package-lock agent-inspect | 6.31.15 |
+| package-lock SHA-256 | `b4f8556d0029cdc970d6c427b105a59111de28668b12706abc9d03a904318b4b` |
 
 ## Environment
 
@@ -23,9 +23,10 @@ Generated: 2026-09-27T19:16:37.346Z
 
 | Field | Value |
 | --- | --- |
-| Plan review baseline | 6.31.7 |
-| Installed | **6.31.11** |
-| npm dist.integrity (when reachable) | sha512-6TU0v/m4wscLaXhUfZPt07oJ+Efob0TdgCHxx2q7LHT6ekcxiHcW1sOtxrBxSwiqebeHAyqVu22Jbuc4Ujx1dA== |
+| Pin (package.json) | 6.31.15 |
+| Installed | **6.31.15** |
+| package-lock integrity | sha512-d7GmUzAM3+gcHzbAH0HVSL0uK2afbK+YGT4xV+QBMj5qXWDsKVHLEXF0I7AchuN/HuP9J4KbZ52fypkoPBA9vw== |
+| npm dist.integrity (fallback) | sha512-d7GmUzAM3+gcHzbAH0HVSL0uK2afbK+YGT4xV+QBMj5qXWDsKVHLEXF0I7AchuN/HuP9J4KbZ52fypkoPBA9vw== |
 | Core export subpaths | ., ./advanced, ./checks, ./diff, ./exporters, ./logs, ./persisted, ./readers, ./reporters, ./workspace, ./writers |
 | Root runtime exports | 7 |
 | CLI commands discovered | 38 |

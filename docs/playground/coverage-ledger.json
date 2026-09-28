@@ -1,13 +1,13 @@
 {
   "schemaVersion": "playground-coverage/1",
-  "generatedAt": "2026-09-27T19:16:37.346Z",
+  "generatedAt": "2026-09-28T21:09:03.021Z",
   "sourceKind": "installed-tarball-inventory",
   "app": {
     "name": "proactive-ai-demo",
     "version": "1.0.0",
-    "gitSha": "a4c9768d3cb08d04d822db511b83036c42504186",
-    "packageLockAgentInspect": "6.31.11",
-    "packageLockHash": "4e45ec4afc1379e05a45396ba6ac767cdabbef6e70489272118455c8b6c05fce"
+    "gitSha": "76d6d8f5e7f69412e5c53849a5c1516810b638fa",
+    "packageLockAgentInspect": "6.31.15",
+    "packageLockHash": "b4f8556d0029cdc970d6c427b105a59111de28668b12706abc9d03a904318b4b"
   },
   "environment": {
     "node": "v22.22.3",
@@ -16,9 +16,10 @@
     "arch": "arm64"
   },
   "agentInspect": {
-    "installedVersion": "6.31.11",
-    "packageIntegrityHint": "sha512-6TU0v/m4wscLaXhUfZPt07oJ+Efob0TdgCHxx2q7LHT6ekcxiHcW1sOtxrBxSwiqebeHAyqVu22Jbuc4Ujx1dA==",
-    "reviewedPlanBaseline": "6.31.7",
+    "installedVersion": "6.31.15",
+    "packageIntegrityHint": "sha512-d7GmUzAM3+gcHzbAH0HVSL0uK2afbK+YGT4xV+QBMj5qXWDsKVHLEXF0I7AchuN/HuP9J4KbZ52fypkoPBA9vw==",
+    "reviewedPlanBaseline": "6.31.15",
+    "packageLockIntegrity": "sha512-d7GmUzAM3+gcHzbAH0HVSL0uK2afbK+YGT4xV+QBMj5qXWDsKVHLEXF0I7AchuN/HuP9J4KbZ52fypkoPBA9vw==",
     "coreSubpaths": [
       ".",
       "./advanced",
@@ -85,7 +86,7 @@
       "gate",
       "help"
     ],
-    "tarballSha256OfPackageJson": "bc1790f276202e7dc85be7c1dd2e2a43da9ac20d5b993d5a4fbac5f05cf5deab"
+    "tarballSha256OfPackageJson": "80bd80786adbad219ad7da83fe172e17daf311135cce37eefd2c549a999cff09"
   },
   "packages": [
     {
@@ -93,7 +94,7 @@
       "name": "agent-inspect",
       "kind": "package",
       "reviewedVersion": "6.31.7",
-      "installedVersion": "6.31.11",
+      "installedVersion": "6.31.15",
       "installed": true,
       "exports": [
         ".",

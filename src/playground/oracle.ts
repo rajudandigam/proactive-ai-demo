@@ -1,5 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { ApplicationResult } from '../demo/schemas';
+import type { CaptureOperationSnapshot } from '../instrumentation/capture-operation-journal';
+import { resolveScenarioExpected, type ExpectedBlock } from './expected-profile';
 import type { ScenarioFile } from './scenario-registry';
 import type { AssertionResult } from './schemas';
 
@@ -21,8 +23,13 @@ export function evaluateApplicationOracle(
   scenario: ScenarioFile,
   result: ApplicationResult,
   independentOutboxCount: number,
+  opts?: { profileId?: string; expected?: ExpectedBlock },
 ): { verdict: 'pass' | 'fail'; assertions: AssertionResult[] } {
-  const e = scenario.expected;
+  const e =
+    opts?.expected ??
+    (opts?.profileId
+      ? resolveScenarioExpected(scenario, opts.profileId)
+      : scenario.expected);
   const assertions: AssertionResult[] = [];
 
   if (e.runStatus) {
@@ -140,6 +147,30 @@ export function evaluateApplicationOracle(
       ),
     );
   }
+  if (e.minLiveAttempts !== undefined) {
+    const got = result.accounting?.liveAttempts ?? -1;
+    assertions.push(
+      check(
+        'app.liveAttempts.min',
+        got >= e.minLiveAttempts,
+        `liveAttempts ${got} >= ${e.minLiveAttempts}`,
+        got,
+        e.minLiveAttempts,
+      ),
+    );
+  }
+  if (e.maxFixtureInvocations !== undefined) {
+    const got = result.accounting?.fixtureInvocations ?? -1;
+    assertions.push(
+      check(
+        'app.fixtureInvocations.max',
+        got <= e.maxFixtureInvocations,
+        `fixtureInvocations ${got} <= ${e.maxFixtureInvocations}`,
+        got,
+        e.maxFixtureInvocations,
+      ),
+    );
+  }
   if (e.requireReasons?.length) {
     const reasons = new Set(result.decisions.map((d) => d.reason));
     for (const r of e.requireReasons) {
@@ -180,6 +211,47 @@ type TraceReadLike = {
   warnings?: unknown[];
 };
 
+function countLlmSpansInTrace(
+  read: TraceReadLike | null | undefined,
+  traceText?: string | null,
+): number {
+  let count = 0;
+  const events = read?.events ?? [];
+  for (const raw of events) {
+    const ev = raw as {
+      type?: string;
+      stepType?: string;
+      event?: string;
+      attributes?: { stepType?: string };
+    };
+    const stepType =
+      ev.type ??
+      ev.stepType ??
+      ev.attributes?.stepType ??
+      (ev.event === 'step_started' || ev.event === 'step_completed'
+        ? undefined
+        : undefined);
+    if (stepType === 'llm') count += 1;
+  }
+  if (count > 0) return count;
+  const text =
+    traceText ??
+    (read?.events ? JSON.stringify(read.events) : '');
+  if (!text) return 0;
+  const llmMarker =
+    /"type"\s*:\s*"llm"|"stepType"\s*:\s*"llm"|step_started[^\\n]*"type"\s*:\s*"llm"/gi;
+  const matches = text.match(llmMarker);
+  return matches?.length ?? 0;
+}
+
+function independentExpectsLlmWork(opts: {
+  independentLiveAttempts: number;
+  operationJournal?: CaptureOperationSnapshot | null;
+}): boolean {
+  if (opts.independentLiveAttempts > 0) return true;
+  return (opts.operationJournal?.llmInvocations ?? 0) > 0;
+}
+
 /**
  * Capture fidelity via public readers — never substring heuristics.
  * Rejects the review probe text "runId policy_envelope".
@@ -190,6 +262,7 @@ export async function evaluateCaptureFidelity(opts: {
   tracePath?: string | null;
   independentModelCalls: number;
   independentLiveAttempts: number;
+  operationJournal?: CaptureOperationSnapshot | null;
   /** Optional preloaded reader result from openTraceFile */
   read?: TraceReadLike | null;
 }): Promise<{
@@ -326,9 +399,38 @@ export async function evaluateCaptureFidelity(opts: {
     }
   }
 
+  const traceText =
+    opts.tracePath && existsSync(opts.tracePath)
+      ? readFileSync(opts.tracePath, 'utf8')
+      : null;
+  const llmSpanCount = countLlmSpansInTrace(read, traceText);
+  const expectsLlm = independentExpectsLlmWork({
+    independentLiveAttempts: opts.independentLiveAttempts,
+    operationJournal: opts.operationJournal,
+  });
+
+  if (expectsLlm && !opts.scenario._lab?.assertNoLlmSteps) {
+    assertions.push(
+      check(
+        'fidelity.llmSpansPresent',
+        llmSpanCount > 0,
+        llmSpanCount > 0
+          ? `Trace contains ${llmSpanCount} LLM span marker(s)`
+          : 'Independent model/journal says LLM work occurred but trace has no LLM spans',
+        {
+          llmSpanCount,
+          independentModelCalls: opts.independentModelCalls,
+          independentLiveAttempts: opts.independentLiveAttempts,
+          operationJournal: opts.operationJournal ?? null,
+        },
+      ),
+    );
+  }
+
   if (
     opts.independentLiveAttempts === 0 &&
-    opts.independentModelCalls === 0
+    opts.independentModelCalls === 0 &&
+    !(opts.operationJournal?.llmInvocations || opts.operationJournal?.fixtureInvocations)
   ) {
     assertions.push(
       check(
@@ -362,6 +464,7 @@ export function evaluateCaptureFidelitySync(opts: {
   traceText?: string | null;
   independentModelCalls: number;
   independentLiveAttempts: number;
+  operationJournal?: CaptureOperationSnapshot | null;
 }): {
   verdict: 'pass' | 'fail' | 'insufficient';
   assertions: AssertionResult[];
@@ -421,11 +524,33 @@ export function evaluateCaptureFidelitySync(opts: {
       ],
     };
   }
+
+  const llmSpanCount = countLlmSpansInTrace(null, opts.traceText);
+  const expectsLlm = independentExpectsLlmWork({
+    independentLiveAttempts: opts.independentLiveAttempts,
+    operationJournal: opts.operationJournal,
+  });
+  const llmAssertions: AssertionResult[] = [];
+  if (expectsLlm && !opts.scenario._lab?.assertNoLlmSteps) {
+    llmAssertions.push(
+      check(
+        'fidelity.llmSpansPresent',
+        llmSpanCount > 0,
+        llmSpanCount > 0
+          ? `Trace contains ${llmSpanCount} LLM span marker(s)`
+          : 'Independent model/journal says LLM work occurred but trace has no LLM spans',
+        { llmSpanCount },
+      ),
+    );
+  }
+
+  const passed = llmAssertions.every((a) => a.passed);
   return {
-    verdict: 'pass',
+    verdict: passed ? 'pass' : 'fail',
     assertions: [
       check('fidelity.runId', true, `Mapped ${opts.agentInspectRunId}`),
       check('fidelity.traceShape', true, 'Valid JSONL shape'),
+      ...llmAssertions,
     ],
   };
 }

@@ -52,9 +52,9 @@ async function main() {
   const appPkg = readJson(join(ROOT, 'package.json'))!;
   const lock = readJson(join(ROOT, 'package-lock.json'));
   const lockPkg =
-    (lock?.packages as Record<string, { version?: string }> | undefined)?.[
-      'node_modules/agent-inspect'
-    ] ?? null;
+    (lock?.packages as
+      | Record<string, { version?: string; integrity?: string }>
+      | undefined)?.['node_modules/agent-inspect'] ?? null;
 
   const aiPkgPath = join(ROOT, 'node_modules', 'agent-inspect', 'package.json');
   const aiPkg = readJson(aiPkgPath);
@@ -204,7 +204,8 @@ async function main() {
     agentInspect: {
       installedVersion,
       packageIntegrityHint: null as string | null,
-      reviewedPlanBaseline: '6.31.7',
+      reviewedPlanBaseline: installedVersion === 'missing' ? '6.31.15' : installedVersion,
+      packageLockIntegrity: lockPkg?.integrity ?? null,
       coreSubpaths,
       rootRuntimeExports: rootExports,
       advancedExportCount: advancedExports.length,
@@ -235,16 +236,21 @@ async function main() {
     ],
   };
 
-  // Try npm integrity without failing offline
-  try {
-    const view = execSync('npm view agent-inspect@6.31.7 dist.integrity --json', {
-      cwd: ROOT,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
-    ledger.agentInspect.packageIntegrityHint = JSON.parse(view) as string;
-  } catch {
-    ledger.agentInspect.packageIntegrityHint = null;
+  ledger.agentInspect.packageIntegrityHint = lockPkg?.integrity ?? null;
+  if (!ledger.agentInspect.packageIntegrityHint && installedVersion !== 'missing') {
+    try {
+      const view = execSync(
+        `npm view agent-inspect@${installedVersion} dist.integrity --json`,
+        {
+          cwd: ROOT,
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+        },
+      ).trim();
+      ledger.agentInspect.packageIntegrityHint = JSON.parse(view) as string;
+    } catch {
+      /* offline — lockfile integrity is authoritative when present */
+    }
   }
 
   const ledgerPath = join(OUT_DIR, 'coverage-ledger.json');
@@ -275,9 +281,10 @@ Generated: ${ledger.generatedAt}
 
 | Field | Value |
 | --- | --- |
-| Plan review baseline | 6.31.7 |
+| Pin (package.json) | ${(appPkg.dependencies as Record<string, string>)['agent-inspect'] ?? 'n/a'} |
 | Installed | **${installedVersion}** |
-| npm dist.integrity (when reachable) | ${ledger.agentInspect.packageIntegrityHint ?? 'unavailable offline'} |
+| package-lock integrity | ${lockPkg?.integrity ?? 'n/a'} |
+| npm dist.integrity (fallback) | ${ledger.agentInspect.packageIntegrityHint ?? 'unavailable offline'} |
 | Core export subpaths | ${coreSubpaths.join(', ')} |
 | Root runtime exports | ${rootExports.length} |
 | CLI commands discovered | ${cliCommands.length} |
@@ -318,7 +325,8 @@ Generated: ${ledger.generatedAt}
         agentInspect: {
           requested: (appPkg.dependencies as Record<string, string>)['agent-inspect'],
           installed: installedVersion,
-          planBaseline: '6.31.7',
+          planBaseline: installedVersion,
+          lockIntegrity: lockPkg?.integrity ?? null,
           integrity: ledger.agentInspect.packageIntegrityHint,
         },
         langchain: {

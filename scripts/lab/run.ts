@@ -21,6 +21,7 @@ import { ReadToolsService } from '../../src/demo/read-tools.service';
 import { DemoTraceService } from '../../src/demo/trace-events.service';
 import { TripAttentionAgentService } from '../../src/demo/trip-attention.agent';
 import { ValidationService } from '../../src/demo/validation.service';
+import { CaptureOperationJournal } from '../../src/instrumentation/capture-operation-journal';
 import { InspectCaptureService } from '../../src/instrumentation/inspect-capture.service';
 import { createSessionId, type ApplicationResult } from '../../src/demo/schemas';
 import {
@@ -30,6 +31,8 @@ import {
   writeJson,
   writeText,
 } from '../../src/playground/artifact-writer';
+import { writeLabEvidenceManifest } from '../../src/playground/evidence-manifest';
+import { resolveScenarioExpected } from '../../src/playground/expected-profile';
 import {
   evaluateApplicationOracle,
   evaluateCaptureFidelity,
@@ -143,6 +146,7 @@ async function createLabModule(traceDir: string, profile: RunProfile) {
       OutboxService,
       ReadToolsService,
       DemoTraceService,
+      CaptureOperationJournal,
       InspectCaptureService,
       TripAttentionAgentService,
       DecisionGraphService,
@@ -404,6 +408,7 @@ export async function runScenario(
   const graph = module.get(DecisionGraphService);
   const outbox = module.get(OutboxService);
   const inspect = module.get(InspectCaptureService);
+  const captureJournal = module.get(CaptureOperationJournal);
   outbox.reset();
 
   const sessionId = createSessionId();
@@ -445,7 +450,12 @@ export async function runScenario(
 
   const independentOutbox = outbox.getOutbox(result.sessionId ?? sessionId)
     .length;
-  const app = evaluateApplicationOracle(scenario, result, independentOutbox);
+  const resolvedExpected = resolveScenarioExpected(scenario, profile.id);
+  const app = evaluateApplicationOracle(scenario, result, independentOutbox, {
+    profileId: profile.id,
+    expected: resolvedExpected,
+  });
+  const operationJournal = captureJournal.snapshot(executionId);
 
   const agentInspectRunId =
     result.agentInspectTraceId ?? inspect.getMappedRunId(executionId);
@@ -460,6 +470,7 @@ export async function runScenario(
     tracePath,
     independentModelCalls: result.modelCalls,
     independentLiveAttempts: result.accounting?.liveAttempts ?? 0,
+    operationJournal,
   });
 
   // S08: both concurrent sessions must produce distinct traces
@@ -566,8 +577,14 @@ export async function runScenario(
             outboxWrites: siblingResult.outboxWrites,
           },
   });
+  writeJson(artifactDir, 'capture-journal.json', operationJournal ?? {
+    llmInvocations: 0,
+    fixtureInvocations: 0,
+  });
   writeJson(artifactDir, 'oracle.json', {
     independentOutboxCount: independentOutbox,
+    profileId: profile.id,
+    resolvedExpected,
     application: app,
     method: 'Nest OutboxService.getOutbox + ApplicationResult counters',
   });
@@ -577,6 +594,16 @@ export async function runScenario(
     assertionFailures: allAssertions.filter((a) => !a.passed),
   });
   writeJson(artifactDir, 'result.json', scenarioResult);
+  if (agentInspectRunId) {
+    writeLabEvidenceManifest({
+      artifactDir,
+      agentInspectRunId,
+      scenarioId: scenario.id,
+      profileId: profile.id,
+      agentInspectVersion: installedAgentInspectVersion(),
+      appGitSha: git.sha,
+    });
+  }
   finalizeChecksums(artifactDir);
   const checksumFailures = verifyChecksums(artifactDir);
   if (checksumFailures.length) {
