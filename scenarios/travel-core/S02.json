@@ -23,5 +23,15 @@
   "contract": {
     "requireCompleted": true,
     "expectCheckPass": true
+  },
+  "expectedByProfile": {
+    "live-model": {
+      "modelMode": "live",
+      "minModelCalls": 1,
+      "minLiveAttempts": 1,
+      "maxFixtureInvocations": 0,
+      "minOutboxWrites": 0,
+      "maxOutboxWrites": 1
+    }
   }
 }

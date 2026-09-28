@@ -38,6 +38,7 @@ import {
 import { PolicyEnvelope } from './policy.service';
 import { ReadToolsService, ToolResult } from './read-tools.service';
 import { DemoTraceService } from './trace-events.service';
+import { CaptureOperationJournal } from '../instrumentation/capture-operation-journal';
 
 export type AgentLoopResult = {
   decisionSet?: ModelDecisionSet;
@@ -73,6 +74,8 @@ export class TripAttentionAgentService {
     @Inject(ConfigService) private readonly config: ConfigService,
     @Inject(ReadToolsService) private readonly tools: ReadToolsService,
     @Inject(DemoTraceService) private readonly traces: DemoTraceService,
+    @Inject(CaptureOperationJournal)
+    private readonly captureJournal: CaptureOperationJournal,
   ) {}
 
   getMode(): 'live' | 'fixture' {
@@ -130,6 +133,7 @@ export class TripAttentionAgentService {
       returnedModelIds: ['fixture-agent'],
       tokenUsage: { known: false },
     };
+    this.captureJournal.recordFixture(ctx.runId, 1);
     const toolResults: ToolResult[] = [];
     const ids = new Set(eligible.map((c) => c.id));
 
@@ -348,6 +352,7 @@ export class TripAttentionAgentService {
       void remainingForInvest;
 
       accounting.liveAttempts += 1;
+      this.captureJournal.recordLlm(ctx.runId, 1);
       this.traces.emit(ctx, {
         stage: 'model_investigate',
         status: 'started',
@@ -493,6 +498,7 @@ export class TripAttentionAgentService {
 
     // Final structured decision
     accounting.liveAttempts += 1;
+    this.captureJournal.recordLlm(ctx.runId, 1);
     this.traces.emit(ctx, {
       stage: 'model_finalize',
       status: 'started',

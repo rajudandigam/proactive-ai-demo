@@ -45,7 +45,11 @@ function loadDir(dir: string): ScenarioFile[] {
     .map((f) => {
       const raw = JSON.parse(readFileSync(join(dir, f), 'utf8')) as ScenarioFile;
       const parsed = ScenarioDefinitionSchema.parse(raw);
-      return { ...parsed, _lab: raw._lab };
+      return {
+        ...parsed,
+        expectedByProfile: raw.expectedByProfile ?? parsed.expectedByProfile,
+        _lab: raw._lab,
+      };
     });
 }
 

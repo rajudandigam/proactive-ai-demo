@@ -9,6 +9,7 @@ import {
 import { createRequire } from 'node:module';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { CaptureOperationJournal } from './capture-operation-journal';
 
 const requireAdv = createRequire(__filename);
 const {
@@ -36,7 +37,11 @@ export class InspectCaptureService implements OnModuleDestroy {
   private readonly runMap = new Map<string, string>();
   private closed = false;
 
-  constructor(@Inject(ConfigService) private readonly config: ConfigService) {}
+  constructor(
+    @Inject(ConfigService) private readonly config: ConfigService,
+    @Inject(CaptureOperationJournal)
+    private readonly operationJournal: CaptureOperationJournal,
+  ) {}
 
   isEnabled(force?: boolean): boolean {
     if (force) return true;
@@ -88,6 +93,7 @@ export class InspectCaptureService implements OnModuleDestroy {
     if (!this.isEnabled(opts.force)) {
       return fn();
     }
+    this.operationJournal.begin(opts.executionId);
     const traceDir = opts.traceDir ?? this.defaultTraceDir();
     const runOpts = {
       silent: true,

@@ -38,6 +38,8 @@ export const ScenarioDefinitionSchema = z.object({
     minModelCalls: z.number().int().nonnegative().optional(),
     exactFixtureInvocations: z.number().int().nonnegative().optional(),
     exactLiveAttempts: z.number().int().nonnegative().optional(),
+    minLiveAttempts: z.number().int().nonnegative().optional(),
+    maxFixtureInvocations: z.number().int().nonnegative().optional(),
     decisions: z.array(ExpectedDecisionSchema).optional(),
     requireReasons: z.array(z.string()).optional(),
     forbidReasons: z.array(z.string()).optional(),
@@ -49,6 +51,28 @@ export const ScenarioDefinitionSchema = z.object({
       requiredTools: z.array(z.string()).optional(),
       expectCheckPass: z.boolean().optional(),
     })
+    .optional(),
+  expectedByProfile: z
+    .record(
+      z.string(),
+      z.object({
+        runStatus: z
+          .enum(['completed', 'partial_failure', 'failed', 'duplicate'])
+          .optional(),
+        modelMode: z.enum(['live', 'fixture', 'replay', 'none']).optional(),
+        minOutboxWrites: z.number().int().nonnegative().optional(),
+        maxOutboxWrites: z.number().int().nonnegative().optional(),
+        exactOutboxWrites: z.number().int().nonnegative().optional(),
+        maxModelCalls: z.number().int().nonnegative().optional(),
+        minModelCalls: z.number().int().nonnegative().optional(),
+        exactFixtureInvocations: z.number().int().nonnegative().optional(),
+        exactLiveAttempts: z.number().int().nonnegative().optional(),
+        minLiveAttempts: z.number().int().nonnegative().optional(),
+        maxFixtureInvocations: z.number().int().nonnegative().optional(),
+        requireReasons: z.array(z.string()).optional(),
+        forbidReasons: z.array(z.string()).optional(),
+      }),
+    )
     .optional(),
 });
 
