@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import {
   existsSync,
   readFileSync,
@@ -10,7 +10,7 @@ import {
   copyFileSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { DecisionGraphService } from '../../src/demo/decision.graph';
 import { DemoClockService } from '../../src/demo/demo-clock.service';
@@ -26,12 +26,17 @@ import { InspectCaptureService } from '../../src/instrumentation/inspect-capture
 import { createSessionId, type ApplicationResult } from '../../src/demo/schemas';
 import {
   createArtifactDir,
-  finalizeChecksums,
-  verifyChecksums,
   writeJson,
   writeText,
 } from '../../src/playground/artifact-writer';
-import { writeLabEvidenceManifest } from '../../src/playground/evidence-manifest';
+import {
+  collectProvenance,
+  describeThrown,
+  finalizeNativeBundle,
+  type BundleProvenance,
+  type NativeBundleGate,
+  type ThrownErrorInfo,
+} from '../../src/playground/native-bundle';
 import { resolveScenarioExpected } from '../../src/playground/expected-profile';
 import {
   evaluateApplicationOracle,
@@ -90,30 +95,6 @@ function installedAgentInspectVersion(): string {
     return pkg.version ?? 'unknown';
   } catch {
     return 'unknown';
-  }
-}
-
-function lockfileDigest(): string {
-  try {
-    const lock = readFileSync(join(process.cwd(), 'package-lock.json'));
-    return createHash('sha256').update(lock).digest('hex').slice(0, 16);
-  } catch {
-    return 'unknown';
-  }
-}
-
-function gitState(): { sha: string; dirty: boolean } {
-  try {
-    const sha = execFileSync('git', ['rev-parse', 'HEAD'], {
-      encoding: 'utf8',
-    }).trim();
-    const dirty =
-      execFileSync('git', ['status', '--porcelain'], {
-        encoding: 'utf8',
-      }).trim().length > 0;
-    return { sha, dirty };
-  } catch {
-    return { sha: 'unknown', dirty: false };
   }
 }
 
@@ -368,6 +349,46 @@ function runContractCheck(
   }
 }
 
+/** Default native bundle verification is a harness gate, not advisory. */
+export function applyBundleGate(
+  result: ScenarioResult,
+  gate: NativeBundleGate,
+): ScenarioResult {
+  const issueCodes = [
+    ...gate.verify.issues.map((i) => i.code),
+    ...gate.provenanceIssues.map((i) => i.code),
+    ...gate.checksumProblems.map(() => 'checksum_problem'),
+  ];
+  const bundleGate: NonNullable<ScenarioResult['bundleGate']> = {
+    ok: gate.ok,
+    identityRunId: gate.identityRunId,
+    verifyStatus: gate.verify.status,
+    issueCodes,
+    reportPath: gate.reportPath,
+  };
+  const assertion = {
+    id: 'bundle.verify',
+    passed: gate.ok,
+    message: gate.ok
+      ? 'default native bundle verification passed'
+      : 'default native bundle verification failed',
+    observed: {
+      verify: gate.verify,
+      checksumProblems: gate.checksumProblems,
+      provenanceIssues: gate.provenanceIssues,
+    },
+  };
+  return {
+    ...result,
+    overallVerdict:
+      gate.ok || result.overallVerdict === 'blocked'
+        ? result.overallVerdict
+        : 'fail',
+    assertions: [...result.assertions, assertion],
+    bundleGate,
+  };
+}
+
 export async function runScenario(
   scenarioId: string,
   opts?: { batchId?: string; profileId?: string },
@@ -375,11 +396,20 @@ export async function runScenario(
   const scenario = getScenario(scenarioId);
   const profile = resolveProfile(opts?.profileId ?? OFFLINE_PROFILE.id);
   const batchId = opts?.batchId ?? `batch-${Date.now()}`;
+  // Identity is allocated before any provider/tool work so every path
+  // (success, returned failure, thrown, blocked) is bound to it.
   const executionId = randomUUID();
   const startedAt = new Date().toISOString();
   const artifactDir = createArtifactDir(batchId, scenario.id, executionId);
   const traceDir = join(artifactDir, 'inspect-traces');
   mkdirSync(traceDir, { recursive: true });
+  const resolvedExpected = resolveScenarioExpected(scenario, profile.id);
+  const provenanceBase = {
+    executionId,
+    scenarioPayload: scenario,
+    oracleExpected: resolvedExpected,
+    config: profile,
+  };
 
   if (profile.modelMode === 'live' && !process.env.OPENAI_API_KEY) {
     const blocked: ScenarioResult = {
@@ -400,8 +430,14 @@ export async function runScenario(
       blockedReason: 'OPENAI_API_KEY missing for live-model profile',
     };
     writeJson(artifactDir, 'result.json', blocked);
-    finalizeChecksums(artifactDir);
-    return blocked;
+    const gate = finalizeNativeBundle({
+      bundleDir: artifactDir,
+      scenarioId: scenario.id,
+      profileId: profile.id,
+      provenance: collectProvenance(provenanceBase),
+      note: 'Playground lab pack (blocked) — local-only; not share-checked.',
+    });
+    return applyBundleGate(blocked, gate);
   }
 
   const module = await createLabModule(traceDir, profile);
@@ -413,68 +449,92 @@ export async function runScenario(
 
   const sessionId = createSessionId();
 
-  if (scenario._lab?.seedPriorEvent) {
-    await graph.run(scenario.request, {
-      sessionId,
-      forceInspect: true,
-      traceDir,
-    });
-  }
-
-  let result: ApplicationResult;
+  let result: ApplicationResult | undefined;
   let siblingResult: ApplicationResult | undefined;
-  if (scenario._lab?.parallelSibling) {
-    const [a, b] = await Promise.all([
-      graph.run(scenario.request, {
-        sessionId: createSessionId(),
+  let thrown: ThrownErrorInfo | undefined;
+  try {
+    if (scenario._lab?.seedPriorEvent) {
+      await graph.run(scenario.request, {
+        sessionId,
+        forceInspect: true,
+        traceDir,
+      });
+    }
+
+    if (scenario._lab?.parallelSibling) {
+      const [a, b] = await Promise.all([
+        graph.run(scenario.request, {
+          sessionId: createSessionId(),
+          runId: executionId,
+          forceInspect: true,
+          traceDir,
+        }),
+        graph.run(scenario._lab.parallelSibling, {
+          sessionId: createSessionId(),
+          forceInspect: true,
+          traceDir,
+        }),
+      ]);
+      result = a;
+      siblingResult = b;
+    } else {
+      result = await graph.run(scenario.request, {
+        sessionId,
         runId: executionId,
         forceInspect: true,
         traceDir,
-      }),
-      graph.run(scenario._lab.parallelSibling, {
-        sessionId: createSessionId(),
-        forceInspect: true,
-        traceDir,
-      }),
-    ]);
-    result = a;
-    siblingResult = b;
-  } else {
-    result = await graph.run(scenario.request, {
-      sessionId,
-      runId: executionId,
-      forceInspect: true,
-      traceDir,
-    });
+      });
+    }
+  } catch (err) {
+    // The application error is recorded (bounded, redacted), never swallowed:
+    // the pack is finalized with failure identity and the verdict is fail.
+    thrown = describeThrown(err);
   }
 
-  const independentOutbox = outbox.getOutbox(result.sessionId ?? sessionId)
+  const independentOutbox = outbox.getOutbox(result?.sessionId ?? sessionId)
     .length;
-  const resolvedExpected = resolveScenarioExpected(scenario, profile.id);
-  const app = evaluateApplicationOracle(scenario, result, independentOutbox, {
-    profileId: profile.id,
-    expected: resolvedExpected,
-  });
+  const app: { verdict: Verdict; assertions: ScenarioResult['assertions'] } =
+    result
+      ? evaluateApplicationOracle(scenario, result, independentOutbox, {
+          profileId: profile.id,
+          expected: resolvedExpected,
+        })
+      : {
+          verdict: 'fail',
+          assertions: [
+            {
+              id: 'application.thrown',
+              passed: false,
+              message: `Application threw ${thrown?.name}: ${thrown?.message}`,
+              observed: thrown,
+            },
+          ],
+        };
   const operationJournal = captureJournal.snapshot(executionId);
 
   const agentInspectRunId =
-    result.agentInspectTraceId ?? inspect.getMappedRunId(executionId);
+    result?.agentInspectTraceId ??
+    inspect.getMappedRunId(executionId) ??
+    (thrown ? inspect.resolveRunIdFromTraceDir(traceDir, executionId) : undefined);
   const tracePath = findTraceFile(traceDir, agentInspectRunId);
   if (tracePath) {
     copyFileSync(tracePath, join(artifactDir, 'trace.jsonl'));
   }
 
-  const fidelity = await evaluateCaptureFidelity({
-    scenario,
-    agentInspectRunId,
-    tracePath,
-    independentModelCalls: result.modelCalls,
-    independentLiveAttempts: result.accounting?.liveAttempts ?? 0,
-    operationJournal,
-  });
+  const fidelity: { verdict: Verdict; assertions: ScenarioResult['assertions'] } =
+    result
+      ? await evaluateCaptureFidelity({
+          scenario,
+          agentInspectRunId,
+          tracePath,
+          independentModelCalls: result.modelCalls,
+          independentLiveAttempts: result.accounting?.liveAttempts ?? 0,
+          operationJournal,
+        })
+      : { verdict: 'insufficient', assertions: [] };
 
   // S08: both concurrent sessions must produce distinct traces
-  if (siblingResult) {
+  if (siblingResult && result) {
     const allTraces = listTraceFiles(traceDir);
     const siblingRunId = siblingResult.agentInspectTraceId;
     const siblingTrace = findTraceFile(traceDir, siblingRunId);
@@ -510,17 +570,24 @@ export async function runScenario(
     ...contract.assertions,
   ];
 
-  const overall = combineVerdict(
-    app.verdict,
-    fidelity.verdict,
-    contract.verdict,
-    scenario.expectFailure,
-    scenario.expectedFailureCode,
-    allAssertions,
-  );
+  // A thrown application error is never an acceptable (even expected-failure)
+  // pass: the pack is preserved for review but the verdict stays fail.
+  const overall = thrown
+    ? 'fail'
+    : combineVerdict(
+        app.verdict,
+        fidelity.verdict,
+        contract.verdict,
+        scenario.expectFailure,
+        scenario.expectedFailureCode,
+        allAssertions,
+      );
 
   const finishedAt = new Date().toISOString();
-  const git = gitState();
+  const provenance: BundleProvenance = collectProvenance({
+    ...provenanceBase,
+    agentInspectRunId,
+  });
 
   const scenarioResult: ScenarioResult = {
     batchId,
@@ -538,14 +605,15 @@ export async function runScenario(
     overallVerdict: overall,
     assertions: allAssertions,
     artifactDir,
+    ...(thrown ? { thrownError: thrown } : {}),
   };
 
   writeJson(artifactDir, 'manifest.json', {
     ...scenarioResult,
-    appGitSha: git.sha,
-    appDirty: git.dirty,
-    agentInspectVersion: installedAgentInspectVersion(),
-    lockfileDigest: lockfileDigest(),
+    appGitSha: provenance.app.gitSha,
+    appDirty: provenance.app.dirty,
+    agentInspectVersion: provenance.agentInspect.installedVersion,
+    lockfileSha256: provenance.lockfileSha256,
     decisionProvider: profile.modelMode === 'live' ? 'live' : 'fixture',
     modelMode: profile.modelMode,
     toolMode: profile.toolMode,
@@ -556,27 +624,45 @@ export async function runScenario(
     scenarioId: scenario.id,
     request: scenario.request,
   });
-  writeJson(artifactDir, 'output.safe.json', {
-    runStatus: result.runStatus,
-    modelMode: result.modelMode,
-    modelCalls: result.modelCalls,
-    outboxWrites: result.outboxWrites,
-    accounting: result.accounting,
-    decisions: result.decisions.map((d) => ({
-      outcome: d.outcome,
-      reason: d.reason,
-      decidedBy: d.decidedBy,
-    })),
-    agentInspectTraceId: result.agentInspectTraceId,
-    sibling:
-      siblingResult == null
-        ? undefined
-        : {
-            sessionId: siblingResult.sessionId,
-            agentInspectTraceId: siblingResult.agentInspectTraceId,
-            outboxWrites: siblingResult.outboxWrites,
-          },
-  });
+  writeJson(
+    artifactDir,
+    'output.safe.json',
+    result
+      ? {
+          runStatus: result.runStatus,
+          modelMode: result.modelMode,
+          modelCalls: result.modelCalls,
+          outboxWrites: result.outboxWrites,
+          accounting: result.accounting,
+          decisions: result.decisions.map((d) => ({
+            outcome: d.outcome,
+            reason: d.reason,
+            decidedBy: d.decidedBy,
+          })),
+          agentInspectTraceId: result.agentInspectTraceId,
+          sibling:
+            siblingResult == null
+              ? undefined
+              : {
+                  sessionId: siblingResult.sessionId,
+                  agentInspectTraceId: siblingResult.agentInspectTraceId,
+                  outboxWrites: siblingResult.outboxWrites,
+                },
+        }
+      : {
+          runStatus: 'failed',
+          thrown: true,
+          error: thrown,
+          agentInspectRunId,
+        },
+  );
+  if (thrown) {
+    writeJson(artifactDir, 'error.json', {
+      executionId,
+      agentInspectRunId,
+      error: thrown,
+    });
+  }
   writeJson(artifactDir, 'capture-journal.json', operationJournal ?? {
     llmInvocations: 0,
     fixtureInvocations: 0,
@@ -590,28 +676,22 @@ export async function runScenario(
   });
   writeJson(artifactDir, 'diagnostics.json', {
     agentInspectRunId,
-    tracePath,
+    tracePath: tracePath ? relative(process.cwd(), tracePath) : null,
     assertionFailures: allAssertions.filter((a) => !a.passed),
   });
   writeJson(artifactDir, 'result.json', scenarioResult);
-  if (agentInspectRunId) {
-    writeLabEvidenceManifest({
-      artifactDir,
-      agentInspectRunId,
-      scenarioId: scenario.id,
-      profileId: profile.id,
-      agentInspectVersion: installedAgentInspectVersion(),
-      appGitSha: git.sha,
-    });
-  }
-  finalizeChecksums(artifactDir);
-  const checksumFailures = verifyChecksums(artifactDir);
-  if (checksumFailures.length) {
-    writeJson(artifactDir, 'checksum-verify.json', { failed: checksumFailures });
-  }
+
+  // evidence.json is the last file written into the bundle; checksums and the
+  // verification report go to the ancillary dir next to it.
+  const gate = finalizeNativeBundle({
+    bundleDir: artifactDir,
+    scenarioId: scenario.id,
+    profileId: profile.id,
+    provenance,
+  });
 
   await module.close();
-  return scenarioResult;
+  return applyBundleGate(scenarioResult, gate);
 }
 
 export async function runSuite(

@@ -6,6 +6,10 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { verifyChecksums } from '../../src/playground/artifact-writer';
+import {
+  checkBundleProvenance,
+  runNativeBundleVerify,
+} from '../../src/playground/native-bundle';
 import { TRAVEL_CORE_EXPECTED_COUNT } from '../../src/playground/scenario-registry';
 
 const ROOT = process.cwd();
@@ -107,6 +111,15 @@ for (const r of results) {
   const failed = verifyChecksums(r.artifactDir);
   if (failed.length) {
     checksumProblems.push(`${r.scenarioId}: ${failed.join('; ')}`);
+  }
+  const native = runNativeBundleVerify(r.artifactDir);
+  if (!native.ok) {
+    checksumProblems.push(
+      `${r.scenarioId}: default bundle verify failed: ${native.issues.map((i) => i.code).join(',') || 'unknown'}`,
+    );
+  }
+  for (const issue of checkBundleProvenance(r.artifactDir)) {
+    checksumProblems.push(`${r.scenarioId}: ${issue.code}: ${issue.message}`);
   }
   const resultPath = join(r.artifactDir, 'result.json');
   if (!existsSync(resultPath)) {
