@@ -14,6 +14,7 @@ import {
   readdirSync,
 } from 'node:fs';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
@@ -25,8 +26,10 @@ import { InspectCaptureService } from '../src/instrumentation/inspect-capture.se
 import {
   allowlistModelDecisions,
   extractUnsupportedAction,
+  writeLiveFailureBundle,
   type LiveEvalFailurePacket,
 } from './live-eval-packet';
+import { describeThrown } from '../src/playground/native-bundle';
 
 function loadEnvFile() {
   const path = join(process.cwd(), '.env');
@@ -61,6 +64,10 @@ type CaseResult = {
   decisions?: Array<{ outcome: string; reason: string }>;
   agentInspectRunId?: string;
   failurePacketPath?: string;
+  /** Self-contained native bundle for failures (local/UNSAFE). */
+  failureBundlePath?: string;
+  bundleVerified?: boolean;
+  executionId?: string;
   error?: string;
 };
 
@@ -254,6 +261,7 @@ async function main() {
 
   const results: CaseResult[] = [];
   let failed = 0;
+  let bundleFailures = 0;
 
   for (let i = 0; i < repeat; i++) {
     for (const c of cases) {
@@ -269,19 +277,25 @@ async function main() {
         : structuredClone(c.request);
       body.eventId = `${body.eventId}-live-${i}-${Date.now()}`;
       const started = Date.now();
+      // Preallocate identity before any provider work so thrown failures
+      // are still bound to a run.
+      const executionId = randomUUID();
       try {
         const result = await graph.run(body, {
           sessionId: createSessionId(),
+          runId: executionId,
           forceInspect: true,
           traceDir,
         });
         const checked = c.check(result);
         const agentInspectRunId =
           result.agentInspectTraceId ??
-          inspect.getMappedRunId(result.runId ?? '');
+          inspect.getMappedRunId(executionId);
         const tracePath = findTraceForRun(traceDir, agentInspectRunId);
 
         let failurePacketPath: string | undefined;
+        let failureBundlePath: string | undefined;
+        let bundleVerified: boolean | undefined;
         if (!checked.ok) {
           const packet: LiveEvalFailurePacket = {
             schemaVersion: 'proactive-ai-demo/live-eval-failure/1',
@@ -290,6 +304,7 @@ async function main() {
             ok: false,
             category: checked.category ?? 'invariant_miss',
             detail: checked.detail,
+            executionId,
             agentInspectRunId,
             tracePath: tracePath ?? undefined,
             application: {
@@ -309,6 +324,16 @@ async function main() {
             contractSummary: runContractSummary(tracePath),
           };
           failurePacketPath = writeFailurePacket(recordingsDir, packet);
+          const sealed = writeLiveFailureBundle({
+            recordingsDir,
+            packet,
+            executionId,
+            request: body,
+            tracePath,
+          });
+          failureBundlePath = sealed.bundleDir;
+          bundleVerified = sealed.gate.ok;
+          if (!sealed.gate.ok) bundleFailures += 1;
         }
 
         if (!checked.ok) failed += 1;
@@ -327,26 +352,52 @@ async function main() {
             reason: d.reason,
           })),
           agentInspectRunId,
+          executionId,
           failurePacketPath,
+          failureBundlePath,
+          bundleVerified,
         });
       } catch (err) {
         failed += 1;
+        // Original error is recorded (bounded, redacted); identity comes from
+        // the preallocated execution id and any trace that was started.
+        const thrown = describeThrown(err);
+        const agentInspectRunId =
+          inspect.getMappedRunId(executionId) ??
+          inspect.resolveRunIdFromTraceDir(traceDir, executionId);
+        const tracePath = findTraceForRun(traceDir, agentInspectRunId);
         const packet: LiveEvalFailurePacket = {
           schemaVersion: 'proactive-ai-demo/live-eval-failure/1',
           recordedAt: new Date().toISOString(),
           case: c.name,
           ok: false,
           category: 'provider_error',
-          error: err instanceof Error ? err.message : String(err),
+          error: `${thrown.name}: ${thrown.message}`,
+          executionId,
+          agentInspectRunId,
+          tracePath: tracePath ?? undefined,
           application: {},
+          contractSummary: runContractSummary(tracePath),
         };
         const failurePacketPath = writeFailurePacket(recordingsDir, packet);
+        const sealed = writeLiveFailureBundle({
+          recordingsDir,
+          packet,
+          executionId,
+          request: body,
+          tracePath,
+        });
+        if (!sealed.gate.ok) bundleFailures += 1;
         results.push({
           case: c.name,
           ok: false,
           category: 'provider_error',
-          error: err instanceof Error ? err.message : String(err),
+          error: packet.error,
+          executionId,
+          agentInspectRunId,
           failurePacketPath,
+          failureBundlePath: sealed.bundleDir,
+          bundleVerified: sealed.gate.ok,
         });
       }
     }
@@ -359,6 +410,7 @@ async function main() {
     JSON.stringify(
       {
         failed,
+        bundleFailures,
         traceDir,
         results,
         saved: outPath,
@@ -367,9 +419,11 @@ async function main() {
       2,
     ),
   );
-  console.log(JSON.stringify({ failed, results, saved: outPath, traceDir }, null, 2));
+  console.log(
+    JSON.stringify({ failed, bundleFailures, results, saved: outPath, traceDir }, null, 2),
+  );
   await app.close();
-  process.exit(failed ? 1 : 0);
+  process.exit(failed || bundleFailures ? 1 : 0);
 }
 
 main().catch((err) => {

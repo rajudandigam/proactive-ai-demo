@@ -133,17 +133,32 @@ export class TripAttentionAgentService {
       returnedModelIds: ['fixture-agent'],
       tokenUsage: { known: false },
     };
-    this.captureJournal.recordFixture(ctx.runId, 1);
+    const fixtureOpId = this.captureJournal.beginOperation(
+      ctx.runId,
+      'fixture',
+      'fixture-agent',
+    );
     const toolResults: ToolResult[] = [];
     const ids = new Set(eligible.map((c) => c.id));
 
     // Scripted two-round lookup for presentation fidelity
+    const t1Op = this.captureJournal.beginOperation(
+      ctx.runId,
+      'tool',
+      'read_trip_snapshot',
+      { parentOperationId: fixtureOpId },
+    );
     const t1 = this.tools.execute(
       ctx,
       'read_trip_snapshot',
       {},
       'fixture-tool-1',
       'model',
+    );
+    this.captureJournal.completeOperation(
+      ctx.runId,
+      t1Op,
+      t1.ok ? 'completed' : 'failed',
     );
     toolResults.push(t1);
     accounting.toolExecutions += t1.cached ? 0 : 1;
@@ -153,6 +168,12 @@ export class TripAttentionAgentService {
     const needsDest = eligible.some((c) => c.kind === 'destination_event');
 
     if (needsWeather) {
+      const t2Op = this.captureJournal.beginOperation(
+        ctx.runId,
+        'tool',
+        'read_weather_context',
+        { parentOperationId: fixtureOpId },
+      );
       const t2 = this.tools.execute(
         ctx,
         'read_weather_context',
@@ -160,16 +181,32 @@ export class TripAttentionAgentService {
         'fixture-tool-2',
         'model',
       );
+      this.captureJournal.completeOperation(
+        ctx.runId,
+        t2Op,
+        t2.ok ? 'completed' : 'failed',
+      );
       toolResults.push(t2);
       accounting.toolExecutions += t2.cached ? 0 : 1;
     }
     if (needsDest) {
+      const t3Op = this.captureJournal.beginOperation(
+        ctx.runId,
+        'tool',
+        'read_destination_impact',
+        { parentOperationId: fixtureOpId },
+      );
       const t3 = this.tools.execute(
         ctx,
         'read_destination_impact',
         {},
         'fixture-tool-3',
         'model',
+      );
+      this.captureJournal.completeOperation(
+        ctx.runId,
+        t3Op,
+        t3.ok ? 'completed' : 'failed',
       );
       toolResults.push(t3);
       accounting.toolExecutions += t3.cached ? 0 : 1;
@@ -182,6 +219,7 @@ export class TripAttentionAgentService {
     });
 
     const decisions = this.buildFixtureDecisions(ctx, eligible, ids);
+    this.captureJournal.completeOperation(ctx.runId, fixtureOpId, 'completed');
     return {
       decisionSet: { decisions },
       toolResults,
@@ -352,7 +390,11 @@ export class TripAttentionAgentService {
       void remainingForInvest;
 
       accounting.liveAttempts += 1;
-      this.captureJournal.recordLlm(ctx.runId, 1);
+      const investigateOpId = this.captureJournal.beginOperation(
+        ctx.runId,
+        'llm',
+        `investigate:${model}`,
+      );
       this.traces.emit(ctx, {
         stage: 'model_investigate',
         status: 'started',
@@ -373,7 +415,17 @@ export class TripAttentionAgentService {
             });
           return maybeLlm(model, call);
         })();
+        this.captureJournal.completeOperation(
+          ctx.runId,
+          investigateOpId,
+          'completed',
+        );
       } catch (err) {
+        this.captureJournal.completeOperation(
+          ctx.runId,
+          investigateOpId,
+          'failed',
+        );
         accounting.liveFailures += 1;
         const message = err instanceof Error ? err.message : String(err);
         this.traces.emit(ctx, {
@@ -450,11 +502,22 @@ export class TripAttentionAgentService {
           args = { __parseError: true };
         }
         const toolName = tc.function.name;
+        const toolOpId = this.captureJournal.beginOperation(
+          ctx.runId,
+          'tool',
+          toolName,
+          { parentOperationId: investigateOpId },
+        );
         const executed = await (async () => {
           const call = () =>
             this.tools.execute(ctx, toolName, args, tc.id, 'model');
           return maybeTool(toolName, call);
         })();
+        this.captureJournal.completeOperation(
+          ctx.runId,
+          toolOpId,
+          executed.ok ? 'completed' : 'failed',
+        );
         toolResults.push(executed);
         if (executed.cached) accounting.toolCacheHits += 1;
         else accounting.toolExecutions += 1;
@@ -498,7 +561,11 @@ export class TripAttentionAgentService {
 
     // Final structured decision
     accounting.liveAttempts += 1;
-    this.captureJournal.recordLlm(ctx.runId, 1);
+    const finalizeOpId = this.captureJournal.beginOperation(
+      ctx.runId,
+      'llm',
+      `finalize:${model}`,
+    );
     this.traces.emit(ctx, {
       stage: 'model_finalize',
       status: 'started',
@@ -526,6 +593,11 @@ export class TripAttentionAgentService {
           });
         return maybeLlm(model, call);
       })();
+      this.captureJournal.completeOperation(
+        ctx.runId,
+        finalizeOpId,
+        'completed',
+      );
 
       accounting.liveSuccesses += 1;
       if (finalCompletion.model) {
@@ -561,6 +633,7 @@ export class TripAttentionAgentService {
       });
       return { decisionSet, toolResults, accounting, transcript: messages };
     } catch (err) {
+      this.captureJournal.completeOperation(ctx.runId, finalizeOpId, 'failed');
       accounting.liveFailures += 1;
       const message = err instanceof Error ? err.message : String(err);
       this.traces.emit(ctx, {

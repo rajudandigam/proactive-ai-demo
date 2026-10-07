@@ -5,6 +5,7 @@ import {
 } from '../src/playground/oracle';
 import { resolveScenarioExpected } from '../src/playground/expected-profile';
 import {
+  ancillaryDirFor,
   finalizeChecksums,
   listFilesRecursive,
   verifyChecksums,
@@ -65,6 +66,101 @@ describe('harness evidence integrity (R3/R5)', () => {
     expect(result.assertions.some((a) => a.id === 'fidelity.llmSpansPresent')).toBe(
       true,
     );
+  });
+
+  it('rejects partial LLM capture when journal expects three completed ops', () => {
+    const scenario = {
+      id: 'probe',
+      version: '1',
+      name: 'probe',
+      suite: 'travel-core',
+      workload: 'trip',
+      variant: 'valid' as const,
+      expectFailure: false,
+      request: {},
+      expected: { minModelCalls: 3 },
+    };
+    const journal = {
+      llmInvocations: 3,
+      fixtureInvocations: 0,
+      operations: [
+        {
+          operationId: 'op1',
+          kind: 'llm' as const,
+          name: 'investigate:a',
+          executionId: 'run_test',
+          terminal: 'completed' as const,
+          transportAttempts: 1,
+        },
+        {
+          operationId: 'op2',
+          kind: 'llm' as const,
+          name: 'investigate:b',
+          executionId: 'run_test',
+          terminal: 'completed' as const,
+          transportAttempts: 1,
+        },
+        {
+          operationId: 'op3',
+          kind: 'llm' as const,
+          name: 'finalize:c',
+          executionId: 'run_test',
+          terminal: 'completed' as const,
+          transportAttempts: 1,
+        },
+      ],
+    };
+    const oneOfThree =
+      '{"schemaVersion":"1.0","event":"run_started","runId":"run_test"}\n' +
+      '{"schemaVersion":"1.0","event":"step_started","runId":"run_test","stepId":"s1","type":"llm","name":"investigate:a"}\n' +
+      '{"schemaVersion":"1.0","event":"step_completed","runId":"run_test","stepId":"s1","type":"llm","name":"investigate:a"}\n';
+    const partial = evaluateCaptureFidelitySync({
+      scenario,
+      agentInspectRunId: 'run_test',
+      traceText: oneOfThree,
+      independentModelCalls: 3,
+      independentLiveAttempts: 3,
+      operationJournal: journal,
+    });
+    expect(partial.verdict).toBe('fail');
+    expect(partial.assertions.some((a) => a.id === 'fidelity.llmOpCount' && !a.passed)).toBe(
+      true,
+    );
+
+    const missingTerminal =
+      '{"schemaVersion":"1.0","event":"run_started","runId":"run_test"}\n' +
+      '{"schemaVersion":"1.0","event":"step_started","runId":"run_test","stepId":"s1","type":"llm","name":"investigate:a"}\n' +
+      '{"schemaVersion":"1.0","event":"step_started","runId":"run_test","stepId":"s2","type":"llm","name":"investigate:b"}\n' +
+      '{"schemaVersion":"1.0","event":"step_completed","runId":"run_test","stepId":"s2","type":"llm","name":"investigate:b"}\n' +
+      '{"schemaVersion":"1.0","event":"step_started","runId":"run_test","stepId":"s3","type":"llm","name":"finalize:c"}\n' +
+      '{"schemaVersion":"1.0","event":"step_completed","runId":"run_test","stepId":"s3","type":"llm","name":"finalize:c"}\n';
+    const incomplete = evaluateCaptureFidelitySync({
+      scenario,
+      agentInspectRunId: 'run_test',
+      traceText: missingTerminal,
+      independentModelCalls: 3,
+      independentLiveAttempts: 3,
+      operationJournal: journal,
+    });
+    expect(incomplete.verdict).toBe('fail');
+    expect(
+      incomplete.assertions.some(
+        (a) => a.id === 'fidelity.llmTerminalObserved' && !a.passed,
+      ),
+    ).toBe(true);
+
+    const empty =
+      '{"schemaVersion":"1.0","event":"run_started","runId":"run_test"}\n' +
+      '{"schemaVersion":"1.0","event":"step_started","runId":"run_test","type":"logic","name":"only-logic"}\n';
+    const none = evaluateCaptureFidelitySync({
+      scenario,
+      agentInspectRunId: 'run_test',
+      traceText: empty,
+      independentModelCalls: 3,
+      independentLiveAttempts: 3,
+      operationJournal: journal,
+    });
+    expect(none.verdict).toBe('fail');
   });
 
   it('resolves live-model expectations without fixture invocation exactness', () => {
@@ -134,9 +230,14 @@ describe('harness evidence integrity (R3/R5)', () => {
     // Mutate nested file — verify must fail
     writeFileSync(join(dir, 'inspect-traces', 'run.jsonl'), '{"event":"mutated"}\n');
     expect(verifyChecksums(dir).length).toBeGreaterThan(0);
-    // SHA256SUMS itself lists nested path
-    const sums = readFileSync(join(dir, 'SHA256SUMS.txt'), 'utf8');
+    // SHA256SUMS lists the nested path and lives OUTSIDE the bundle
+    const sums = readFileSync(
+      join(ancillaryDirFor(dir), 'SHA256SUMS.txt'),
+      'utf8',
+    );
     expect(sums).toContain('inspect-traces/run.jsonl');
+    expect(listFilesRecursive(dir)).not.toContain('SHA256SUMS.txt');
     rmSync(dir, { recursive: true, force: true });
+    rmSync(ancillaryDirFor(dir), { recursive: true, force: true });
   });
 });
