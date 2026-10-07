@@ -112,6 +112,24 @@ export const ScenarioResultSchema = z.object({
   assertions: z.array(AssertionResultSchema),
   artifactDir: z.string(),
   blockedReason: z.string().optional(),
+  /** Bounded/redacted description of an exception thrown by the application. */
+  thrownError: z
+    .object({
+      name: z.string(),
+      message: z.string(),
+      code: z.string().optional(),
+    })
+    .optional(),
+  /** Result of the default native bundle verification harness gate. */
+  bundleGate: z
+    .object({
+      ok: z.boolean(),
+      identityRunId: z.string(),
+      verifyStatus: z.string().optional(),
+      issueCodes: z.array(z.string()),
+      reportPath: z.string(),
+    })
+    .optional(),
 });
 
 export type ScenarioResult = z.infer<typeof ScenarioResultSchema>;

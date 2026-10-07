@@ -5,6 +5,7 @@ import {
 } from '../src/playground/oracle';
 import { resolveScenarioExpected } from '../src/playground/expected-profile';
 import {
+  ancillaryDirFor,
   finalizeChecksums,
   listFilesRecursive,
   verifyChecksums,
@@ -229,9 +230,14 @@ describe('harness evidence integrity (R3/R5)', () => {
     // Mutate nested file — verify must fail
     writeFileSync(join(dir, 'inspect-traces', 'run.jsonl'), '{"event":"mutated"}\n');
     expect(verifyChecksums(dir).length).toBeGreaterThan(0);
-    // SHA256SUMS itself lists nested path
-    const sums = readFileSync(join(dir, 'SHA256SUMS.txt'), 'utf8');
+    // SHA256SUMS lists the nested path and lives OUTSIDE the bundle
+    const sums = readFileSync(
+      join(ancillaryDirFor(dir), 'SHA256SUMS.txt'),
+      'utf8',
+    );
     expect(sums).toContain('inspect-traces/run.jsonl');
+    expect(listFilesRecursive(dir)).not.toContain('SHA256SUMS.txt');
     rmSync(dir, { recursive: true, force: true });
+    rmSync(ancillaryDirFor(dir), { recursive: true, force: true });
   });
 });
