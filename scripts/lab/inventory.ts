@@ -7,6 +7,14 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
+import {
+  computeInputRevision,
+  countStatuses,
+  isSafeEvidenceLink,
+  mergeCoverageLedger,
+  revisionIdFromLedger,
+  type CoverageStatus,
+} from '../../src/playground/coverage-merge';
 
 const ROOT = process.cwd();
 const OUT_DIR = join(ROOT, 'docs', 'playground');
@@ -44,6 +52,35 @@ async function listRuntimeExports(specifier: string): Promise<string[]> {
   } catch (err) {
     return [`__import_error__: ${err instanceof Error ? err.message : String(err)}`];
   }
+}
+
+type PreviousLedger = Parameters<typeof mergeCoverageLedger>[0]['previous'] &
+  Parameters<typeof revisionIdFromLedger>[0];
+
+/** A corrupt ledger must fail loudly: silently regenerating would erase executed evidence. */
+function loadPreviousLedger(path: string): PreviousLedger | null {
+  if (!existsSync(path)) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(path, 'utf8'));
+  } catch (err) {
+    throw new Error(
+      `Refusing to overwrite unreadable coverage ledger ${path}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+  const obj = parsed as { schemaVersion?: unknown; symbols?: unknown; packages?: unknown };
+  if (
+    !obj ||
+    typeof obj !== 'object' ||
+    obj.schemaVersion !== 'playground-coverage/1' ||
+    !Array.isArray(obj.symbols) ||
+    !Array.isArray(obj.packages)
+  ) {
+    throw new Error(
+      `Refusing to overwrite coverage ledger ${path}: unexpected schema (expected playground-coverage/1)`,
+    );
+  }
+  return parsed as PreviousLedger;
 }
 
 async function main() {
@@ -105,11 +142,11 @@ async function main() {
       installedVersion: installed ? (local?.version as string) : null,
       installed,
       exports: installed ? listExportKeys(local) : (p.exports ?? []),
-      status: installed
+      status: (installed
         ? p.name === 'agent-inspect'
           ? 'implemented-unverified'
           : 'planned'
-        : 'blocked',
+        : 'blocked') as CoverageStatus,
       blockedReason: installed
         ? undefined
         : 'Not installed in this app; deferred to isolated consumer or later phase',
@@ -118,11 +155,9 @@ async function main() {
     };
   });
 
-  type SymbolStatus =
-    | 'planned'
-    | 'implemented-unverified'
-    | 'passed'
-    | 'blocked';
+  // Discovery only assigns planned/implemented-unverified/unsupported/blocked;
+  // passed/failed/stale come exclusively from merged executed evidence.
+  type SymbolStatus = CoverageStatus;
 
   // Core runtime symbols from installed root
   const symbolRows: Array<{
@@ -141,7 +176,9 @@ async function main() {
       subpath: '.',
       symbol: name,
       kind: 'runtime-export' as const,
-      status: 'planned' as SymbolStatus,
+      status: (name.startsWith('__import_error__')
+        ? 'unsupported'
+        : 'planned') as SymbolStatus,
       testIds: [] as string[],
       executedEvidence: [] as string[],
     })),
@@ -184,6 +221,34 @@ async function main() {
     }
   }
 
+  const ledgerPath = join(OUT_DIR, 'coverage-ledger.json');
+  const previousLedger = loadPreviousLedger(ledgerPath);
+  const revision = computeInputRevision({
+    agentInspectVersion: installedVersion,
+    packageLockIntegrity: lockPkg?.integrity ?? null,
+    packageJsonSha256: sha256File(aiPkgPath),
+  });
+  const merged = mergeCoverageLedger({
+    symbols: symbolRows,
+    packages: packageRows,
+    previous: previousLedger,
+    ctx: {
+      revision,
+      previousLedgerRevisionId: previousLedger ? revisionIdFromLedger(previousLedger) : null,
+      artifactExists: (link) => isSafeEvidenceLink(link) && existsSync(join(ROOT, link)),
+    },
+  });
+  const mergedSymbols = merged.symbols;
+  const mergedPackages = merged.packages;
+  const retiredSymbols = merged.retiredSymbols;
+  const allRows = [...mergedSymbols, ...retiredSymbols];
+  const freshEvidenceLinks = mergedSymbols
+    .filter((s) => s.status === 'passed' || s.status === 'failed')
+    .reduce((n, s) => n + s.executedEvidence.length, 0);
+  const staleEvidenceLinks = allRows
+    .filter((s) => s.status === 'stale')
+    .reduce((n, s) => n + s.executedEvidence.length, 0);
+
   const ledger = {
     schemaVersion: 'playground-coverage/1',
     generatedAt: new Date().toISOString(),
@@ -215,24 +280,34 @@ async function main() {
       cliCommands,
       tarballSha256OfPackageJson: sha256File(aiPkgPath),
     },
-    packages: packageRows,
-    symbols: symbolRows,
+    inputRevision: revision,
+    packages: mergedPackages,
+    symbols: mergedSymbols,
+    retiredSymbols,
     counts: {
-      packagesTotal: packageRows.length,
-      packagesInstalled: packageRows.filter((p) => p.installed).length,
-      packagesBlocked: packageRows.filter((p) => p.status === 'blocked').length,
-      symbolsTotal: symbolRows.length,
-      symbolsPlanned: symbolRows.filter((s) => s.status === 'planned').length,
-      symbolsImplementedUnverified: symbolRows.filter(
+      packagesTotal: mergedPackages.length,
+      packagesInstalled: mergedPackages.filter((p) => p.installed).length,
+      packagesBlocked: mergedPackages.filter((p) => p.status === 'blocked').length,
+      symbolsTotal: mergedSymbols.length,
+      symbolsPlanned: mergedSymbols.filter((s) => s.status === 'planned').length,
+      symbolsImplementedUnverified: mergedSymbols.filter(
         (s) => s.status === 'implemented-unverified',
       ).length,
-      symbolsPassed: symbolRows.filter((s) => s.status === 'passed').length,
-      executedEvidence: 0,
+      symbolsPassed: mergedSymbols.filter((s) => s.status === 'passed').length,
+      symbolsFailed: mergedSymbols.filter((s) => s.status === 'failed').length,
+      symbolsUnsupported: mergedSymbols.filter((s) => s.status === 'unsupported').length,
+      symbolsStale: mergedSymbols.filter((s) => s.status === 'stale').length,
+      symbolsRetired: retiredSymbols.length,
+      symbolsByStatus: countStatuses(mergedSymbols),
+      executedEvidence: freshEvidenceLinks,
+      staleEvidenceLinks,
     },
     limitations: [
       'Scoped @agent-inspect/* packages are not installed in this app (blocked until P07+).',
       'Type-only exports and instance methods need deeper .d.ts parsing in a later inventory pass.',
-      'Coverage statuses other than planned/blocked/implemented-unverified require executed evidence.',
+      'Coverage statuses other than planned/blocked/unsupported/implemented-unverified require executed evidence.',
+      'Executed evidence is bound to the agent-inspect version, lockfile integrity and package.json hash; any change marks it stale (history is kept, not erased) until re-executed.',
+      'Evidence is verified by artifact path existence only; artifact contents are not re-hashed during inventory regeneration (see lab:mark-m1-evidence for checksum verification).',
     ],
   };
 
@@ -253,7 +328,6 @@ async function main() {
     }
   }
 
-  const ledgerPath = join(OUT_DIR, 'coverage-ledger.json');
   writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + '\n');
 
   const baseline = `# AgentInspect Playground baseline (P00)
@@ -298,10 +372,14 @@ Generated: ${ledger.generatedAt}
 | Blocked (not installed) | ${ledger.counts.packagesBlocked} |
 | Symbol/subpath/CLI rows | ${ledger.counts.symbolsTotal} |
 | Implemented-unverified (M1 targets) | ${ledger.counts.symbolsImplementedUnverified} |
-| Passed (executed evidence) | ${ledger.counts.symbolsPassed} |
+| Passed (executed evidence, current revision) | ${ledger.counts.symbolsPassed} |
+| Failed (executed evidence, current revision) | ${ledger.counts.symbolsFailed} |
+| Stale (evidence kept, needs re-execution) | ${ledger.counts.symbolsStale} |
+| Retired symbols (removed, evidence kept) | ${ledger.counts.symbolsRetired} |
 
 ## Notes
 
+- Regeneration preserves executed evidence only for the same input revision (\`${revision.id.slice(0, 12)}\`); other evidence is marked stale and kept.
 - Seed file \`AgentInspect_Coverage_Seed.json\` remains planning data; this baseline and \`coverage-ledger.json\` are generated from the installed tarball.
 - \`@agent-inspect/langchain\` peer requires \`@langchain/core ^1.0.0\`; this app stays on 0.3.x with **manual** instrumentation until an isolated P07 consumer.
 - Existing offline validation: run \`npm run validate\` separately and record results in evidence manifests.

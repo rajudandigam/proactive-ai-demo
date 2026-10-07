@@ -17,6 +17,8 @@ const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8')) as {
   counts: Record<string, number>;
   packages: Array<{ name: string; status: string; installed: boolean }>;
   symbols: Array<{ id: string; status: string }>;
+  retiredSymbols?: Array<{ id: string; status: string }>;
+  inputRevision?: { id: string };
   agentInspect: { installedVersion: string };
 };
 
@@ -34,12 +36,14 @@ console.log(
       counts: ledger.counts,
       packagesByStatus: byStatus(ledger.packages),
       symbolsByStatus: byStatus(ledger.symbols),
+      retiredSymbolsByStatus: byStatus(ledger.retiredSymbols ?? []),
+      inputRevision: ledger.inputRevision?.id ?? null,
       installedPackages: ledger.packages.filter((p) => p.installed).map((p) => p.name),
       blockedPackages: ledger.packages
         .filter((p) => !p.installed)
         .map((p) => p.name),
       denominatorNote:
-        'Passed requires executedEvidence. Planned/blocked/implemented-unverified are not inflated into passed.',
+        'Passed/failed require executedEvidence bound to the current input revision. Stale rows keep prior evidence but do not count as passed. Planned/blocked/unsupported/implemented-unverified are never inflated into passed.',
     },
     null,
     2,
