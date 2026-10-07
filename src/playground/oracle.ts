@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { ApplicationResult } from '../demo/schemas';
-import type { CaptureOperationSnapshot } from '../instrumentation/capture-operation-journal';
+import type {
+  CaptureLogicalOperation,
+  CaptureOperationSnapshot,
+} from '../instrumentation/capture-operation-journal';
 import { resolveScenarioExpected, type ExpectedBlock } from './expected-profile';
 import type { ScenarioFile } from './scenario-registry';
 import type { AssertionResult } from './schemas';
@@ -211,37 +214,206 @@ type TraceReadLike = {
   warnings?: unknown[];
 };
 
-function countLlmSpansInTrace(
+type ObservedCaptureOp = {
+  kind: 'llm' | 'tool';
+  name: string;
+  stepId?: string;
+  parentStepId?: string;
+  terminal: 'started' | 'completed' | 'failed' | 'unknown';
+  runId?: string;
+};
+
+function stepTypeOf(ev: Record<string, unknown>): string | undefined {
+  const attrs = ev.attributes as { stepType?: string } | undefined;
+  const t = ev.type ?? ev.stepType ?? attrs?.stepType;
+  return typeof t === 'string' ? t : undefined;
+}
+
+/** Structured observation only — no raw-text completeness fallback. */
+function observeCaptureOperations(
   read: TraceReadLike | null | undefined,
-  traceText?: string | null,
-): number {
-  let count = 0;
-  const events = read?.events ?? [];
-  for (const raw of events) {
-    const ev = raw as {
-      type?: string;
-      stepType?: string;
-      event?: string;
-      attributes?: { stepType?: string };
-    };
-    const stepType =
-      ev.type ??
-      ev.stepType ??
-      ev.attributes?.stepType ??
-      (ev.event === 'step_started' || ev.event === 'step_completed'
-        ? undefined
-        : undefined);
-    if (stepType === 'llm') count += 1;
+  runId?: string,
+): ObservedCaptureOp[] {
+  const events = (read?.events ?? []) as Array<Record<string, unknown>>;
+  const byStep = new Map<string, ObservedCaptureOp>();
+  for (const ev of events) {
+    const evRun = typeof ev.runId === 'string' ? ev.runId : undefined;
+    if (runId && evRun && evRun !== runId) continue;
+    const stepType = stepTypeOf(ev);
+    if (stepType !== 'llm' && stepType !== 'tool') continue;
+    const stepId =
+      typeof ev.stepId === 'string'
+        ? ev.stepId
+        : typeof ev.id === 'string'
+          ? ev.id
+          : undefined;
+    const name =
+      typeof ev.name === 'string'
+        ? ev.name
+        : typeof (ev.attributes as { name?: string } | undefined)?.name ===
+            'string'
+          ? (ev.attributes as { name: string }).name
+          : stepType;
+    const parentStepId =
+      typeof ev.parentStepId === 'string'
+        ? ev.parentStepId
+        : typeof ev.parentId === 'string'
+          ? ev.parentId
+          : undefined;
+    const key = stepId ?? `${stepType}:${name}:${byStep.size}`;
+    const existing = byStep.get(key);
+    const eventName = typeof ev.event === 'string' ? ev.event : '';
+    let terminal: ObservedCaptureOp['terminal'] = existing?.terminal ?? 'unknown';
+    if (eventName === 'step_started') terminal = 'started';
+    if (eventName === 'step_completed') terminal = 'completed';
+    if (eventName === 'step_failed' || eventName === 'step_error') {
+      terminal = 'failed';
+    }
+    if (!existing && eventName === '' && stepType) {
+      // Some persisted shapes omit event and only carry type/name.
+      terminal = 'completed';
+    }
+    byStep.set(key, {
+      kind: stepType,
+      name,
+      stepId,
+      parentStepId,
+      terminal,
+      runId: evRun,
+    });
   }
-  if (count > 0) return count;
-  const text =
-    traceText ??
-    (read?.events ? JSON.stringify(read.events) : '');
-  if (!text) return 0;
-  const llmMarker =
-    /"type"\s*:\s*"llm"|"stepType"\s*:\s*"llm"|step_started[^\\n]*"type"\s*:\s*"llm"/gi;
-  const matches = text.match(llmMarker);
-  return matches?.length ?? 0;
+  return [...byStep.values()];
+}
+
+function parseTraceTextEvents(traceText: string): TraceReadLike {
+  const events: unknown[] = [];
+  for (const line of traceText.split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      events.push(JSON.parse(line));
+    } catch {
+      // ignore non-JSON lines for structured observation
+    }
+  }
+  return { events, format: 'jsonl' };
+}
+
+function reconcileJournalToCapture(opts: {
+  journal?: CaptureOperationSnapshot | null;
+  observed: ObservedCaptureOp[];
+  runId?: string;
+}): AssertionResult[] {
+  const assertions: AssertionResult[] = [];
+  const ops = opts.journal?.operations ?? [];
+  const expectedLogical = ops.filter(
+    (o) => o.kind === 'llm' || o.kind === 'tool',
+  );
+  const expectedLlm = expectedLogical.filter((o) => o.kind === 'llm');
+  const expectedTool = expectedLogical.filter((o) => o.kind === 'tool');
+  const observedLlm = opts.observed.filter((o) => o.kind === 'llm');
+  const observedTool = opts.observed.filter((o) => o.kind === 'tool');
+
+  if (expectedLogical.length === 0) {
+    return assertions;
+  }
+
+  const unfinished = expectedLogical.filter((o) => o.terminal === 'started');
+  assertions.push(
+    check(
+      'fidelity.journalTerminal',
+      unfinished.length === 0,
+      unfinished.length === 0
+        ? 'All journaled logical ops reached a terminal state'
+        : `Journal has ${unfinished.length} non-terminal op(s)`,
+      unfinished.map((o) => o.operationId),
+    ),
+  );
+
+  if (opts.runId) {
+    const wrongRun = expectedLogical.filter(
+      (o) => o.executionId && o.executionId !== opts.runId,
+    );
+    assertions.push(
+      check(
+        'fidelity.journalRunBound',
+        wrongRun.length === 0,
+        wrongRun.length === 0
+          ? 'Journal executionIds match mapped run'
+          : `Journal ops bound to wrong executionId(s)`,
+        wrongRun.map((o) => o.executionId),
+        opts.runId,
+      ),
+    );
+  }
+
+  assertions.push(
+    check(
+      'fidelity.llmOpCount',
+      observedLlm.length === expectedLlm.length,
+      `LLM ops expected ${expectedLlm.length} observed ${observedLlm.length}`,
+      { expected: expectedLlm.length, observed: observedLlm.length },
+      expectedLlm.length,
+    ),
+  );
+  assertions.push(
+    check(
+      'fidelity.toolOpCount',
+      observedTool.length === expectedTool.length,
+      `Tool ops expected ${expectedTool.length} observed ${observedTool.length}`,
+      { expected: expectedTool.length, observed: observedTool.length },
+      expectedTool.length,
+    ),
+  );
+
+  const missingTerminal = observedLlm.filter(
+    (o) => o.terminal !== 'completed' && o.terminal !== 'failed',
+  );
+  assertions.push(
+    check(
+      'fidelity.llmTerminalObserved',
+      missingTerminal.length === 0,
+      missingTerminal.length === 0
+        ? 'Observed LLM ops have terminal events'
+        : `Observed LLM ops missing terminal: ${missingTerminal.length}`,
+      missingTerminal.map((o) => o.name),
+    ),
+  );
+
+  // Reject partial acceptance: presence of any LLM is not enough when journal expects N.
+  assertions.push(
+    check(
+      'fidelity.operationSetExact',
+      observedLlm.length === expectedLlm.length &&
+        observedTool.length === expectedTool.length &&
+        unfinished.length === 0,
+      'Exact journal↔capture operation set reconciliation',
+      {
+        expectedLlm: expectedLlm.map(summarizeJournalOp),
+        observedLlm: observedLlm.map((o) => ({
+          name: o.name,
+          terminal: o.terminal,
+          parentStepId: o.parentStepId,
+        })),
+        expectedTool: expectedTool.map(summarizeJournalOp),
+        observedTool: observedTool.map((o) => ({
+          name: o.name,
+          terminal: o.terminal,
+        })),
+      },
+    ),
+  );
+
+  return assertions;
+}
+
+function summarizeJournalOp(o: CaptureLogicalOperation) {
+  return {
+    operationId: o.operationId,
+    kind: o.kind,
+    name: o.name,
+    terminal: o.terminal,
+    parentOperationId: o.parentOperationId,
+  };
 }
 
 function independentExpectsLlmWork(opts: {
@@ -249,6 +421,9 @@ function independentExpectsLlmWork(opts: {
   operationJournal?: CaptureOperationSnapshot | null;
 }): boolean {
   if (opts.independentLiveAttempts > 0) return true;
+  if ((opts.operationJournal?.operations ?? []).some((o) => o.kind === 'llm')) {
+    return true;
+  }
   return (opts.operationJournal?.llmInvocations ?? 0) > 0;
 }
 
@@ -399,38 +574,47 @@ export async function evaluateCaptureFidelity(opts: {
     }
   }
 
-  const traceText =
-    opts.tracePath && existsSync(opts.tracePath)
-      ? readFileSync(opts.tracePath, 'utf8')
-      : null;
-  const llmSpanCount = countLlmSpansInTrace(read, traceText);
   const expectsLlm = independentExpectsLlmWork({
     independentLiveAttempts: opts.independentLiveAttempts,
     operationJournal: opts.operationJournal,
   });
+  const observed = observeCaptureOperations(read, opts.agentInspectRunId);
 
   if (expectsLlm && !opts.scenario._lab?.assertNoLlmSteps) {
-    assertions.push(
-      check(
-        'fidelity.llmSpansPresent',
-        llmSpanCount > 0,
-        llmSpanCount > 0
-          ? `Trace contains ${llmSpanCount} LLM span marker(s)`
-          : 'Independent model/journal says LLM work occurred but trace has no LLM spans',
-        {
-          llmSpanCount,
-          independentModelCalls: opts.independentModelCalls,
-          independentLiveAttempts: opts.independentLiveAttempts,
-          operationJournal: opts.operationJournal ?? null,
-        },
-      ),
-    );
+    const journalOps = opts.operationJournal?.operations ?? [];
+    if (journalOps.length > 0) {
+      assertions.push(
+        ...reconcileJournalToCapture({
+          journal: opts.operationJournal,
+          observed,
+          runId: opts.agentInspectRunId,
+        }),
+      );
+    } else {
+      // Legacy counter-only journal: require at least one structured LLM op.
+      assertions.push(
+        check(
+          'fidelity.llmSpansPresent',
+          observed.filter((o) => o.kind === 'llm').length > 0,
+          observed.some((o) => o.kind === 'llm')
+            ? `Trace contains structured LLM operation(s)`
+            : 'Independent model/journal says LLM work occurred but trace has no structured LLM ops',
+          {
+            observedLlm: observed.filter((o) => o.kind === 'llm').length,
+            independentModelCalls: opts.independentModelCalls,
+            independentLiveAttempts: opts.independentLiveAttempts,
+            operationJournal: opts.operationJournal ?? null,
+          },
+        ),
+      );
+    }
   }
 
   if (
     opts.independentLiveAttempts === 0 &&
     opts.independentModelCalls === 0 &&
-    !(opts.operationJournal?.llmInvocations || opts.operationJournal?.fixtureInvocations)
+    !(opts.operationJournal?.llmInvocations || opts.operationJournal?.fixtureInvocations) &&
+    !(opts.operationJournal?.operations?.length)
   ) {
     assertions.push(
       check(
@@ -525,23 +709,35 @@ export function evaluateCaptureFidelitySync(opts: {
     };
   }
 
-  const llmSpanCount = countLlmSpansInTrace(null, opts.traceText);
+  const read = parseTraceTextEvents(opts.traceText);
   const expectsLlm = independentExpectsLlmWork({
     independentLiveAttempts: opts.independentLiveAttempts,
     operationJournal: opts.operationJournal,
   });
+  const observed = observeCaptureOperations(read, opts.agentInspectRunId);
   const llmAssertions: AssertionResult[] = [];
   if (expectsLlm && !opts.scenario._lab?.assertNoLlmSteps) {
-    llmAssertions.push(
-      check(
-        'fidelity.llmSpansPresent',
-        llmSpanCount > 0,
-        llmSpanCount > 0
-          ? `Trace contains ${llmSpanCount} LLM span marker(s)`
-          : 'Independent model/journal says LLM work occurred but trace has no LLM spans',
-        { llmSpanCount },
-      ),
-    );
+    const journalOps = opts.operationJournal?.operations ?? [];
+    if (journalOps.length > 0) {
+      llmAssertions.push(
+        ...reconcileJournalToCapture({
+          journal: opts.operationJournal,
+          observed,
+          runId: opts.agentInspectRunId,
+        }),
+      );
+    } else {
+      llmAssertions.push(
+        check(
+          'fidelity.llmSpansPresent',
+          observed.filter((o) => o.kind === 'llm').length > 0,
+          observed.some((o) => o.kind === 'llm')
+            ? 'Trace contains structured LLM operation(s)'
+            : 'Independent model/journal says LLM work occurred but trace has no structured LLM ops',
+          { observedLlm: observed.filter((o) => o.kind === 'llm').length },
+        ),
+      );
+    }
   }
 
   const passed = llmAssertions.every((a) => a.passed);
