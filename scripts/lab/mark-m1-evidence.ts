@@ -7,6 +7,11 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { verifyChecksums } from '../../src/playground/artifact-writer';
 import {
+  recordExecutedEvidence,
+  revisionIdFromLedger,
+  type CoverageRowBase,
+} from '../../src/playground/coverage-merge';
+import {
   checkBundleProvenance,
   runNativeBundleVerify,
 } from '../../src/playground/native-bundle';
@@ -57,21 +62,22 @@ function latestSuiteSummary(): {
 }
 
 const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8')) as {
-  symbols: Array<{
-    id: string;
-    symbol: string;
-    status: string;
-    testIds: string[];
-    executedEvidence: string[];
-  }>;
-  packages: Array<{
-    name: string;
-    status: string;
-    testIds: string[];
-    executedEvidence: string[];
-  }>;
+  inputRevision?: { id?: string } | null;
+  agentInspect?: {
+    installedVersion?: string;
+    packageLockIntegrity?: string | null;
+    tarballSha256OfPackageJson?: string | null;
+  };
+  symbols: Array<CoverageRowBase & { symbol?: string }>;
+  packages: Array<CoverageRowBase & { name: string }>;
   counts: Record<string, number>;
 };
+
+const revisionId = revisionIdFromLedger(ledger);
+if (!revisionId) {
+  console.error('Coverage ledger has no input revision. Run: npm run lab:inventory');
+  process.exit(1);
+}
 
 const summary = latestSuiteSummary();
 if (!summary || summary.failed !== 0) {
@@ -139,19 +145,18 @@ const evidence = [`artifacts/${summary.batchId}/suite-summary.json`];
 const m1Runtime = new Set(['inspectRun', 'step', 'observeOutcome']);
 const m1Cli = new Set(['check']);
 
-for (const row of ledger.symbols) {
-  const sym = (row as { symbol?: string }).symbol;
-  if (!sym) continue;
-  const isM1 = m1Runtime.has(sym) || m1Cli.has(sym);
-  if (!isM1) continue;
-  row.status = 'passed';
-  row.testIds = Array.from(
-    new Set([...(row.testIds ?? []), 'lab:suite:travel-core']),
-  );
-  row.executedEvidence = Array.from(
-    new Set([...(row.executedEvidence ?? []), ...evidence]),
-  );
-}
+const executed = {
+  status: 'passed' as const,
+  revisionId,
+  testIds: ['lab:suite:travel-core'],
+  executedEvidence: evidence,
+};
+
+ledger.symbols = ledger.symbols.map((row) => {
+  const sym = row.symbol;
+  if (!sym || !(m1Runtime.has(sym) || m1Cli.has(sym))) return row;
+  return recordExecutedEvidence(row, executed);
+});
 
 const wired = new Set([
   'maybeInspectRun',
@@ -159,19 +164,15 @@ const wired = new Set([
   'getCurrentCorrelationMetadata',
 ]);
 for (const row of ledger.symbols) {
-  const sym = (row as { symbol?: string }).symbol;
+  const sym = row.symbol;
   if (!sym || !wired.has(sym)) continue;
-  if (row.status === 'passed') continue;
+  if (row.status === 'passed' || row.status === 'failed' || row.status === 'stale') continue;
   row.status = 'implemented-unverified';
 }
 
-for (const pkg of ledger.packages) {
-  if (pkg.name === 'agent-inspect') {
-    pkg.status = 'passed';
-    pkg.testIds = ['lab:suite:travel-core'];
-    pkg.executedEvidence = evidence;
-  }
-}
+ledger.packages = ledger.packages.map((pkg) =>
+  pkg.name === 'agent-inspect' ? recordExecutedEvidence(pkg, executed) : pkg,
+);
 
 ledger.counts.symbolsPassed = ledger.symbols.filter(
   (s) => s.status === 'passed',
@@ -182,10 +183,10 @@ ledger.counts.symbolsImplementedUnverified = ledger.symbols.filter(
 ledger.counts.symbolsPlanned = ledger.symbols.filter(
   (s) => s.status === 'planned',
 ).length;
-ledger.counts.executedEvidence = ledger.symbols.reduce(
-  (n, s) => n + (s.executedEvidence?.length ?? 0),
-  0,
-);
+ledger.counts.symbolsStale = ledger.symbols.filter((s) => s.status === 'stale').length;
+ledger.counts.executedEvidence = ledger.symbols
+  .filter((s) => s.status === 'passed' || s.status === 'failed')
+  .reduce((n, s) => n + (s.executedEvidence?.length ?? 0), 0);
 
 writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + '\n');
 console.log(
