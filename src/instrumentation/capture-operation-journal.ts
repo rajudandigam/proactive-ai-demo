@@ -32,7 +32,14 @@ export type CaptureOperationSnapshot = {
   operations?: CaptureLogicalOperation[];
 };
 
-function emptySnapshot(): CaptureOperationSnapshot {
+type MutableSnapshot = {
+  llmInvocations: number;
+  fixtureInvocations: number;
+  toolInvocations: number;
+  operations: CaptureLogicalOperation[];
+};
+
+function emptySnapshot(): MutableSnapshot {
   return {
     llmInvocations: 0,
     fixtureInvocations: 0,
@@ -47,7 +54,7 @@ function emptySnapshot(): CaptureOperationSnapshot {
  */
 @Injectable()
 export class CaptureOperationJournal {
-  private readonly byExecution = new Map<string, CaptureOperationSnapshot>();
+  private readonly byExecution = new Map<string, MutableSnapshot>();
 
   begin(executionId: string): void {
     this.byExecution.set(executionId, emptySnapshot());
@@ -93,15 +100,9 @@ export class CaptureOperationJournal {
     if (op) op.terminal = terminal;
   }
 
-  private ensure(executionId: string): Required<CaptureOperationSnapshot> {
+  private ensure(executionId: string): MutableSnapshot {
     const existing = this.byExecution.get(executionId);
-    if (
-      existing &&
-      Array.isArray(existing.operations) &&
-      typeof existing.toolInvocations === 'number'
-    ) {
-      return existing as Required<CaptureOperationSnapshot>;
-    }
+    if (existing) return existing;
     const fresh = emptySnapshot();
     this.byExecution.set(executionId, fresh);
     return fresh;
