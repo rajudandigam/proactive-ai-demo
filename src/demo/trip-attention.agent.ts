@@ -8,8 +8,11 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const requireAdv = createRequire(__filename);
-const { hasActiveContext } = requireAdv('agent-inspect/advanced') as {
+const { hasActiveContext, getCurrentStepId } = requireAdv(
+  'agent-inspect/advanced',
+) as {
   hasActiveContext: () => boolean;
+  getCurrentStepId: () => string | undefined;
 };
 
 async function maybeStep<T>(name: string, fn: () => Promise<T> | T): Promise<T> {
@@ -17,13 +20,33 @@ async function maybeStep<T>(name: string, fn: () => Promise<T> | T): Promise<T> 
   return fn();
 }
 
-async function maybeLlm<T>(model: string, fn: () => Promise<T> | T): Promise<T> {
-  if (hasActiveContext()) return step.llm(model, async () => fn());
+async function maybeLlm<T>(
+  model: string,
+  fn: () => Promise<T> | T,
+  onStep?: (stepId: string, captureName: string) => void,
+): Promise<T> {
+  if (hasActiveContext()) {
+    return step.llm(model, async () => {
+      const stepId = getCurrentStepId();
+      if (stepId && onStep) onStep(stepId, `llm:${model}`);
+      return fn();
+    });
+  }
   return fn();
 }
 
-async function maybeTool<T>(toolName: string, fn: () => Promise<T> | T): Promise<T> {
-  if (hasActiveContext()) return step.tool(toolName, async () => fn());
+async function maybeTool<T>(
+  toolName: string,
+  fn: () => Promise<T> | T,
+  onStep?: (stepId: string, captureName: string) => void,
+): Promise<T> {
+  if (hasActiveContext()) {
+    return step.tool(toolName, async () => {
+      const stepId = getCurrentStepId();
+      if (stepId && onStep) onStep(stepId, `tool:${toolName}`);
+      return fn();
+    });
+  }
   return fn();
 }
 import {
@@ -142,18 +165,30 @@ export class TripAttentionAgentService {
     const ids = new Set(eligible.map((c) => c.id));
 
     // Scripted two-round lookup for presentation fidelity
+    const bind = (operationId: string, stepId: string, captureName: string) => {
+      this.captureJournal.bindCaptureIdentity(ctx.runId, operationId, {
+        captureStepId: stepId,
+        captureName,
+      });
+    };
+
     const t1Op = this.captureJournal.beginOperation(
       ctx.runId,
       'tool',
       'read_trip_snapshot',
       { parentOperationId: fixtureOpId },
     );
-    const t1 = this.tools.execute(
-      ctx,
+    const t1 = await maybeTool(
       'read_trip_snapshot',
-      {},
-      'fixture-tool-1',
-      'model',
+      () =>
+        this.tools.execute(
+          ctx,
+          'read_trip_snapshot',
+          {},
+          'fixture-tool-1',
+          'model',
+        ),
+      (stepId, captureName) => bind(t1Op, stepId, captureName),
     );
     this.captureJournal.completeOperation(
       ctx.runId,
@@ -174,12 +209,17 @@ export class TripAttentionAgentService {
         'read_weather_context',
         { parentOperationId: fixtureOpId },
       );
-      const t2 = this.tools.execute(
-        ctx,
+      const t2 = await maybeTool(
         'read_weather_context',
-        {},
-        'fixture-tool-2',
-        'model',
+        () =>
+          this.tools.execute(
+            ctx,
+            'read_weather_context',
+            {},
+            'fixture-tool-2',
+            'model',
+          ),
+        (stepId, captureName) => bind(t2Op, stepId, captureName),
       );
       this.captureJournal.completeOperation(
         ctx.runId,
@@ -196,12 +236,17 @@ export class TripAttentionAgentService {
         'read_destination_impact',
         { parentOperationId: fixtureOpId },
       );
-      const t3 = this.tools.execute(
-        ctx,
+      const t3 = await maybeTool(
         'read_destination_impact',
-        {},
-        'fixture-tool-3',
-        'model',
+        () =>
+          this.tools.execute(
+            ctx,
+            'read_destination_impact',
+            {},
+            'fixture-tool-3',
+            'model',
+          ),
+        (stepId, captureName) => bind(t3Op, stepId, captureName),
       );
       this.captureJournal.completeOperation(
         ctx.runId,
@@ -413,7 +458,12 @@ export class TripAttentionAgentService {
               tools: this.tools.definitions(),
               tool_choice: 'auto',
             });
-          return maybeLlm(model, call);
+          return maybeLlm(model, call, (stepId, captureName) => {
+            this.captureJournal.bindCaptureIdentity(ctx.runId, investigateOpId, {
+              captureStepId: stepId,
+              captureName,
+            });
+          });
         })();
         this.captureJournal.completeOperation(
           ctx.runId,
@@ -511,7 +561,12 @@ export class TripAttentionAgentService {
         const executed = await (async () => {
           const call = () =>
             this.tools.execute(ctx, toolName, args, tc.id, 'model');
-          return maybeTool(toolName, call);
+          return maybeTool(toolName, call, (stepId, captureName) => {
+            this.captureJournal.bindCaptureIdentity(ctx.runId, toolOpId, {
+              captureStepId: stepId,
+              captureName,
+            });
+          });
         })();
         this.captureJournal.completeOperation(
           ctx.runId,
@@ -591,7 +646,12 @@ export class TripAttentionAgentService {
               'decision_set',
             ),
           });
-        return maybeLlm(model, call);
+        return maybeLlm(model, call, (stepId, captureName) => {
+          this.captureJournal.bindCaptureIdentity(ctx.runId, finalizeOpId, {
+            captureStepId: stepId,
+            captureName,
+          });
+        });
       })();
       this.captureJournal.completeOperation(
         ctx.runId,

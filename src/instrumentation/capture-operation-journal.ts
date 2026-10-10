@@ -19,6 +19,13 @@ export type CaptureLogicalOperation = {
   name: string;
   executionId: string;
   parentOperationId?: string;
+  /**
+   * Capture stepId recorded at the call boundary when it differs from
+   * operationId. Reconciler must never infer this by position or name.
+   */
+  captureStepId?: string;
+  /** Capture step name recorded at the call boundary (e.g. tool:read_x). */
+  captureName?: string;
   terminal: CaptureOperationTerminal;
   /** Transport attempts under this logical call (live LLM retries, etc.). */
   transportAttempts: number;
@@ -98,6 +105,26 @@ export class CaptureOperationJournal {
     if (!cur?.operations) return;
     const op = cur.operations.find((o) => o.operationId === operationId);
     if (op) op.terminal = terminal;
+  }
+
+  /**
+   * Record capture identity at the call boundary (inside step.tool / step.llm).
+   * Never infer mapping later by position or stable name alone.
+   */
+  bindCaptureIdentity(
+    executionId: string,
+    operationId: string,
+    identity: { captureStepId: string; captureName?: string },
+  ): void {
+    const cur = this.byExecution.get(executionId);
+    if (!cur?.operations) return;
+    const op = cur.operations.find((o) => o.operationId === operationId);
+    if (!op) return;
+    const stepId = identity.captureStepId.trim();
+    if (stepId !== '') op.captureStepId = stepId;
+    if (typeof identity.captureName === 'string' && identity.captureName.trim() !== '') {
+      op.captureName = identity.captureName.trim();
+    }
   }
 
   private ensure(executionId: string): MutableSnapshot {
