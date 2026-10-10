@@ -479,14 +479,14 @@ export class DecisionGraphService {
         return this.timed(state, 'investigate_agent', 'skipped', () => ({}));
       }
 
-      await this.inspect.tracedTool('read_trip_snapshot', async () =>
-        this.tools.execute(
-          state.ctx,
-          'read_trip_snapshot',
-          {},
-          'app-mandatory-1',
-          'application',
-        ),
+      // Application-mandatory read (not journaled as a model/tool capture op).
+      // Capture fidelity for tools is owned by the agent journal↔step.tool boundary.
+      await this.tools.execute(
+        state.ctx,
+        'read_trip_snapshot',
+        {},
+        'app-mandatory-1',
+        'application',
       );
 
       const result = await this.agent.run(state.ctx, state.envelope!, eligible);

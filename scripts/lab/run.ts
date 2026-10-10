@@ -526,6 +526,7 @@ export async function runScenario(
       ? await evaluateCaptureFidelity({
           scenario,
           agentInspectRunId,
+          executionId,
           tracePath,
           independentModelCalls: result.modelCalls,
           independentLiveAttempts: result.accounting?.liveAttempts ?? 0,
